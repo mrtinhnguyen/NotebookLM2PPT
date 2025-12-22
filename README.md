@@ -64,8 +64,8 @@ graph TD
 ### 3. 安装项目依赖
 
 ```bash
-git clone https://github.com/your-repo/PDF2PPT.git
-cd PDF2PPT
+git clone https://github.com/elliottzheng/NotebookLM2PPT.git
+cd NotebookLM2PPT
 pip install -r requirements.txt
 ```
 
@@ -111,7 +111,7 @@ python main.py path/to/your/document.pdf
 ## 📁 项目结构
 
 ```text
-PDF2PPT/
+NotebookLM2PPT/
 ├── main.py                          # 程序主入口
 ├── requirements.txt                 # 依赖清单
 ├── src/                             # 核心源码
@@ -149,7 +149,7 @@ PDF2PPT/
 
 ## 🤝 贡献与反馈
 
-- 提交 [Issues](https://github.com/your-repo/PDF2PPT/issues) 反馈 Bug 或建议。
+- 提交 [Issues](https://github.com/elliottzheng/NotebookLM2PPT/issues) 反馈 Bug 或建议。
 - 欢迎提交 Pull Request 改进代码。
 
 ---
