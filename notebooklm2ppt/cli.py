@@ -6,6 +6,7 @@ import threading
 import cv2
 import shutil
 import argparse
+import sys
 from pathlib import Path
 from .pdf2png import pdf_to_png
 from .utils.image_viewer import show_image_fullscreen
@@ -164,6 +165,12 @@ def process_pdf_to_ppt(pdf_path, png_dir, ppt_dir, delay_between_images=2, inpai
 
 
 def main():
+    # 如果没有参数，或者第一个参数是 --gui，则启动 GUI
+    if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] == "--gui"):
+        from .gui import launch_gui
+        launch_gui()
+        return
+
     # 解析命令行参数
     parser = argparse.ArgumentParser(
         description='NotebookLM2PPT - 将 PDF 转换为可编辑 PowerPoint 演示文稿',

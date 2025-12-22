@@ -9,3 +9,4 @@ pywinauto
 scikit-image
 Pillow
 pyinpaint
+windnd

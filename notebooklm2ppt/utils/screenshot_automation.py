@@ -251,7 +251,7 @@ def take_fullscreen_snip(
 
     center = (width // 2, height // 2)
     
-    done_button = (width - 210, height + 35)
+    done_button = (bottom_right[0] - 210, height + 35)
 
     if done_button[1] > screen_height:
         done_button = (done_button[0], height - 35)

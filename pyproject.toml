@@ -24,6 +24,7 @@ dependencies = [
     "scikit-image",
     "Pillow",
     "pyinpaint",
+    "windnd; sys_platform == 'win32'",
 ]
 
 [project.urls]

@@ -63,14 +63,17 @@ graph TD
 
 ### 3. 安装
 
-你可以直接通过 pip 安装：
+#### 方式 A：下载预编译版本（推荐）
+直接前往 [Releases](https://github.com/elliottzheng/NotebookLM2PPT/releases) 页面下载最新的 `.exe` 执行文件。无需安装 Python 环境，开箱即用。
+
+#### 方式 B：通过 pip 安装
+如果你已经安装了 Python，可以直接通过 pip 安装：
 
 ```bash
 pip install notebooklm2ppt -U
 ```
 
-或者从源码安装：
-
+#### 方式 C：从源码安装
 ```bash
 pip install git+https://github.com/elliottzheng/NotebookLM2PPT.git
 ```
@@ -79,7 +82,21 @@ pip install git+https://github.com/elliottzheng/NotebookLM2PPT.git
 
 ## 📖 使用指南
 
-### 基础命令
+### 图形界面 (GUI)
+
+如果你更喜欢使用图形界面，只需直接运行程序而不带任何参数：
+
+```bash
+notebooklm2ppt
+```
+或者
+```bash
+python main.py
+```
+
+这将启动一个简单的图形界面，你可以通过它选择文件、设置参数并查看转换进度。
+
+### 命令行界面 (CLI)
 
 安装后，你可以直接在命令行中使用 `notebooklm2ppt` 命令：
 
