@@ -3,15 +3,15 @@ from tkinter import ttk, filedialog, messagebox, scrolledtext
 import threading
 import sys
 import os
-try:
-    import windnd
-except ImportError:
-    print("windnd 模块未安装，拖拽功能将不可用。")
-    windnd = None
+import windnd
 from pathlib import Path
 from .cli import process_pdf_to_ppt
 from .ppt_combiner import combine_ppt
-from .utils.screenshot_automation import screen_width, screen_height, load_saved_done_offset
+from .utils.screenshot_automation import screen_width, screen_height
+import json
+
+CONFIG_FILE = Path("./config.json")
+
 
 class TextRedirector:
     def __init__(self, widget, tag="stdout"):
@@ -30,9 +30,9 @@ class TextRedirector:
 class AppGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("PDF to PPT Converter")
-        self.root.geometry("800x600")
-        self.root.minsize(700, 480)
+        self.root.title("NotebookLM2PPT - PDF 转 PPT 工具")
+        self.root.geometry("850x750")
+        self.root.minsize(750, 550)
         
         self.setup_ui()
         
@@ -51,16 +51,15 @@ class AppGUI:
 
     def on_drop_files(self, files):
         if files:
-            # Get the first file dropped
             file_path = files[0].decode('gbk') if isinstance(files[0], bytes) else files[0]
             if file_path.lower().endswith('.pdf'):
                 self.pdf_path_var.set(file_path)
-                print(f"已通过拖拽选择文件: {file_path}")
+                print(f"已添加文件: {file_path}")
             else:
-                messagebox.showwarning("警告", "只支持 PDF 文件")
+                messagebox.showwarning("提示", "请拖拽 PDF 文件")
 
     def on_closing(self):
-        # Restore stdout/stderr
+        self.dump_config_to_disk()
         sys.stdout = self.old_stdout
         sys.stderr = self.old_stderr
         self.root.destroy()
@@ -85,7 +84,7 @@ class AppGUI:
         main_frame.columnconfigure(0, weight=1)
 
         # File Selection
-        file_frame = ttk.LabelFrame(main_frame, text="文件设置 (支持拖拽 PDF 文件到窗口)", padding="10")
+        file_frame = ttk.LabelFrame(main_frame, text="📁 文件设置（支持拖拽 PDF 文件到窗口）", padding="10")
         file_frame.pack(fill=tk.X, pady=5)
         file_frame.columnconfigure(1, weight=1)
 
@@ -94,89 +93,97 @@ class AppGUI:
         pdf_entry = ttk.Entry(file_frame, textvariable=self.pdf_path_var, width=60)
         pdf_entry.grid(row=0, column=1, padx=5, sticky="ew")
         self.add_context_menu(pdf_entry)
-        ttk.Button(file_frame, text="浏览", command=self.browse_pdf).grid(row=0, column=2)
+        ttk.Button(file_frame, text="浏览...", command=self.browse_pdf).grid(row=0, column=2)
 
         ttk.Label(file_frame, text="输出目录:").grid(row=1, column=0, sticky=tk.W, pady=5)
         self.output_dir_var = tk.StringVar(value="workspace")
         output_entry = ttk.Entry(file_frame, textvariable=self.output_dir_var, width=60)
         output_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
         self.add_context_menu(output_entry)
-        ttk.Button(file_frame, text="浏览", command=self.browse_output).grid(row=1, column=2, pady=5)
+        ttk.Button(file_frame, text="浏览...", command=self.browse_output).grid(row=1, column=2, pady=5)
 
         # Options
-        opt_frame = ttk.LabelFrame(main_frame, text="转换选项", padding="10")
+        opt_frame = ttk.LabelFrame(main_frame, text="⚙️ 转换选项", padding="10")
         opt_frame.pack(fill=tk.X, pady=5)
         opt_frame.columnconfigure(1, weight=1)
         opt_frame.columnconfigure(3, weight=1)
 
-        ttk.Label(opt_frame, text="DPI:").grid(row=0, column=0, sticky=tk.W)
+        ttk.Label(opt_frame, text="图片清晰度 (DPI):").grid(row=0, column=0, sticky=tk.W)
         self.dpi_var = tk.IntVar(value=150)
         dpi_entry = ttk.Entry(opt_frame, textvariable=self.dpi_var, width=10)
         dpi_entry.grid(row=0, column=1, sticky=tk.W, padx=5)
         self.add_context_menu(dpi_entry)
+        ttk.Label(opt_frame, text="（建议 150-300，越高越清晰）", foreground="gray").grid(row=0, column=2, sticky=tk.W, padx=5)
 
-        ttk.Label(opt_frame, text="延迟 (秒):").grid(row=0, column=2, sticky=tk.W, padx=10)
+        ttk.Label(opt_frame, text="等待时间 (秒):").grid(row=1, column=0, sticky=tk.W, pady=5)
         self.delay_var = tk.IntVar(value=2)
         delay_entry = ttk.Entry(opt_frame, textvariable=self.delay_var, width=10)
-        delay_entry.grid(row=0, column=3, sticky=tk.W, padx=5)
+        delay_entry.grid(row=1, column=1, sticky=tk.W, padx=5, pady=5)
         self.add_context_menu(delay_entry)
+        ttk.Label(opt_frame, text="（每页加载后的等待时间）", foreground="gray").grid(row=1, column=2, sticky=tk.W, padx=5, pady=5)
 
-        ttk.Label(opt_frame, text="超时 (秒):").grid(row=0, column=4, sticky=tk.W, padx=10)
+        ttk.Label(opt_frame, text="超时时间 (秒):").grid(row=2, column=0, sticky=tk.W, pady=5)
         self.timeout_var = tk.IntVar(value=50)
         timeout_entry = ttk.Entry(opt_frame, textvariable=self.timeout_var, width=10)
-        timeout_entry.grid(row=0, column=5, sticky=tk.W, padx=5)
+        timeout_entry.grid(row=2, column=1, sticky=tk.W, padx=5, pady=5)
         self.add_context_menu(timeout_entry)
+        ttk.Label(opt_frame, text="（单页最大处理时间）", foreground="gray").grid(row=2, column=2, sticky=tk.W, padx=5, pady=5)
 
-        ttk.Label(opt_frame, text="显示比例:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        ttk.Label(opt_frame, text="窗口显示比例:").grid(row=3, column=0, sticky=tk.W, pady=5)
         self.ratio_var = tk.DoubleVar(value=0.8)
         ratio_entry = ttk.Entry(opt_frame, textvariable=self.ratio_var, width=10)
-        ratio_entry.grid(row=1, column=1, sticky=tk.W, padx=5, pady=5)
+        ratio_entry.grid(row=3, column=1, sticky=tk.W, padx=5, pady=5)
         self.add_context_menu(ratio_entry)
-
-        # 将页范围放到单独的行，避免与偏移提示重叠
-        ttk.Label(opt_frame, text="页范围:").grid(row=5, column=0, sticky=tk.W, padx=10, pady=5)
-        self.page_range_var = tk.StringVar(value="")
-        page_range_entry = ttk.Entry(opt_frame, textvariable=self.page_range_var, width=30)
-        page_range_entry.grid(row=5, column=1, columnspan=3, sticky="ew", padx=5, pady=5)
-        self.add_context_menu(page_range_entry)
-        ttk.Label(opt_frame, text="示例: 1-3,5,7- (与 Word 打印页范围一致)", wraplength=420).grid(row=6, column=0, columnspan=4, sticky=tk.W)
+        ttk.Label(opt_frame, text="（建议 0.7-0.9）", foreground="gray").grid(row=3, column=2, sticky=tk.W, padx=5, pady=5)
 
         self.inpaint_var = tk.BooleanVar(value=True)
-        ttk.Checkbutton(opt_frame, text="启用图像修复 (去水印)", variable=self.inpaint_var).grid(row=1, column=2, columnspan=2, sticky=tk.W, padx=10)
+        ttk.Checkbutton(opt_frame, text="去除水印（图像修复）", variable=self.inpaint_var).grid(row=4, column=0, columnspan=3, sticky=tk.W, pady=5)
 
+        ttk.Separator(opt_frame, orient='horizontal').grid(row=5, column=0, columnspan=4, sticky="ew", pady=10)
 
-        ttk.Label(opt_frame, text="转换按钮偏移:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        ttk.Label(opt_frame, text="页码范围:").grid(row=6, column=0, sticky=tk.W, pady=5)
+        self.page_range_var = tk.StringVar(value="")
+        page_range_entry = ttk.Entry(opt_frame, textvariable=self.page_range_var, width=30)
+        page_range_entry.grid(row=6, column=1, columnspan=2, sticky="ew", padx=5, pady=5)
+        self.add_context_menu(page_range_entry)
+        ttk.Label(opt_frame, text="留空=全部，示例: 1-3,5,7-9", foreground="gray").grid(row=6, column=3, sticky=tk.W, padx=5, pady=5)
+
+        ttk.Separator(opt_frame, orient='horizontal').grid(row=7, column=0, columnspan=4, sticky="ew", pady=10)
+
+        ttk.Label(opt_frame, text="按钮偏移 (像素):").grid(row=8, column=0, sticky=tk.W, pady=5)
         self.done_offset_var = tk.StringVar(value="")
         done_offset_entry = ttk.Entry(opt_frame, textvariable=self.done_offset_var, width=10)
-        done_offset_entry.grid(row=2, column=1, sticky=tk.W, padx=5, pady=5)
+        done_offset_entry.grid(row=8, column=1, sticky=tk.W, padx=5, pady=5)
         self.add_context_menu(done_offset_entry)
-        # 显示已保存的偏移（不作为手动覆盖输入）
         self.saved_offset_var = tk.StringVar(value="")
-        ttk.Label(opt_frame, textvariable=self.saved_offset_var).grid(row=2, column=2, sticky=tk.W, padx=5)
-        # 将长说明放到独立一行，跨越所有列并允许横向扩展与自动换行
-        ttk.Label(opt_frame, text="该数值表示从右下角到转换按钮的像素偏移(从右往左)，留空则在无已保存偏移时强制按钮位置校准；填数字将作为手动覆盖。", wraplength=640).grid(row=3, column=0, columnspan=6, sticky="ew", pady=2)
-
-        # 首次校准选项：允许用户在第一页手动点击完成按钮以捕获偏移并保存
-        # 如果磁盘已有保存偏移，默认关闭首次校准；否则默认开启
+        ttk.Label(opt_frame, textvariable=self.saved_offset_var, foreground="blue").grid(row=8, column=2, sticky=tk.W, padx=5)
+        
+        ttk.Label(opt_frame, text="⚠️ 核心参数：程序通过模拟鼠标点击'转换为PPT'按钮实现转换", foreground="red").grid(row=9, column=0, columnspan=4, sticky=tk.W)
+        ttk.Label(opt_frame, text="   如果无法准确定位按钮位置，核心功能将无法实现！可通过勾选“校准按钮位置”进行校准", foreground="red").grid(row=10, column=0, columnspan=4, sticky=tk.W)
+        
         self.calibrate_var = tk.BooleanVar(value=True)
+        cb = ttk.Checkbutton(opt_frame, text="校准按钮位置", variable=self.calibrate_var)
+        cb.grid(row=11, column=0, columnspan=3, sticky=tk.W, pady=5)
+        # ttk 不支持 foreground，用样式或 Label 实现红色提示
+        ttk.Label(opt_frame, text="提示: 程序会自动保存校准结果，下次无需重复校准", foreground="red").grid(row=12, column=0, columnspan=4, sticky=tk.W)
 
-        ttk.Checkbutton(opt_frame, text="按钮位置校准（若无已保存偏移则默认开启）", variable=self.calibrate_var).grid(row=4, column=0, columnspan=4, sticky=tk.W, pady=5)
-        self.load_offset_from_disk()
 
         # Control
         ctrl_frame = ttk.Frame(main_frame, padding="10")
         ctrl_frame.pack(fill=tk.X)
 
-        self.start_btn = ttk.Button(ctrl_frame, text="开始转换", command=self.start_conversion)
+        self.start_btn = ttk.Button(ctrl_frame, text="🚀 开始转换", command=self.start_conversion)
         self.start_btn.pack(side=tk.LEFT, padx=5)
 
         # Log Area
-        log_frame = ttk.LabelFrame(main_frame, text="日志输出", padding="5")
+        log_frame = ttk.LabelFrame(main_frame, text="📋 运行日志", padding="5")
         log_frame.pack(fill=tk.BOTH, expand=True, pady=5)
 
         self.log_area = scrolledtext.ScrolledText(log_frame, state='disabled', height=15)
         self.log_area.pack(fill=tk.BOTH, expand=True)
         self.log_area.tag_config("stderr", foreground="red")
+
+        self.load_config_from_disk()
 
     def browse_pdf(self):
         # 清理路径中的引号和空格，方便用户直接粘贴带引号的路径
@@ -209,35 +216,69 @@ class AppGUI:
         pdf_path = self.pdf_path_var.get().strip().strip('"')
         output_dir = self.output_dir_var.get().strip().strip('"')
         
-        # Update variables with sanitized paths
         self.pdf_path_var.set(pdf_path)
         self.output_dir_var.set(output_dir)
 
         if not pdf_path or not os.path.exists(pdf_path):
-            messagebox.showerror("错误", "请选择有效的 PDF 文件")
+            messagebox.showerror("错误", "请先选择一个 PDF 文件")
             return
 
         self.start_btn.config(state=tk.DISABLED)
         threading.Thread(target=self.run_conversion, daemon=True).start()
 
-    def load_offset_from_disk(self):
-        # 从磁盘加载已保存的偏移并更新显示
+    def dump_config_to_disk(self):
+        config_data = {
+            "pdf_path": self.pdf_path_var.get(),
+            "output_dir": self.output_dir_var.get(),
+            "dpi": self.dpi_var.get(),
+            "delay": self.delay_var.get(),
+            "timeout": self.timeout_var.get(),
+            "ratio": self.ratio_var.get(),
+            "inpaint": self.inpaint_var.get(),
+            "done_offset": self.done_offset_var.get(),
+        }
         try:
-            saved = load_saved_done_offset()
-        except Exception:
-            saved = None
-        # 如果磁盘已有保存偏移，显示其值并将偏移预填到输入框；否则提示将要求首次校准
-        default_calibrate = True if saved is None else False
-        if saved is not None:
-            self.saved_offset_var.set(f"已保存偏移: {saved} 像素")
-            # 直接将已保存偏移填入偏移输入框，便于用户微调
+            with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                json.dump(config_data, f, ensure_ascii=False, indent=4)
+            print("✅ 配置已保存到磁盘")
+        except Exception as e:
+            print(f"⚠️ 配置保存失败: {str(e)}")
+
+    def load_config_from_disk(self):
+        try:
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                config_data = json.load(f)
+                self.pdf_path_var.set(config_data.get("pdf_path", ""))
+                self.output_dir_var.set(config_data.get("output_dir", "workspace"))
+                self.dpi_var.set(config_data.get("dpi", 150))
+                self.delay_var.set(config_data.get("delay", 2))
+                self.timeout_var.set(config_data.get("timeout", 50))
+                self.ratio_var.set(config_data.get("ratio", 0.8))
+                self.inpaint_var.set(config_data.get("inpaint", True))
+                offset_value = config_data.get("done_offset", "")
+                self.update_offset_related_gui(offset_value)
+        except Exception as e:
+            print(f"⚠️ 配置加载失败: {str(e)}")
+            self.dump_config_to_disk()
+            print("已创建默认配置文件")
+
+
+    def update_offset_disk(self, offset_value):
+        self.done_offset_var.set(str(offset_value))
+        self.dump_config_to_disk()
+        self.update_offset_related_gui(offset_value)
+
+    def update_offset_related_gui(self, done_offset_value=None):
+        saved = done_offset_value
+        is_valid = saved is not None and saved != ""
+        if is_valid:
+            self.saved_offset_var.set(f"已保存: {saved}px")
             if not self.done_offset_var.get().strip():
                 self.done_offset_var.set(str(saved))
         else:
-            self.saved_offset_var.set("未保存偏移：运行将要求进行按钮位置校准")
-        self.calibrate_var.set(default_calibrate)
+            self.saved_offset_var.set("未保存: 将自动校准")
+        self.calibrate_var.set(not is_valid)
         
-
     def run_conversion(self):
         try:
             pdf_file = self.pdf_path_var.get()
@@ -306,18 +347,18 @@ class AppGUI:
                 done_button_offset=done_offset,
                 capture_done_offset=self.calibrate_var.get(),
                 pages=pages_list,
-                update_offset_callback=self.load_offset_from_disk
+                update_offset_callback=self.update_offset_disk
             )
 
             combine_ppt(ppt_dir, out_ppt_file, png_names=png_names)
             out_ppt_file = os.path.abspath(out_ppt_file)
-            print(f"\n转换完成！最终文件: {out_ppt_file}")
-            # 打开该文件
+            print(f"\n✅ 转换完成！")
+            print(f"📄 输出文件: {out_ppt_file}")
             os.startfile(out_ppt_file)
-            messagebox.showinfo("成功", f"转换完成！\n文件保存至: {out_ppt_file}")
+            messagebox.showinfo("转换成功", f"PDF 已成功转换为 PPT！\n\n文件位置:\n{out_ppt_file}")
         except Exception as e:
-            print(f"\n发生错误: {str(e)}")
-            messagebox.showerror("错误", f"转换过程中发生错误: {str(e)}")
+            print(f"\n❌ 转换失败: {str(e)}")
+            messagebox.showerror("转换失败", f"处理过程中出现错误:\n{str(e)}")
         finally:
             self.start_btn.config(state=tk.NORMAL)
 

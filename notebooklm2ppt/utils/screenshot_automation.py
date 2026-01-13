@@ -25,30 +25,6 @@ import tkinter as tk
 screen_width = win32api.GetSystemMetrics(0)
 screen_height = win32api.GetSystemMetrics(1)
 
-# Persistent config file to store computed done-button offset (one integer)
-_DONE_OFFSET_FILE = Path.home() / ".notebooklm2ppt_done_offset"
-
-
-def load_saved_done_offset() -> int | None:
-    """从磁盘加载已保存的完成按钮偏移（像素），不存在时返回 None"""
-    try:
-        if _DONE_OFFSET_FILE.exists():
-            txt = _DONE_OFFSET_FILE.read_text(encoding="utf-8").strip()
-            if txt:
-                return int(txt)
-    except Exception:
-        pass
-    return None
-
-
-def save_done_offset(offset: int) -> None:
-    """将完成按钮偏移值保存到磁盘（覆盖）。"""
-    try:
-        _DONE_OFFSET_FILE.write_text(str(int(offset)), encoding="utf-8")
-        print(f"已保存完成按钮偏移到: {_DONE_OFFSET_FILE}")
-    except Exception as e:
-        print(f"保存完成按钮偏移失败: {e}")
-
 
 def _wait_for_left_click(timeout: float = 60.0):
     """等待用户进行一次左键点击，返回点击时的屏幕坐标 (x, y)。超时返回 None。"""
@@ -250,30 +226,6 @@ def check_and_close_download_folder(initial_explorer_windows, timeout=10, check_
     return closed_count
 
 
-OFFSET_319 = 175
-OFFSET_LEGACY = 210
-
-def _compute_done_button_offset(pc_manager_version: str | None, fallback: int) -> int:
-    """Infer the done-button offset based on PC Manager version."""
-    if not pc_manager_version:
-        return fallback
-
-    normalized = pc_manager_version.strip().lower()
-    numeric_match = re.match(r"(\d+(?:\.\d+)?)", normalized)
-    if numeric_match:
-        try:
-            numeric_version = float(numeric_match.group(1))
-            return OFFSET_319 if numeric_version >= 3.19 else OFFSET_LEGACY
-        except ValueError:
-            pass
-
-    if "3.19" in normalized or "+" in normalized or "after" in normalized or "new" in normalized:
-        return OFFSET_319
-    return fallback
-
-
-
-
 def create_topmost_dialog():    
     # 创建一个简单的Tkinter窗口    
     root = tk.Tk()    
@@ -381,10 +333,6 @@ def take_fullscreen_snip(
         if coords:
             click_x, click_y = coords
             computed_offset = int((bottom_right[0]) - click_x)
-            try:
-                save_done_offset(computed_offset)
-            except Exception:
-                pass
             print(f"已计算并保存完成按钮偏移: {computed_offset}")
             resolved_offset = computed_offset
         else:

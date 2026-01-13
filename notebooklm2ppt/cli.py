@@ -10,8 +10,7 @@ import sys
 from pathlib import Path
 from .pdf2png import pdf_to_png
 from .utils.image_viewer import show_image_fullscreen
-from .utils.screenshot_automation import take_fullscreen_snip, mouse, screen_height, screen_width, load_saved_done_offset
-from .ppt_combiner import combine_ppt
+from .utils.screenshot_automation import take_fullscreen_snip, mouse, screen_height, screen_width
 
 
 def process_pdf_to_ppt(pdf_path, png_dir, ppt_dir, delay_between_images=2, inpaint=True, dpi=150, timeout=50, display_height=None, 
@@ -129,7 +128,7 @@ def process_pdf_to_ppt(pdf_path, png_dir, ppt_dir, delay_between_images=2, inpai
                 print(f"捕获到的完成按钮偏移: {computed_offset}")
                 done_button_offset = computed_offset  # 更新为最新捕获的偏移
                 if update_offset_callback:
-                    update_offset_callback()
+                    update_offset_callback(computed_offset)
 
 
             if success and ppt_filename:
@@ -199,201 +198,9 @@ def main():
         launch_gui()
         return
 
-    # 解析命令行参数
-    parser = argparse.ArgumentParser(
-        description='NotebookLM2PPT - 将 PDF 转换为可编辑 PowerPoint 演示文稿',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-使用示例:
-  notebooklm2ppt examples/demo.pdf                  # 转换指定PDF
-  notebooklm2ppt examples/demo.pdf --no-inpaint     # 禁用图像修复（去水印）
-  notebooklm2ppt examples/demo.pdf -d 3 -t 60       # 设置延迟和超时
-  notebooklm2ppt -s 0.9 examples/demo.pdf           # 设置显示尺寸比例
-        """
-    )
+    # 删除CLI
+    print("命令行模式已被弃用，请使用 GUI 界面。")
     
-    parser.add_argument(
-        'pdf_file',
-        help='PDF 文件路径'
-    )
-    
-    parser.add_argument(
-        '-d', '--delay',
-        type=float,
-        default=2,
-        metavar='SECONDS',
-        help='处理每张图片之间的延迟时间，单位秒（默认: 2）'
-    )
-    
-    parser.add_argument(
-        '-t', '--timeout',
-        type=float,
-        default=50,
-        metavar='SECONDS',
-        help='PPT 窗口检测超时时间，单位秒（默认: 50）'
-    )
-    
-    parser.add_argument(
-        '--inpaint-notebooklm',
-        dest='inpaint',
-        action='store_true',
-        help='启用图像修复功能（去水印），只能去除notebooklm生成的水印'
-    )
-    
-    parser.add_argument(
-        '--no-inpaint',
-        dest='inpaint',
-        action='store_false',
-        help='禁用图像修复功能'
-    )
-
-    parser.add_argument(
-        '--dpi',
-        type=int,
-        default=150,
-        metavar='DPI',
-        help='PNG 输出分辨率，必须为150以启用图像修复（默认: 150）'
-    )
-    
-    parser.set_defaults(inpaint=True)
-
-    # 根据磁盘上是否存在已保存偏移决定默认是否进行首次校准
-    try:
-        _saved_offset = load_saved_done_offset()
-        _default_capture = True if _saved_offset is None else False
-    except Exception:
-        _default_capture = True
-    parser.set_defaults(capture_done_offset=_default_capture)
-    
-    parser.add_argument(
-        '-s', '--size-ratio',
-        type=float,
-        default=0.8,
-        metavar='RATIO',
-        help='显示尺寸比例，1.0 表示填满屏幕（默认: 0.8），如果转换失败，可尝试调小此值重试'
-    )
-    
-    parser.add_argument(
-        '-o', '--output',
-        metavar='DIR',
-        help='输出目录（默认: workspace）'
-    )
-
-    parser.add_argument(
-        '--pcmgr-version',
-        dest='pc_manager_version',
-        type=str,
-        default="3.19",
-        help='电脑管家版本号，用于计算转换按钮位置；3.19及以上使用 190，低于3.19 使用 210'
-    )
-
-    parser.add_argument(
-        '--done-offset',
-        dest='done_button_offset',
-        type=int,
-        default=None,
-        help='转换按钮右侧偏移量（像素）。设置后优先生效，留空则按电脑管家版本推断'
-    )
-
-    parser.add_argument(
-        '--pages', '-p',
-        dest='pages',
-        type=str,
-        default=None,
-        help='页范围，格式示例: 1-3,5,7- （与 Word 打印页范围一致）'
-    )
-
-    parser.add_argument(
-        '--no-calibrate',
-        dest='capture_done_offset',
-        action='store_false',
-        help='禁用首次页面的手动点击校准（默认启用）'
-    )
-    
-    args = parser.parse_args()
-    
-    # 配置参数
-    pdf_file = args.pdf_file
-    pdf_name = Path(pdf_file).stem
-    
-    # 定义目录
-    workspace_dir = Path(args.output) if args.output else Path("workspace")
-    png_dir = workspace_dir / f"{pdf_name}_pngs"
-    ppt_dir = workspace_dir / f"{pdf_name}_ppt"
-    out_ppt_file = workspace_dir / f"{pdf_name}.pptx"
-    workspace_dir.mkdir(exist_ok=True, parents=True)
-
-    ratio = min(screen_width/16, screen_height/9)
-    max_display_width = int(16 * ratio)
-    max_display_height = int(9 * ratio)
-
-    display_width = int(max_display_width * args.size_ratio)
-    display_height = int(max_display_height * args.size_ratio)
-    
-    print("=" * 60)
-    print("NotebookLM2PPT - 将 PDF 转换为可编辑 PowerPoint 演示文稿")
-    print("=" * 60)
-    print(f"PDF 文件: {pdf_file}")
-    print(f"输出目录: {workspace_dir}")
-    print(f"图像修复（去水印）: {'启用' if args.inpaint else '禁用'}")
-    print(f"DPI: {args.dpi}")
-    print(f"延迟时间: {args.delay} 秒")
-    print(f"超时时间: {args.timeout} 秒")
-    print(f"显示尺寸: {display_width}x{display_height} (比例: {args.size_ratio})")
-    print(f"电脑管家版本: {args.pc_manager_version or '未指定 (使用偏移默认值)'}")
-    print(f"完成按钮偏移: {args.done_button_offset if args.done_button_offset is not None else '按版本自动推断'}")
-    print("=" * 60)
-    print()
-
-    # 解析页范围参数（如果有）
-    def _parse_page_range(range_str):
-        if not range_str:
-            return None
-        pages = set()
-        parts = [p.strip() for p in range_str.split(',') if p.strip()]
-        for part in parts:
-            if '-' in part:
-                start_end = part.split('-')
-                if start_end[0] == '':
-                    continue
-                start = int(start_end[0])
-                if start_end[1] == '':
-                    # 开放式范围，例如 7-
-                    # 表示从 start 到最后，表示为 None, 主逻辑会处理为 None（不限制）
-                    # 这里将把开放式范围当作起始页及后续页：使用 a large sentinel
-                    pages.update(range(start, start + 10000))
-                else:
-                    end = int(start_end[1])
-                    if end < start:
-                        continue
-                    pages.update(range(start, end + 1))
-            else:
-                pages.add(int(part))
-        return sorted(pages)
-
-    pages_list = _parse_page_range(args.pages)
-
-    process_pdf_to_ppt(
-        pdf_path=pdf_file,
-        png_dir=png_dir,
-        ppt_dir=ppt_dir,
-        delay_between_images=args.delay,
-        inpaint=args.inpaint,
-        dpi=args.dpi,
-        timeout=args.timeout,
-        display_height=display_height,
-        display_width=display_width,
-        pc_manager_version=args.pc_manager_version,
-        done_button_offset=args.done_button_offset,
-        capture_done_offset=args.capture_done_offset,
-        pages=pages_list,
-    )
-
-    combine_ppt(ppt_dir, out_ppt_file)
-    out_ppt_file = os.path.abspath(out_ppt_file)
-    os.startfile(out_ppt_file)
-    print(f"\n最终合并的PPT文件: {out_ppt_file}")
-
 
 if __name__ == "__main__":
     main()
