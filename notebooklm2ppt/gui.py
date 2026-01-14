@@ -6,12 +6,20 @@ import os
 import windnd
 from pathlib import Path
 from .cli import process_pdf_to_ppt
-from .ppt_combiner import combine_ppt
+from .utils.ppt_combiner import combine_ppt
 from .utils.screenshot_automation import screen_width, screen_height
+from .utils.ppt_refiner import refine_ppt
 import json
 import ctypes
+import webbrowser
+
+MINERU_URL = "https://mineru.net/"
+
 
 CONFIG_FILE = Path("./config.json")
+
+
+BASE_WINDOWS_DPI = 85
 
 
 def enable_windows_dpi_awareness(root=None):
@@ -48,7 +56,8 @@ def enable_windows_dpi_awareness(root=None):
         if root is not None:
             try:
                 # Get system DPI (fallback to 96)
-                dpi = 96
+                dpi = BASE_WINDOWS_DPI
+                
                 if hasattr(user32, 'GetDpiForSystem'):
                     dpi = user32.GetDpiForSystem()
                 elif hasattr(user32, 'GetDeviceCaps'):
@@ -57,7 +66,8 @@ def enable_windows_dpi_awareness(root=None):
                     # LOGPIXELSX = 88
                     gdi32 = ctypes.windll.gdi32
                     dpi = gdi32.GetDeviceCaps(hdc, 88)
-                scaling = float(dpi) / 96.0
+                scaling = float(dpi) / BASE_WINDOWS_DPI
+                print("??", scaling)
                 root.tk.call('tk', 'scaling', scaling)
             except Exception:
                 pass
@@ -104,11 +114,14 @@ class AppGUI:
     def on_drop_files(self, files):
         if files:
             file_path = files[0].decode('gbk') if isinstance(files[0], bytes) else files[0]
-            if file_path.lower().endswith('.pdf'):
+            lower_file_path = file_path.lower()
+            if lower_file_path.endswith('.pdf'):
                 self.pdf_path_var.set(file_path)
                 print(f"已添加文件: {file_path}")
+            elif lower_file_path.endswith('.json'):
+                self.mineru_json_var.set(file_path)
             else:
-                messagebox.showwarning("提示", "请拖拽 PDF 文件")
+                messagebox.showwarning("提示", "请拖拽 PDF 文件或者 Mineru JSON 文件！")
 
     def on_closing(self):
         self.dump_config_to_disk()
@@ -136,7 +149,7 @@ class AppGUI:
         main_frame.columnconfigure(0, weight=1)
 
         # File Selection
-        file_frame = ttk.LabelFrame(main_frame, text="📁 文件设置（支持拖拽 PDF 文件到窗口）", padding="10")
+        file_frame = ttk.LabelFrame(main_frame, text="📁 文件设置（支持拖拽 PDF/ 对应的MinerU JSON 文件到窗口）", padding="10")
         file_frame.pack(fill=tk.X, pady=5)
         file_frame.columnconfigure(1, weight=1)
 
@@ -147,12 +160,20 @@ class AppGUI:
         self.add_context_menu(pdf_entry)
         ttk.Button(file_frame, text="浏览...", command=self.browse_pdf).grid(row=0, column=2)
 
+        ttk.Label(file_frame, text="输入PDF对应的MinerU JSON (可选，进一步优化效果):").grid(row=2, column=0, sticky=tk.W, pady=5)
+        self.mineru_json_var = tk.StringVar(value="")
+        mineru_entry = ttk.Entry(file_frame, textvariable=self.mineru_json_var, width=60)
+        mineru_entry.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
+        self.add_context_menu(mineru_entry)
+        ttk.Button(file_frame, text="浏览...", command=self.browse_json).grid(row=2, column=2, pady=5)
+        ttk.Button(file_frame, text="说明", command=self.show_mineru_info).grid(row=2, column=3, pady=5, padx=5)
+
         ttk.Label(file_frame, text="输出目录:").grid(row=1, column=0, sticky=tk.W, pady=5)
         self.output_dir_var = tk.StringVar(value="workspace")
         output_entry = ttk.Entry(file_frame, textvariable=self.output_dir_var, width=60)
         output_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
         self.add_context_menu(output_entry)
-        ttk.Button(file_frame, text="浏览...", command=self.browse_output).grid(row=1, column=2, pady=5)
+        ttk.Button(file_frame, text="浏览...", command=self.browse_output).grid(row=1, column=2, pady=5)        
 
         # Options
         opt_frame = ttk.LabelFrame(main_frame, text="⚙️ 转换选项", padding="10")
@@ -264,6 +285,18 @@ class AppGUI:
         if directory:
             self.output_dir_var.set(directory)
 
+    def browse_json(self):
+        current_path = self.mineru_json_var.get().strip().strip('"')
+        initial_dir = os.path.dirname(current_path) if current_path and os.path.exists(os.path.dirname(current_path)) else None
+        filename = filedialog.askopenfilename(
+            parent=self.root,
+            title="选择 Mineru JSON 文件",
+            initialdir=initial_dir,
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+        )
+        if filename:
+            self.mineru_json_var.set(filename)
+
     def start_conversion(self):
         pdf_path = self.pdf_path_var.get().strip().strip('"')
         output_dir = self.output_dir_var.get().strip().strip('"')
@@ -280,7 +313,6 @@ class AppGUI:
 
     def dump_config_to_disk(self):
         config_data = {
-            "pdf_path": self.pdf_path_var.get(),
             "output_dir": self.output_dir_var.get(),
             "dpi": self.dpi_var.get(),
             "delay": self.delay_var.get(),
@@ -300,7 +332,6 @@ class AppGUI:
         try:
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                 config_data = json.load(f)
-                self.pdf_path_var.set(config_data.get("pdf_path", ""))
                 self.output_dir_var.set(config_data.get("output_dir", "workspace"))
                 self.dpi_var.set(config_data.get("dpi", 150))
                 self.delay_var.set(config_data.get("delay", 2))
@@ -331,6 +362,35 @@ class AppGUI:
             self.saved_offset_var.set("未保存: 将自动校准")
         self.calibrate_var.set(not is_valid)
         
+    def show_mineru_info(self):
+        info = (
+            "MinerU 是一个可在线使用的文档解析工具。\n\n"
+            "使用步骤：\n"
+            "1. 在 MinerU 网站 https://mineru.net/ 上传你的 PDF，等待解析完成。\n"
+            "2. 解析完成后下载生成的 JSON 文件。\n"
+            "3. 在本程序的“输入PDF对应的MinerU JSON (可选)”中选择该 JSON 文件。\n\n"
+            "说明：该 JSON 包含页面结构、文本和排版等信息；本程序会利用它进一步优化输出 PPT 的图像、背景和文本，从而提升生成效果。\n\n"
+            "注意：请确保 JSON 与要转换的 PDF 对应，否则优化效果可能不正确。"
+        )
+        top = tk.Toplevel(self.root)
+        top.title("关于 MinerU")
+        top.geometry("640x360")
+        txt = scrolledtext.ScrolledText(top, wrap=tk.WORD, height=12)
+        txt.pack(fill=tk.BOTH, expand=True, padx=8, pady=(8,6))
+        txt.insert(tk.END, info)
+        txt.configure(state='disabled')
+        btn_frame = ttk.Frame(top)
+        btn_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=8, pady=6)
+
+        def open_mineru_website():
+            try:
+                webbrowser.open_new_tab(MINERU_URL)
+            except Exception as e:
+                messagebox.showerror("错误", f"无法打开网页: {e}")
+
+        ttk.Button(btn_frame, text="打开 MinerU 网站", command=open_mineru_website).pack(side=tk.LEFT, padx=6)
+        ttk.Button(btn_frame, text="关闭", command=top.destroy).pack(side=tk.LEFT, padx=6)
+        
     def run_conversion(self):
         try:
             pdf_file = self.pdf_path_var.get()
@@ -339,6 +399,7 @@ class AppGUI:
             png_dir = workspace_dir / f"{pdf_name}_pngs"
             ppt_dir = workspace_dir / f"{pdf_name}_ppt"
             out_ppt_file = workspace_dir / f"{pdf_name}.pptx"
+            tmp_image_dir = workspace_dir / "tmp_images"
             
             workspace_dir.mkdir(exist_ok=True, parents=True)
 
@@ -402,12 +463,27 @@ class AppGUI:
                 update_offset_callback=self.update_offset_disk
             )
 
-            combine_ppt(ppt_dir, out_ppt_file, png_names=png_names)
+            png_names = combine_ppt(ppt_dir, out_ppt_file, png_names=png_names)
+            # 如果用户提供了 mineru JSON，则进行 refine_ppt 处理
+            mineru_json = self.mineru_json_var.get().strip().strip('"')
+            if mineru_json:
+                if not os.path.exists(mineru_json):
+                    print(f"⚠️ 提供的 MinerU JSON 文件不存在，跳过 PPT 优化: {mineru_json}")
+                else:
+                    refined_out = workspace_dir / f"{pdf_name}_优化.pptx"
+                    print(f"开始利用MinerU信息优化 PPT: {mineru_json}")
+                    refine_ppt(str(tmp_image_dir), mineru_json, str(out_ppt_file), str(png_dir), png_names, str(refined_out))
+                    
+                    print("✅ refine_ppt 完成")
+                    extra_message = "优化前的PPT已保存在同一目录下"
+                    out_ppt_file = os.path.abspath(refined_out)
+            else:
+                extra_message = ""
             out_ppt_file = os.path.abspath(out_ppt_file)
             print(f"\n✅ 转换完成！")
             print(f"📄 输出文件: {out_ppt_file}")
             os.startfile(out_ppt_file)
-            messagebox.showinfo("转换成功", f"PDF 已成功转换为 PPT！\n\n文件位置:\n{out_ppt_file}")
+            messagebox.showinfo("转换成功", f"PDF 已成功转换为 PPT！\n\n文件位置:\n{out_ppt_file}"+extra_message)
         except Exception as e:
             print(f"\n❌ 转换失败: {str(e)}")
             messagebox.showerror("转换失败", f"处理过程中出现错误:\n{str(e)}")
