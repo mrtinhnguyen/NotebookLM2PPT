@@ -97,6 +97,8 @@ class AppGUI:
         self.root.geometry("850x750")
         self.root.minsize(750, 550)
         
+        self.stop_flag = False
+        
         self.show_startup_dialog()
         
         self.setup_ui()
@@ -251,6 +253,9 @@ class AppGUI:
         self.start_btn = ttk.Button(ctrl_frame, text="🚀 开始转换", command=self.start_conversion)
         self.start_btn.pack(side=tk.LEFT, padx=5)
 
+        self.stop_btn = ttk.Button(ctrl_frame, text="⏹️ 停止转换", command=self.stop_conversion, state=tk.DISABLED)
+        self.stop_btn.pack(side=tk.LEFT, padx=5)
+
         # Log Area
         log_frame = ttk.LabelFrame(main_frame, text="📋 运行日志", padding="5")
         log_frame.pack(fill=tk.BOTH, expand=True, pady=5)
@@ -311,8 +316,15 @@ class AppGUI:
             messagebox.showerror("错误", "请先选择一个 PDF 文件")
             return
 
+        self.stop_flag = False
         self.start_btn.config(state=tk.DISABLED)
+        self.stop_btn.config(state=tk.NORMAL)
         threading.Thread(target=self.run_conversion, daemon=True).start()
+
+    def stop_conversion(self):
+        self.stop_flag = True
+        print("⏹️ 正在停止转换...")
+        self.stop_btn.config(state=tk.DISABLED)
 
     def dump_config_to_disk(self):
         config_data = {
@@ -543,8 +555,14 @@ class AppGUI:
                 done_button_offset=done_offset,
                 capture_done_offset=self.calibrate_var.get(),
                 pages=pages_list,
-                update_offset_callback=self.update_offset_disk
+                update_offset_callback=self.update_offset_disk,
+                stop_flag=lambda: self.stop_flag
             )
+
+            if self.stop_flag:
+                print("\n⏹️ 转换已被用户停止")
+                messagebox.showinfo("转换已停止", "转换已被用户停止")
+                return
 
             png_names = combine_ppt(ppt_dir, out_ppt_file, png_names=png_names)
             # 如果用户提供了 mineru JSON，则进行 refine_ppt 处理
@@ -572,6 +590,7 @@ class AppGUI:
             messagebox.showerror("转换失败", f"处理过程中出现错误:\n{str(e)}")
         finally:
             self.start_btn.config(state=tk.NORMAL)
+            self.stop_btn.config(state=tk.DISABLED)
 
 def launch_gui():
     # Enable Windows DPI awareness before creating the Tk root where possible

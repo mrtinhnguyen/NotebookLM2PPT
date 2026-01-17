@@ -14,32 +14,25 @@ from .utils.screenshot_automation import take_fullscreen_snip, mouse, screen_hei
 
 
 def process_pdf_to_ppt(pdf_path, png_dir, ppt_dir, delay_between_images=2, inpaint=True, dpi=150, timeout=50, display_height=None, 
-                    display_width=None, done_button_offset=None, capture_done_offset: bool = True, pages=None, update_offset_callback=None):
+                    display_width=None, done_button_offset=None, capture_done_offset: bool = True, pages=None, update_offset_callback=None, stop_flag=None):
     """
     将 PDF 转换为 PNG 图片，然后对每张图片进行截图处理
     
-            try:
+    Args:
         pdf_path: PDF 文件路径
-            # 对第一页允许用户手动点击并捕获完成按钮偏移（如果未保存且启用）
-            capture_offset = (idx == 1 and capture_done_offset)
-            success, ppt_filename, computed_offset = take_fullscreen_snip(
-                check_ppt_window=True,
-                ppt_check_timeout=timeout,
-                width=display_width,
-                height=display_height,
-                pc_manager_version=pc_manager_version,
-                done_button_right_offset=done_button_offset,
-                capture_done_offset_if_missing=capture_offset,
-                force_capture=force_calibrate,
-            )
-            # 如果本次截屏捕获并保存了偏移，回调通知（GUI 可使用此回调更新显示）
-            try:
-                if computed_offset is not None and offset_saved_callback:
-                    offset_saved_callback(int(computed_offset))
-            except Exception:
-                pass
-        pc_manager_version: 电脑管家版本号；3.19及以上自动使用 190，低于3.19 使用 210
-        done_button_offset: 完成按钮右侧偏移量，传入数字时优先使用，不传则按版本推断
+        png_dir: PNG 输出目录
+        ppt_dir: PPT 输出目录
+        delay_between_images: 每张图片之间的延迟时间（秒）
+        inpaint: 是否进行图像修复
+        dpi: 图片清晰度
+        timeout: 超时时间（秒）
+        display_height: 显示窗口高度
+        display_width: 显示窗口宽度
+        done_button_offset: 完成按钮右侧偏移量
+        capture_done_offset: 是否捕获完成按钮偏移
+        pages: 要处理的页码范围
+        update_offset_callback: 偏移更新回调函数
+        stop_flag: 停止标志（用于中断转换）
     """
     # 1. 将 PDF 转换为 PNG 图片
     print("=" * 60)
@@ -82,6 +75,10 @@ def process_pdf_to_ppt(pdf_path, png_dir, ppt_dir, delay_between_images=2, inpai
     
     # 3. 对每张图片进行截图处理
     for idx, png_file in enumerate(png_files, 1):
+        if stop_flag and stop_flag():
+            print("\n⏹️ 用户请求停止转换")
+            break
+        
         print(f"\n[{idx}/{len(png_files)}] 处理图片: {png_file.name}")
         
         stop_event = threading.Event()
