@@ -4,6 +4,7 @@ import cv2
 from PIL import Image
 import os
 import requests
+from sklearn.cluster import DBSCAN
 from spire.presentation.common import *
 from spire.presentation import *
 from .ppt_combiner import clean_ppt
@@ -84,18 +85,26 @@ def load_json(file_path):
 
 
 
+
 def compute_edge_diversity(image_cv, left, top, right, bottom):
-    left, top, right, bottom = int(left), int(top), int(right), int(bottom)
-    top_edge = image_cv[top:top+1, left:right]
-    bottom_edge = image_cv[bottom-1:bottom, left:right]
-    left_edge = image_cv[top:bottom, left:left+1]
-    right_edge = image_cv[top:bottom, right-1:right]
+    left, top, right, bottom = round(left), round(top), round(right), round(bottom)
+    top_edge = image_cv[top-1:top, left:right]
+    bottom_edge = image_cv[bottom:bottom+1, left:right]
+    left_edge = image_cv[top:bottom, left-1:left]
+    right_edge = image_cv[top:bottom, right:right+1]
     edges = [top_edge, bottom_edge, left_edge, right_edge]
+    flatten_points = np.concatenate([edge.reshape(-1, 3) for edge in edges], axis=0)
+    clustering = DBSCAN(eps=2, min_samples=3).fit(flatten_points)
 
-    diversity = np.max([edge.astype(np.float32).reshape(-1, 3).std(axis=0).mean() for edge in edges])# (N, 3)
-    
-    return diversity
+    counts = []
+    for label in np.unique(clustering.labels_):
+        count = np.sum(clustering.labels_==label)
+        counts.append(count)
 
+    main_ratio = np.max(counts) / np.sum(counts)  # 主要颜色占比
+
+    main_color = flatten_points[clustering.labels_==np.argmax(counts)].mean(axis=0)
+    return 1 - main_ratio, main_color
 
 def compute_color_diff(color1, color2):
     # CIELAB - 避免 uint8 在相减时发生环绕（underflow/overflow），先转换为 float
@@ -106,21 +115,6 @@ def compute_color_diff(color1, color2):
     diff = np.linalg.norm(color1_lab - color2_lab)
     return float(diff)
 
-
-def compute_four_point_diff(image_cv, left, top, right, bottom):
-    left, top, right, bottom = int(left), int(top), int(right), int(bottom)
-    top_left = image_cv[top, left]
-    top_right = image_cv[top, right-1]
-    bottom_left = image_cv[bottom-1, left]
-    bottom_right = image_cv[bottom-1, right-1]
-
-    diffs = [
-        compute_color_diff(top_left, top_right),
-        compute_color_diff(top_left, bottom_left),
-        compute_color_diff(bottom_right, top_right),
-        compute_color_diff(bottom_right, bottom_left),
-    ]
-    return np.mean(diffs)
 
 
 def get_indices_from_png_names(png_names):
@@ -205,7 +199,9 @@ def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out
 
                     left, top, right, bottom = image_block['bbox']
 
-                    rect1 = RectangleF.FromLTRB(left, top, right, bottom)
+                    delta_y = 2 # 下移两个像素
+
+                    rect1 = RectangleF.FromLTRB(left, top + delta_y, right, bottom + delta_y)
                     image = slide.Shapes.AppendEmbedImageByPath(ShapeType.Rectangle, tmp_image_path, rect1)
                     image.Line.FillType = FillFormatType.none
                     image.ZOrderPosition = 0  # 设置图片在最底层
@@ -242,21 +238,14 @@ def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out
 
         text_blocks = get_scaled_para_blocks(image_scale, pdf_info, page_index, cond='no_image')
 
-        # mask = np.zeros(image_cv.shape[:-1], dtype=bool)
 
         for text_block in text_blocks:
             bbox = text_block['bbox']
-            
-            l, t, r, b = map(int, bbox)
-            # 取左上角和右下角颜色平均值
-            fill_color = image_cv[t, l] * 0.5 + image_cv[b, r] * 0.5
+            l, t, r, b = map(round, bbox)
+            diversity, fill_color = compute_edge_diversity(image_cv, l, t, r, b)
             fill_color = fill_color.astype(np.uint8).tolist()
-            diversity = compute_edge_diversity(image_cv, l, t, r, b)
-            # print(diversity)
-            
-            diff = compute_four_point_diff(image_cv, l, t, r, b)
-            print("div=", diversity, " diff=", diff, " text_block=", text_block)
-            if old_bg_cv is None or (diversity < 10 and diff < 9): # 边缘多样性低，认为是纯色区域，则可以直接填充
+            print("div=", diversity, " text_block=", text_block)
+            if old_bg_cv is None or diversity < 0.5: # 边缘多样性低，认为是纯色区域，则可以直接填充
                 cv2.rectangle(image_cv, (l, t), (r, b), fill_color, thickness=-1)
             else: # 边缘多样性高，保留原背景
                 image_cv[t:b, l:r] = old_bg_cv[t:b, l:r] # 保留原背景的前提是要有原背景图
