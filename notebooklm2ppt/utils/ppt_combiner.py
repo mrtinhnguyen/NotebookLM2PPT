@@ -142,8 +142,13 @@ def create_ppt_from_images(png_dir, output_file, png_names=None):
     
     prs = PptxPresentation()
     
-    prs.slide_width = Inches(13.333)
-    prs.slide_height = Inches(7.5)
+    first_img = Image.open(png_files[0])
+    img_width_px, img_height_px = first_img.size
+    
+    prs.slide_width = Pt(img_width_px)
+    prs.slide_height = Pt(img_height_px)
+    
+    print(f"PPT尺寸设置为: {img_width_px} x {img_height_px} 像素")
     
     blank_layout = prs.slide_layouts[6]
     
@@ -155,18 +160,7 @@ def create_ppt_from_images(png_dir, output_file, png_names=None):
         img = Image.open(png_file)
         img_width, img_height = img.size
         
-        slide_width = prs.slide_width
-        slide_height = prs.slide_height
-        
-        scale = min(slide_width / img_width, slide_height / img_height)
-        
-        new_width = int(img_width * scale)
-        new_height = int(img_height * scale)
-        
-        left = int((slide_width - new_width) / 2)
-        top = int((slide_height - new_height) / 2)
-        
-        slide.shapes.add_picture(str(png_file), left, top, new_width, new_height)
+        slide.shapes.add_picture(str(png_file), 0, 0, Pt(img_width), Pt(img_height))
     
     prs.save(output_file)
     print(f"\n已生成PPT文件: {output_file}")
