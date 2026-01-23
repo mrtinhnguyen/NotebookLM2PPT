@@ -6,9 +6,10 @@ import os
 import windnd
 from pathlib import Path
 from .cli import process_pdf_to_ppt
-from .utils.ppt_combiner import combine_ppt
+from .utils.ppt_combiner import combine_ppt, create_ppt_from_images
 from .utils.screenshot_automation import screen_width, screen_height
 from .utils.ppt_refiner import refine_ppt
+from .pdf2png import pdf_to_png
 import json
 import ctypes
 import webbrowser
@@ -219,35 +220,39 @@ class AppGUI:
         self.inpaint_var = tk.BooleanVar(value=True)
         ttk.Checkbutton(opt_frame, text="去除水印（图像修复）", variable=self.inpaint_var).grid(row=4, column=0, columnspan=3, sticky=tk.W, pady=5)
 
+        self.image_only_var = tk.BooleanVar(value=False)
+        self.image_only_var.trace_add('write', self.on_image_only_changed)
+        ttk.Checkbutton(opt_frame, text="仅图片模式（跳过智能圈选，直接将去水印图片插入PPT，生成的PPT内容不可编辑）", variable=self.image_only_var).grid(row=5, column=0, columnspan=3, sticky=tk.W, pady=5)
+
         self.force_regenerate_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(opt_frame, text="强制重新生成所有PPT页面（不勾选则复用已存在的 PPT）", variable=self.force_regenerate_var).grid(row=5, column=0, columnspan=3, sticky=tk.W, pady=5)
+        ttk.Checkbutton(opt_frame, text="强制重新生成所有PPT页面（不勾选则复用已存在的 PPT）", variable=self.force_regenerate_var).grid(row=6, column=0, columnspan=3, sticky=tk.W, pady=5)
 
-        ttk.Separator(opt_frame, orient='horizontal').grid(row=6, column=0, columnspan=4, sticky="ew", pady=10)
+        ttk.Separator(opt_frame, orient='horizontal').grid(row=7, column=0, columnspan=4, sticky="ew", pady=10)
 
-        ttk.Label(opt_frame, text="页码范围:").grid(row=7, column=0, sticky=tk.W, pady=5)
+        ttk.Label(opt_frame, text="页码范围:").grid(row=8, column=0, sticky=tk.W, pady=5)
         self.page_range_var = tk.StringVar(value="")
         page_range_entry = ttk.Entry(opt_frame, textvariable=self.page_range_var, width=30)
-        page_range_entry.grid(row=7, column=1, columnspan=2, sticky="ew", padx=5, pady=5)
+        page_range_entry.grid(row=8, column=1, columnspan=2, sticky="ew", padx=5, pady=5)
         self.add_context_menu(page_range_entry)
-        ttk.Label(opt_frame, text="留空=全部，示例: 1-3,5,7-9", foreground="gray").grid(row=7, column=3, sticky=tk.W, padx=5, pady=5)
+        ttk.Label(opt_frame, text="留空=全部，示例: 1-3,5,7-9", foreground="gray").grid(row=8, column=3, sticky=tk.W, padx=5, pady=5)
 
-        ttk.Separator(opt_frame, orient='horizontal').grid(row=8, column=0, columnspan=4, sticky="ew", pady=10)
+        ttk.Separator(opt_frame, orient='horizontal').grid(row=9, column=0, columnspan=4, sticky="ew", pady=10)
 
-        ttk.Label(opt_frame, text="按钮偏移 (像素):").grid(row=9, column=0, sticky=tk.W, pady=5)
+        ttk.Label(opt_frame, text="按钮偏移 (像素):").grid(row=10, column=0, sticky=tk.W, pady=5)
         self.done_offset_var = tk.StringVar(value="")
         done_offset_entry = ttk.Entry(opt_frame, textvariable=self.done_offset_var, width=10)
-        done_offset_entry.grid(row=9, column=1, sticky=tk.W, padx=5, pady=5)
+        done_offset_entry.grid(row=10, column=1, sticky=tk.W, padx=5, pady=5)
         self.add_context_menu(done_offset_entry)
         self.saved_offset_var = tk.StringVar(value="")
-        ttk.Label(opt_frame, textvariable=self.saved_offset_var, foreground="blue").grid(row=9, column=2, sticky=tk.W, padx=5)
+        ttk.Label(opt_frame, textvariable=self.saved_offset_var, foreground="blue").grid(row=10, column=2, sticky=tk.W, padx=5)
         
-        ttk.Label(opt_frame, text="⚠️ 核心参数：程序通过模拟鼠标点击'转换为PPT'按钮实现转换", foreground="red").grid(row=10, column=0, columnspan=4, sticky=tk.W)
-        ttk.Label(opt_frame, text='   如果无法准确定位按钮位置，核心功能将无法实现！可通过勾选"校准按钮位置"进行校准"', foreground="red").grid(row=11, column=0, columnspan=4, sticky=tk.W)
+        ttk.Label(opt_frame, text="⚠️ 核心参数：程序通过模拟鼠标点击'转换为PPT'按钮实现转换", foreground="red").grid(row=11, column=0, columnspan=4, sticky=tk.W)
+        ttk.Label(opt_frame, text='   如果无法准确定位按钮位置，核心功能将无法实现！可通过勾选"校准按钮位置"进行校准"', foreground="red").grid(row=12, column=0, columnspan=4, sticky=tk.W)
         
         self.calibrate_var = tk.BooleanVar(value=True)
         cb = ttk.Checkbutton(opt_frame, text="校准按钮位置", variable=self.calibrate_var)
-        cb.grid(row=12, column=0, columnspan=3, sticky=tk.W, pady=5)
-        ttk.Label(opt_frame, text="提示: 程序会自动保存校准结果，下次无需重复校准", foreground="red").grid(row=13, column=0, columnspan=4, sticky=tk.W)
+        cb.grid(row=13, column=0, columnspan=3, sticky=tk.W, pady=5)
+        ttk.Label(opt_frame, text="提示: 程序会自动保存校准结果，下次无需重复校准", foreground="red").grid(row=14, column=0, columnspan=4, sticky=tk.W)
 
 
         # Control
@@ -341,6 +346,21 @@ class AppGUI:
             self.mineru_json_var.set(filename)
             self.last_json_dir = os.path.dirname(filename)
 
+    def on_image_only_changed(self, *args):
+        if self.image_only_var.get():
+            result = messagebox.askyesno(
+                "确认仅图片模式",
+                "仅图片模式将：\n\n"
+                "• 跳过智能圈选功能\n"
+                "• 直接将去水印后的PNG图片插入PPT\n"
+                "• 不生成可编辑的文本内容\n"
+                "• 速度更快，但PPT内容不可编辑\n\n"
+                "是否继续启用仅图片模式？",
+                icon='question'
+            )
+            if not result:
+                self.image_only_var.set(False)
+
     def start_conversion(self):
         pdf_path = self.pdf_path_var.get().strip().strip('"')
         output_dir = self.output_dir_var.get().strip().strip('"')
@@ -370,6 +390,7 @@ class AppGUI:
             "timeout": self.timeout_var.get(),
             "ratio": self.ratio_var.get(),
             "inpaint": self.inpaint_var.get(),
+            "image_only": self.image_only_var.get(),
             "force_regenerate": self.force_regenerate_var.get(),
             "done_offset": self.done_offset_var.get(),
             "last_pdf_dir": getattr(self, 'last_pdf_dir', ''),
@@ -392,6 +413,7 @@ class AppGUI:
                 self.timeout_var.set(config_data.get("timeout", 50))
                 self.ratio_var.set(config_data.get("ratio", 0.8))
                 self.inpaint_var.set(config_data.get("inpaint", True))
+                self.image_only_var.set(config_data.get("image_only", False))
                 self.force_regenerate_var.set(config_data.get("force_regenerate", False))
                 offset_value = config_data.get("done_offset", "")
                 self.update_offset_related_gui(offset_value)
@@ -610,45 +632,70 @@ class AppGUI:
             page_suffix = format_page_suffix(pages_list)
             out_ppt_file = workspace_dir / f"{pdf_name}{page_suffix}.pptx"
             
-            png_names = process_pdf_to_ppt(
-                pdf_path=pdf_file,
-                png_dir=png_dir,
-                ppt_dir=ppt_dir,
-                delay_between_images=self.delay_var.get(),
-                inpaint=self.inpaint_var.get(),
-                dpi=self.dpi_var.get(),
-                timeout=self.timeout_var.get(),
-                display_height=display_height,
-                display_width=display_width,
-                done_button_offset=done_offset,
-                capture_done_offset=self.calibrate_var.get(),
-                pages=pages_list,
-                update_offset_callback=self.update_offset_disk,
-                stop_flag=lambda: self.stop_flag,
-                force_regenerate=self.force_regenerate_var.get()
-            )
-
-            if self.stop_flag:
-                print("\n⏹️ 转换已被用户停止")
-                messagebox.showinfo("转换已停止", "转换已被用户停止")
-                return
-
-            png_names = combine_ppt(ppt_dir, out_ppt_file, png_names=png_names)
-            # 如果用户提供了 mineru JSON，则进行 refine_ppt 处理
-            mineru_json = self.mineru_json_var.get().strip().strip('"')
-            if mineru_json:
-                if not os.path.exists(mineru_json):
-                    print(f"⚠️ 提供的 MinerU JSON 文件不存在，跳过 PPT 优化: {mineru_json}")
-                else:
-                    refined_out = workspace_dir / f"{pdf_name}{page_suffix}_优化.pptx"
-                    print(f"开始利用MinerU信息优化 PPT: {mineru_json}")
-                    refine_ppt(str(tmp_image_dir), mineru_json, str(out_ppt_file), str(png_dir), png_names, str(refined_out))
-                    
-                    print("✅ refine_ppt 完成")
-                    extra_message = "优化前的PPT已保存在同一目录下"
-                    out_ppt_file = os.path.abspath(refined_out)
+            if self.image_only_var.get():
+                print("=" * 60)
+                print("仅图片模式：直接将PNG图片插入PPT")
+                print("=" * 60)
+                
+                png_names = pdf_to_png(
+                    pdf_path=pdf_file,
+                    output_dir=png_dir,
+                    dpi=self.dpi_var.get(),
+                    inpaint=self.inpaint_var.get(),
+                    pages=pages_list
+                )
+                
+                if self.stop_flag:
+                    print("\n⏹️ 转换已被用户停止")
+                    messagebox.showinfo("转换已停止", "转换已被用户停止")
+                    return
+                
+                png_names = create_ppt_from_images(png_dir, out_ppt_file, png_names=png_names)
+                extra_message = "（仅图片模式）"
             else:
+                png_names = process_pdf_to_ppt(
+                    pdf_path=pdf_file,
+                    png_dir=png_dir,
+                    ppt_dir=ppt_dir,
+                    delay_between_images=self.delay_var.get(),
+                    inpaint=self.inpaint_var.get(),
+                    dpi=self.dpi_var.get(),
+                    timeout=self.timeout_var.get(),
+                    display_height=display_height,
+                    display_width=display_width,
+                    done_button_offset=done_offset,
+                    capture_done_offset=self.calibrate_var.get(),
+                    pages=pages_list,
+                    update_offset_callback=self.update_offset_disk,
+                    stop_flag=lambda: self.stop_flag,
+                    force_regenerate=self.force_regenerate_var.get()
+                )
+
+                if self.stop_flag:
+                    print("\n⏹️ 转换已被用户停止")
+                    messagebox.showinfo("转换已停止", "转换已被用户停止")
+                    return
+
+                png_names = combine_ppt(ppt_dir, out_ppt_file, png_names=png_names)
                 extra_message = ""
+            if not self.image_only_var.get():
+                # 如果用户提供了 mineru JSON，则进行 refine_ppt 处理
+                mineru_json = self.mineru_json_var.get().strip().strip('"')
+                if mineru_json:
+                    if not os.path.exists(mineru_json):
+                        print(f"⚠️ 提供的 MinerU JSON 文件不存在，跳过 PPT 优化: {mineru_json}")
+                    else:
+                        refined_out = workspace_dir / f"{pdf_name}{page_suffix}_优化.pptx"
+                        print(f"开始利用MinerU信息优化 PPT: {mineru_json}")
+                        refine_ppt(str(tmp_image_dir), mineru_json, str(out_ppt_file), str(png_dir), png_names, str(refined_out))
+                        
+                        print("✅ refine_ppt 完成")
+                        extra_message = "优化前的PPT已保存在同一目录下"
+                        out_ppt_file = os.path.abspath(refined_out)
+                else:
+                    extra_message = ""
+            else:
+                extra_message = "（仅图片模式）"
             out_ppt_file = os.path.abspath(out_ppt_file)
             print(f"\n✅ 转换完成！")
             print(f"📄 输出文件: {out_ppt_file}")

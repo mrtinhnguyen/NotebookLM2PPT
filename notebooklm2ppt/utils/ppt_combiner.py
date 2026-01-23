@@ -2,9 +2,13 @@
 # 安装: pip install spire.presentation
 
 import os
+from pathlib import Path
 from spire.presentation import *
 from spire.presentation.common import *
+from pptx.util import Inches, Pt
+from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx import Presentation as PptxPresentation
+from PIL import Image
 
 def combine_ppt_files_with_spire(source_folder, output_file, png_names=None):
     """
@@ -108,3 +112,64 @@ def combine_ppt(source_folder, out_ppt_file, png_names = None):
     os.remove(output_file1)
     
     return valid_png_names
+
+
+def create_ppt_from_images(png_dir, output_file, png_names=None):
+    """
+    直接将PNG图片插入到PPTX中，不使用智能圈选
+    
+    Args:
+        png_dir: PNG图片所在目录
+        output_file: 输出PPT文件路径
+        png_names: PNG文件名列表（可选，如果提供则只处理这些文件）
+    
+    Returns:
+        实际使用的PNG文件名列表
+    """
+    png_dir = Path(png_dir)
+    output_file = str(output_file)
+    
+    if png_names:
+        png_files = [png_dir / name for name in png_names if (png_dir / name).exists()]
+    else:
+        png_files = sorted(png_dir.glob("*.png"))
+    
+    if not png_files:
+        print("未找到任何PNG图片")
+        return []
+    
+    print(f"找到 {len(png_files)} 张PNG图片")
+    
+    prs = PptxPresentation()
+    
+    prs.slide_width = Inches(13.333)
+    prs.slide_height = Inches(7.5)
+    
+    blank_layout = prs.slide_layouts[6]
+    
+    for idx, png_file in enumerate(png_files, 1):
+        print(f"  [{idx}/{len(png_files)}] 处理: {png_file.name}")
+        
+        slide = prs.slides.add_slide(blank_layout)
+        
+        img = Image.open(png_file)
+        img_width, img_height = img.size
+        
+        slide_width = prs.slide_width
+        slide_height = prs.slide_height
+        
+        scale = min(slide_width / img_width, slide_height / img_height)
+        
+        new_width = int(img_width * scale)
+        new_height = int(img_height * scale)
+        
+        left = int((slide_width - new_width) / 2)
+        top = int((slide_height - new_height) / 2)
+        
+        slide.shapes.add_picture(str(png_file), left, top, new_width, new_height)
+    
+    prs.save(output_file)
+    print(f"\n已生成PPT文件: {output_file}")
+    print(f"总共添加了 {len(prs.slides)} 页幻灯片")
+    
+    return [f.name for f in png_files]
