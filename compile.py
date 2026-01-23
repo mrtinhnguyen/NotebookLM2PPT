@@ -24,8 +24,11 @@ if __name__ == "__main__":
     version = pyproject_data["project"]["version"]
     output_name = f"notebooklm2ppt-{version}"
     print(f"编译版本: {output_name}")
-
+    os.system('del *.spec')
+    
     if not args.as_dir:
-        os.system(f'pyinstaller --clean -F -w -n {output_name} --optimize=2 --collect-all spire.presentation main.py ')
+        flags = "-F"
     else:
-        os.system(f'pyinstaller --clean -D -w -n {output_name} --optimize=2 --collect-all spire.presentation main.py ')
+        flags = "-D"
+    command = f'pyinstaller --clean {flags} -w -n {output_name} --optimize=2 --collect-all spire.presentation --collect-all pywinauto main.py'
+    os.system(command)
