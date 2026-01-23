@@ -12,6 +12,7 @@ from .utils.ppt_refiner import refine_ppt
 import json
 import ctypes
 import webbrowser
+from . import __version__
 
 MINERU_URL = "https://mineru.net/"
 GITHUB_URL = "https://github.com/elliottzheng/NotebookLM2PPT"
@@ -93,7 +94,7 @@ class TextRedirector:
 class AppGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("NotebookLM2PPT - PDF 转 PPT 工具")
+        self.root.title(f"NotebookLM2PPT v{__version__} - PDF 转 PPT 工具")
         self.root.geometry("850x750")
         self.root.minsize(750, 550)
         
@@ -269,17 +270,23 @@ class AppGUI:
         self.load_config_from_disk()
 
     def browse_pdf(self):
-        # 清理路径中的引号和空格，方便用户直接粘贴带引号的路径
         current_path = self.pdf_path_var.get().strip().strip('"')
-        initial_dir = os.path.dirname(current_path) if current_path and os.path.exists(os.path.dirname(current_path)) else None
+        initial_dir = None
+        
+        if current_path and os.path.exists(os.path.dirname(current_path)):
+            initial_dir = os.path.dirname(current_path)
+        elif hasattr(self, 'last_pdf_dir') and self.last_pdf_dir and os.path.exists(self.last_pdf_dir):
+            initial_dir = self.last_pdf_dir
         
         filename = filedialog.askopenfilename(
             parent=self.root,
             title="选择 PDF 文件",
+            initialdir=initial_dir,
             filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")]
         )
         if filename:
             self.pdf_path_var.set(filename)
+            self.last_pdf_dir = os.path.dirname(filename)
 
     def browse_output(self):
         # 清理路径中的引号和空格
@@ -297,7 +304,13 @@ class AppGUI:
 
     def browse_json(self):
         current_path = self.mineru_json_var.get().strip().strip('"')
-        initial_dir = os.path.dirname(current_path) if current_path and os.path.exists(os.path.dirname(current_path)) else None
+        initial_dir = None
+        
+        if current_path and os.path.exists(os.path.dirname(current_path)):
+            initial_dir = os.path.dirname(current_path)
+        elif hasattr(self, 'last_json_dir') and self.last_json_dir and os.path.exists(self.last_json_dir):
+            initial_dir = self.last_json_dir
+        
         filename = filedialog.askopenfilename(
             parent=self.root,
             title="选择 Mineru JSON 文件",
@@ -306,6 +319,7 @@ class AppGUI:
         )
         if filename:
             self.mineru_json_var.set(filename)
+            self.last_json_dir = os.path.dirname(filename)
 
     def start_conversion(self):
         pdf_path = self.pdf_path_var.get().strip().strip('"')
@@ -338,6 +352,8 @@ class AppGUI:
             "inpaint": self.inpaint_var.get(),
             "force_regenerate": self.force_regenerate_var.get(),
             "done_offset": self.done_offset_var.get(),
+            "last_pdf_dir": getattr(self, 'last_pdf_dir', ''),
+            "last_json_dir": getattr(self, 'last_json_dir', ''),
         }
         try:
             with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
@@ -359,6 +375,8 @@ class AppGUI:
                 self.force_regenerate_var.set(config_data.get("force_regenerate", False))
                 offset_value = config_data.get("done_offset", "")
                 self.update_offset_related_gui(offset_value)
+                self.last_pdf_dir = config_data.get("last_pdf_dir", '')
+                self.last_json_dir = config_data.get("last_json_dir", '')
         except Exception as e:
             print(f"配置加载失败: {str(e)}")
             self.dump_config_to_disk()
