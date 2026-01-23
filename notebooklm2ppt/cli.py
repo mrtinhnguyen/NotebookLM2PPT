@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from .pdf2png import pdf_to_png
 from .utils.image_viewer import show_image_fullscreen
-from .utils.screenshot_automation import take_fullscreen_snip, mouse, screen_height, screen_width
+from .utils.screenshot_automation import take_fullscreen_snip, screen_height, screen_width
 
 
 def process_pdf_to_ppt(pdf_path, png_dir, ppt_dir, delay_between_images=2, inpaint=True, dpi=150, timeout=50, display_height=None, 
@@ -179,6 +179,8 @@ def process_pdf_to_ppt(pdf_path, png_dir, ppt_dir, delay_between_images=2, inpai
                 print(f"✓ 图片 {png_file.name} 处理完成，但未获取到PPT文件名")
             else:
                 print(f"⚠ 图片 {png_file.name} 已截图，但未检测到新的PPT窗口")
+                # 延迟导入 pywinauto，避免在模块加载时就导入（会与主 GUI 冲突）
+                from pywinauto import mouse
                 close_button = (display_width - 35, display_height + 35)
                 mouse.click(button='left', coords=close_button)
         except Exception as e:

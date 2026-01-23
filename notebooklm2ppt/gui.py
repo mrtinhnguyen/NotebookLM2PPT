@@ -276,7 +276,6 @@ class AppGUI:
         filename = filedialog.askopenfilename(
             parent=self.root,
             title="选择 PDF 文件",
-            initialdir=initial_dir,
             filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")]
         )
         if filename:
@@ -294,6 +293,7 @@ class AppGUI:
         )
         if directory:
             self.output_dir_var.set(directory)
+            print(f"已设置新目录: {directory}")
 
     def browse_json(self):
         current_path = self.mineru_json_var.get().strip().strip('"')
@@ -325,7 +325,7 @@ class AppGUI:
 
     def stop_conversion(self):
         self.stop_flag = True
-        print("⏹️ 正在停止转换...")
+        print("正在停止转换...")
         self.stop_btn.config(state=tk.DISABLED)
 
     def dump_config_to_disk(self):
@@ -342,9 +342,9 @@ class AppGUI:
         try:
             with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
                 json.dump(config_data, f, ensure_ascii=False, indent=4)
-            print("✅ 配置已保存到磁盘")
+            print("配置已保存到磁盘")
         except Exception as e:
-            print(f"⚠️ 配置保存失败: {str(e)}")
+            print(f"配置保存失败: {str(e)}")
 
     def load_config_from_disk(self):
         try:
@@ -360,7 +360,7 @@ class AppGUI:
                 offset_value = config_data.get("done_offset", "")
                 self.update_offset_related_gui(offset_value)
         except Exception as e:
-            print(f"⚠️ 配置加载失败: {str(e)}")
+            print(f"配置加载失败: {str(e)}")
             self.dump_config_to_disk()
             print("已创建默认配置文件")
 

@@ -17,7 +17,8 @@ import cv2
 import win32api
 import win32gui
 import win32con
-from pywinauto import mouse, keyboard
+# 不要在模块级别导入 pywinauto，避免与主 GUI 冲突，导致 https://github.com/elliottzheng/NotebookLM2PPT/issues/8
+# from pywinauto import mouse, keyboard
 from pathlib import Path
 from tkinter import messagebox
 import tkinter as tk
@@ -279,7 +280,10 @@ def take_fullscreen_snip(
         tuple: (bool, str, int|None) - (是否成功检测到新窗口, PPT文件名, 已保存的偏移或 None)
                如果不需要检查PPT窗口，返回 (True, None, None)
     """
-    
+
+    # 延迟导入 pywinauto，避免在模块加载时就导入（会与主 GUI 冲突）
+    from pywinauto import mouse, keyboard
+
     # 记录点击前的PPT窗口和文件资源管理器窗口
     initial_ppt_windows = get_ppt_windows() if check_ppt_window else []
     initial_explorer_windows = get_explorer_windows()
