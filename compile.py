@@ -30,5 +30,7 @@ if __name__ == "__main__":
         flags = "-F"
     else:
         flags = "-D"
-    command = f'pyinstaller --clean {flags} -w -n {output_name} --optimize=2 --collect-all spire.presentation main.py'
+    icon_path = "docs/public/favicon.ico"
+    
+    command = f'pyinstaller --clean {flags} -w --icon {icon_path} --add-data "{icon_path};." -n {output_name} --optimize=2 --collect-all spire.presentation main.py'
     os.system(command)

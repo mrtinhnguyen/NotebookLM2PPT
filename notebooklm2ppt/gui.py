@@ -26,6 +26,13 @@ CONFIG_FILE = Path("./config.json")
 BASE_WINDOWS_DPI = 85
 
 
+def icon_path():
+    """获取资源绝对路径，适用于PyInstaller打包后"""
+    try:
+        return os.path.join(sys._MEIPASS, "favicon.ico")
+    except Exception:
+        return os.path.abspath("./docs/public/favicon.ico")
+    
 def enable_windows_dpi_awareness(root=None):
     """Enable DPI awareness on Windows and adjust Tk scaling.
 
@@ -145,6 +152,14 @@ class AppGUI:
         x = (self.root.winfo_screenwidth() // 2) - (width // 2)
         y = (self.root.winfo_screenheight() // 2) - (height // 2)
         self.root.geometry(f'{width}x{height}+{x}+{y}')
+
+    def create_toplevel(self, title, width, height):
+        """创建带图标设置的 Toplevel 窗口"""
+        top = tk.Toplevel(self.root)
+        top.title(title)
+        top.iconbitmap(icon_path())
+        self.center_toplevel(top, width, height)
+        return top
 
     def center_toplevel(self, window, width, height):
         """将 Toplevel 窗口居中显示"""
@@ -396,9 +411,7 @@ class AppGUI:
         
         info = "".join(info_lines)
         
-        top = tk.Toplevel(self.root)
-        top.title("图像修复方法说明")
-        self.center_toplevel(top, 600, 400)
+        top = self.create_toplevel("图像修复方法说明", 600, 400)
         txt = scrolledtext.ScrolledText(top, wrap=tk.WORD, height=15)
         txt.pack(fill=tk.BOTH, expand=True, padx=8, pady=(8,6))
         txt.insert(tk.END, info)
@@ -509,9 +522,7 @@ class AppGUI:
         if not show_dialog:
             return
         
-        top = tk.Toplevel(self.root)
-        top.title("欢迎使用")
-        self.center_toplevel(top, 500, 300)
+        top = self.create_toplevel("欢迎使用", 500, 300)
         top.resizable(False, False)
         
         info_frame = ttk.Frame(top, padding="20")
@@ -577,9 +588,7 @@ class AppGUI:
             "说明：该 JSON 包含页面结构、文本和排版等信息；本程序会利用它进一步优化输出 PPT 的图像、背景和文本，从而提升生成效果。\n\n"
             "注意：请确保 JSON 与要转换的 PDF 对应，否则优化效果可能不正确。"
         )
-        top = tk.Toplevel(self.root)
-        top.title("关于 MinerU")
-        self.center_toplevel(top, 640, 360)
+        top = self.create_toplevel("关于 MinerU", 640, 360)
         txt = scrolledtext.ScrolledText(top, wrap=tk.WORD, height=12)
         txt.pack(fill=tk.BOTH, expand=True, padx=8, pady=(8,6))
         txt.insert(tk.END, info)
@@ -765,6 +774,8 @@ def launch_gui():
         pass
 
     root = tk.Tk()
+    # 设置窗口图标
+    root.iconbitmap(icon_path())
     # After root exists, apply scaling using the helper (this will call tk scaling)
     try:
         enable_windows_dpi_awareness(root)
