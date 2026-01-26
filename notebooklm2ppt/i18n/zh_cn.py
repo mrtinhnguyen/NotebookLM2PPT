@@ -1,0 +1,123 @@
+TRANSLATIONS = {
+    "root_title": "NotebookLM2PPT v{version} - PDF 转 PPT 工具",
+    "startup_dialog_title": "欢迎使用",
+    "startup_info": (
+        "本软件是免费开源的 PDF 转 PPT 工具\n\n"
+        "开发者：Elliott Zheng\n\n"
+        "如果您感觉本软件对您有所帮助，请在项目GitHub上给个star或是介绍给您的朋友，谢谢。\n\n"
+        "本软件免费开源，如果您是以付费的方式获得本软件，那么你应该是被骗了。[○･｀Д´･○]\n\n"
+        "感谢使用本工具！"
+    ),
+    "open_github_btn": "打开 GitHub 主页",
+    "dont_show_again_btn": "不再显示",
+    "ok_btn": "确定",
+    "drop_warning": "请拖拽 PDF 文件或者 Mineru JSON 文件！",
+    "file_settings_label": "📁 文件设置（支持拖拽 PDF/ 对应的MinerU JSON 文件到窗口）",
+    "pdf_file_label": "PDF 文件:",
+    "browse_btn": "浏览...",
+    "mineru_json_label": "输入PDF对应的MinerU JSON (可选，进一步优化效果):",
+    "info_btn": "说明",
+    "output_dir_label": "输出目录:",
+    "open_btn": "打开",
+    "options_label": "⚙️ 转换选项",
+    "dpi_label": "图片清晰度 (DPI):",
+    "dpi_hint": "（150-300）",
+    "delay_label": "等待时间 (秒):",
+    "delay_hint": "（每页加载后）",
+    "timeout_label": "超时时间 (秒):",
+    "timeout_hint": "（单页最大处理）",
+    "ratio_label": "窗口显示比例:",
+    "ratio_hint": "（建议 0.7-0.9）",
+    "inpaint_label": "去除水印",
+    "inpaint_method_label": "图像修复方法:",
+    "image_only_label": "仅图片模式（跳过智能圈选，PPT不可编辑）",
+    "force_regenerate_label": "强制重新生成所有页面",
+    "page_range_label": "页码范围:",
+    "page_range_hint": "留空=全部，示例: 1-3,5,7-9",
+    "button_offset_label": "按钮偏移 (像素):",
+    "calibrate_label": "校准按钮位置",
+    "core_param_warning": "⚠️ 核心参数：程序通过模拟鼠标点击'转换为PPT'按钮实现转换",
+    "core_param_warning2": "   如果无法准确定位按钮位置，核心功能将无法实现！可通过勾选'校准按钮位置'进行校准",
+    "core_param_warning3": "   提示: 程序会自动保存校准结果，下次无需重复校准",
+    "start_btn": "🚀 开始转换",
+    "stop_btn": "⏹️ 停止转换",
+    "log_area_label": "📋 运行日志",
+    "select_pdf_title": "选择 PDF 文件",
+    "select_json_title": "选择 Mineru JSON 文件",
+    "select_output_title": "选择输出目录",
+    "set_new_dir_msg": "已设置新目录: {directory}",
+    "set_output_dir_warning": "请先设置输出目录",
+    "create_output_dir_msg": "已创建输出目录: {output_dir}",
+    "create_output_dir_error": "无法创建输出目录: {error}",
+    "open_output_dir_error": "无法打开输出目录: {error}",
+    "image_only_confirm_title": "确认仅图片模式",
+    "image_only_confirm_msg": (
+        "仅图片模式将：\n\n"
+        "• 跳过智能圈选功能\n"
+        "• 直接将去水印后的PNG图片插入PPT\n"
+        "• 不生成可编辑的文本内容\n"
+        "• 速度更快，但PPT内容不可编辑\n\n"
+        "是否继续启用仅图片模式？"
+    ),
+    "inpaint_method_info_title": "图像修复方法说明",
+    "inpaint_method_info_prefix": "图像修复方法说明：\n",
+    "close_btn": "关闭",
+    "select_pdf_error": "请先选择一个 PDF 文件",
+    "stopping_msg": "正在停止转换...",
+    "config_saved": "配置已保存到磁盘",
+    "config_save_fail": "配置保存失败: {error}",
+    "config_load_fail": "配置加载失败: {error}",
+    "default_config_created": "已创建默认配置文件",
+    "saved_offset": "已保存: {offset}px",
+    "unsaved_offset": "未保存: 将自动校准",
+    "mineru_info_title": "关于 MinerU",
+    "mineru_info_content": (
+        "MinerU 是一个可在线使用的文档解析工具。\n\n"
+        "使用步骤：\n"
+        "1. 在 MinerU 网站 https://mineru.net/ 上传你的 PDF，等待解析完成。\n"
+        "2. 解析完成后下载生成的 JSON 文件。\n"
+        "3. 在本程序的“输入PDF对应的MinerU JSON (可选)”中选择该 JSON 文件。\n\n"
+        "说明：该 JSON 包含页面结构、文本和排版等信息；本程序会利用它进一步优化输出 PPT 的图像、背景和文本，从而提升生成效果。\n\n"
+        "注意：请确保 JSON 与要转换的 PDF 对应，否则优化效果可能不正确。"
+    ),
+    "open_mineru_website": "打开 MinerU 网站",
+    "start_processing": "开始处理: {file}",
+    "page_range_error": "页范围格式错误，请使用 1-3,5,7- 类似格式",
+    "image_only_mode_start": "仅图片模式：直接将PNG图片插入PPT",
+    "conversion_stopped_msg": "转换已被用户停止",
+    "conversion_stopped_title": "转换已停止",
+    "mineru_optimizing": "开始利用MinerU信息优化 PPT: {file}",
+    "refine_ppt_done": "✅ refine_ppt 完成",
+    "refine_extra_msg": "优化前的PPT已保存在同一目录下",
+    "conversion_done": "✅ 转换完成！",
+    "output_file": "📄 输出文件: {file}",
+    "conversion_success_title": "转换成功",
+    "conversion_success_msg": "PDF 已成功转换为 PPT！\n\n文件位置:\n{file}",
+    "conversion_fail": "❌ 转换失败: {error}",
+    "conversion_fail_title": "转换失败",
+    "conversion_fail_msg": "处理过程中出现错误:\n{error}",
+    "integer_offset_error": "完成按钮偏移需填写整数或留空",
+    "language_menu": "语言",
+    "lang_zh_cn": "简体中文",
+    "lang_en": "English",
+    "cut": "剪切",
+    "copy": "复制",
+    "paste": "粘贴",
+    "select_all": "全选",
+    "error_btn": "错误",
+    "file_added_msg": "已添加文件: {file}",
+    "drag_drop_warning": "请拖拽 PDF 文件或者 Mineru JSON 文件！",
+    "offset_value_error": "完成按钮偏移需填写整数或留空",
+    "method_background_smooth_name": "智能平滑（推荐）",
+    "method_background_smooth_desc": "综合效果最佳，适合大多数去除文字、水印的场景",
+    "method_edge_mean_smooth_name": "边缘均值填充",
+    "method_edge_mean_smooth_desc": "取周围像素平均色填充，适合纯色或简单背景",
+    "method_background_name": "极速纯色填充",
+    "method_background_desc": "直接填充单一背景色，仅适合极简底色，速度最快",
+    "method_onion_name": "逐层内缩修补",
+    "method_onion_desc": "由外向内逐层修补，适合细长划痕或线条修复",
+    "method_griddata_name": "渐变过渡插值",
+    "method_griddata_desc": "计算平滑的曲面过渡，适合带有渐变的背景",
+    "method_skimage_name": "双调和光影修补",
+    "method_skimage_desc": "计算量大，速度较慢，但能更好保持光影连续性",
+}

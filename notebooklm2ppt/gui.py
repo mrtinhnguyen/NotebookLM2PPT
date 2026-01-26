@@ -15,6 +15,7 @@ import json
 import ctypes
 import webbrowser
 from . import __version__
+from .i18n import get_text, SUPPORTED_LANGUAGES, set_language
 
 MINERU_URL = "https://mineru.net/"
 GITHUB_URL = "https://github.com/elliottzheng/NotebookLM2PPT"
@@ -103,7 +104,11 @@ class TextRedirector:
 class AppGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title(f"NotebookLM2PPT v{__version__} - PDF 转 PPT 工具")
+        self.lang = "zh_cn"  # Default
+        self.load_config_from_disk()
+        set_language(self.lang)
+        
+        self.root.title(get_text("root_title", version=__version__))
         self.root.geometry("850x800")
         self.root.minsize(750, 800)
         self.center_window()
@@ -133,11 +138,11 @@ class AppGUI:
             lower_file_path = file_path.lower()
             if lower_file_path.endswith('.pdf'):
                 self.pdf_path_var.set(file_path)
-                print(f"已添加文件: {file_path}")
+                print(get_text("file_added_msg", file=file_path))
             elif lower_file_path.endswith('.json'):
                 self.mineru_json_var.set(file_path)
             else:
-                messagebox.showwarning("提示", "请拖拽 PDF 文件或者 Mineru JSON 文件！")
+                messagebox.showwarning(get_text("info_btn"), get_text("drag_drop_warning"))
 
     def on_closing(self):
         self.dump_config_to_disk()
@@ -167,154 +172,217 @@ class AppGUI:
         y = (window.winfo_screenheight() // 2) - (height // 2)
         window.geometry(f'{width}x{height}+{x}+{y}')
 
+    def change_language(self, new_lang):
+        """切换语言并重启 UI"""
+        if self.lang == new_lang:
+            return
+        
+        self.lang = new_lang
+        set_language(self.lang)
+        self.dump_config_to_disk()
+        
+        # 更新主窗口标题
+        self.root.title(get_text("root_title", version=__version__))
+        
+        # 刷新主 UI
+        for widget in self.root.winfo_children():
+            if isinstance(widget, ttk.Frame) or isinstance(widget, tk.Frame):
+                widget.destroy()
+        
+        self.setup_ui()
+        # 重新重定向 stdout/stderr 到新的 log_area
+        sys.stdout = TextRedirector(self.log_area, "stdout")
+        sys.stderr = TextRedirector(self.log_area, "stderr")
+
     def add_context_menu(self, widget):
         """为输入框添加右键菜单（剪切、复制、粘贴、全选）"""
         menu = tk.Menu(widget, tearoff=0)
-        menu.add_command(label="剪切", command=lambda: widget.event_generate("<<Cut>>"))
-        menu.add_command(label="复制", command=lambda: widget.event_generate("<<Copy>>"))
-        menu.add_command(label="粘贴", command=lambda: widget.event_generate("<<Paste>>"))
+        menu.add_command(label=get_text("cut"), command=lambda: widget.event_generate("<<Cut>>"))
+        menu.add_command(label=get_text("copy"), command=lambda: widget.event_generate("<<Copy>>"))
+        menu.add_command(label=get_text("paste"), command=lambda: widget.event_generate("<<Paste>>"))
         menu.add_separator()
-        menu.add_command(label="全选", command=lambda: widget.select_range(0, tk.END))
+        menu.add_command(label=get_text("select_all"), command=lambda: widget.select_range(0, tk.END))
         
         def show_menu(event):
             menu.post(event.x_root, event.y_root)
         
         widget.bind("<Button-3>", show_menu)
 
+    def get_translated_method_names(self):
+        """获取翻译后的方法名列表"""
+        from .utils.image_inpainter import INPAINT_METHODS
+        return [get_text(f"method_{m['id']}_name") for m in INPAINT_METHODS]
+
+    def get_method_id_from_translated_name(self, translated_name):
+        """根据翻译后的方法名获取 ID"""
+        from .utils.image_inpainter import INPAINT_METHODS
+        for m in INPAINT_METHODS:
+            if get_text(f"method_{m['id']}_name") == translated_name:
+                return m['id']
+        return "background_smooth"
+
+    def get_translated_name_from_id(self, method_id):
+        """根据 ID 获取翻译后的方法名"""
+        return get_text(f"method_{method_id}_name")
+
+    def on_language_combo_change(self, event):
+        """处理语言下拉框选择变更"""
+        selected_name = self.lang_combo_var.get()
+        for code in SUPPORTED_LANGUAGES.keys():
+            if get_text(f"lang_{code}") == selected_name:
+                self.change_language(code)
+                return
+
     def setup_ui(self):
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.pack(fill=tk.BOTH, expand=True)
         main_frame.columnconfigure(0, weight=1)
 
+        # 语言切换栏
+        header_frame = ttk.Frame(main_frame)
+        header_frame.pack(fill=tk.X, pady=(0, 5))
+        
+        lang_frame = ttk.Frame(header_frame)
+        lang_frame.pack(side=tk.RIGHT)
+        
+        ttk.Label(lang_frame, text=get_text("language_menu") + ": ").pack(side=tk.LEFT)
+        
+        lang_display_names = [get_text(f"lang_{code}") for code in SUPPORTED_LANGUAGES.keys()]
+        current_lang_display = get_text(f"lang_{self.lang}")
+        
+        self.lang_combo_var = tk.StringVar(value=current_lang_display)
+        lang_combo = ttk.Combobox(lang_frame, textvariable=self.lang_combo_var, values=lang_display_names, state="readonly", width=10)
+        lang_combo.pack(side=tk.LEFT)
+        lang_combo.bind("<<ComboboxSelected>>", self.on_language_combo_change)
+
         # File Selection
-        file_frame = ttk.LabelFrame(main_frame, text="📁 文件设置（支持拖拽 PDF/ 对应的MinerU JSON 文件到窗口）", padding="10")
+        file_frame = ttk.LabelFrame(main_frame, text=get_text("file_settings_label"), padding="10")
         file_frame.pack(fill=tk.X, pady=5)
         file_frame.columnconfigure(1, weight=1)
 
-        ttk.Label(file_frame, text="PDF 文件:").grid(row=0, column=0, sticky=tk.W)
-        self.pdf_path_var = tk.StringVar()
+        ttk.Label(file_frame, text=get_text("pdf_file_label")).grid(row=0, column=0, sticky=tk.W)
+        self.pdf_path_var = getattr(self, 'pdf_path_var', tk.StringVar())
         pdf_entry = ttk.Entry(file_frame, textvariable=self.pdf_path_var, width=60)
         pdf_entry.grid(row=0, column=1, padx=5, sticky="ew")
         self.add_context_menu(pdf_entry)
-        ttk.Button(file_frame, text="浏览...", command=self.browse_pdf).grid(row=0, column=2)
+        ttk.Button(file_frame, text=get_text("browse_btn"), command=self.browse_pdf).grid(row=0, column=2)
 
-        ttk.Label(file_frame, text="输入PDF对应的MinerU JSON (可选，进一步优化效果):").grid(row=2, column=0, sticky=tk.W, pady=5)
-        self.mineru_json_var = tk.StringVar(value="")
+        ttk.Label(file_frame, text=get_text("mineru_json_label")).grid(row=2, column=0, sticky=tk.W, pady=5)
+        self.mineru_json_var = getattr(self, 'mineru_json_var', tk.StringVar(value=""))
         mineru_entry = ttk.Entry(file_frame, textvariable=self.mineru_json_var, width=60)
         mineru_entry.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
         self.add_context_menu(mineru_entry)
-        ttk.Button(file_frame, text="浏览...", command=self.browse_json).grid(row=2, column=2, pady=5)
-        ttk.Button(file_frame, text="说明", command=self.show_mineru_info).grid(row=2, column=3, pady=5, padx=5)
+        ttk.Button(file_frame, text=get_text("browse_btn"), command=self.browse_json).grid(row=2, column=2, pady=5)
+        ttk.Button(file_frame, text=get_text("info_btn"), command=self.show_mineru_info).grid(row=2, column=3, pady=5, padx=5)
 
-        ttk.Label(file_frame, text="输出目录:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.output_dir_var = tk.StringVar(value="workspace")
+        ttk.Label(file_frame, text=get_text("output_dir_label")).grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.output_dir_var = getattr(self, 'output_dir_var', tk.StringVar(value="workspace"))
         output_entry = ttk.Entry(file_frame, textvariable=self.output_dir_var, width=60)
         output_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
         self.add_context_menu(output_entry)
-        ttk.Button(file_frame, text="浏览...", command=self.browse_output).grid(row=1, column=2, pady=5)
-        ttk.Button(file_frame, text="打开", command=self.open_output_dir).grid(row=1, column=3, pady=5, padx=5)        
+        ttk.Button(file_frame, text=get_text("browse_btn"), command=self.browse_output).grid(row=1, column=2, pady=5)
+        ttk.Button(file_frame, text=get_text("open_btn"), command=self.open_output_dir).grid(row=1, column=3, pady=5, padx=5)        
 
         # Options
-        opt_frame = ttk.LabelFrame(main_frame, text="⚙️ 转换选项", padding="10")
+        opt_frame = ttk.LabelFrame(main_frame, text=get_text("options_label"), padding="10")
         opt_frame.pack(fill=tk.X, pady=5)
         opt_frame.columnconfigure(1, weight=1)
         opt_frame.columnconfigure(3, weight=1)
         opt_frame.columnconfigure(5, weight=1)
 
         # 第一行：DPI 和 等待时间
-        ttk.Label(opt_frame, text="图片清晰度 (DPI):").grid(row=0, column=0, sticky=tk.W)
-        self.dpi_var = tk.IntVar(value=150)
+        ttk.Label(opt_frame, text=get_text("dpi_label")).grid(row=0, column=0, sticky=tk.W)
+        self.dpi_var = getattr(self, 'dpi_var', tk.IntVar(value=150))
         dpi_entry = ttk.Entry(opt_frame, textvariable=self.dpi_var, width=8)
         dpi_entry.grid(row=0, column=1, sticky=tk.W, padx=5)
         self.add_context_menu(dpi_entry)
-        ttk.Label(opt_frame, text="（150-300）", foreground="gray").grid(row=0, column=2, sticky=tk.W, padx=5)
+        ttk.Label(opt_frame, text=get_text("dpi_hint"), foreground="gray").grid(row=0, column=2, sticky=tk.W, padx=5)
 
-        ttk.Label(opt_frame, text="等待时间 (秒):").grid(row=0, column=3, sticky=tk.W, padx=(20, 0))
-        self.delay_var = tk.IntVar(value=2)
+        ttk.Label(opt_frame, text=get_text("delay_label")).grid(row=0, column=3, sticky=tk.W, padx=(20, 0))
+        self.delay_var = getattr(self, 'delay_var', tk.IntVar(value=2))
         delay_entry = ttk.Entry(opt_frame, textvariable=self.delay_var, width=8)
         delay_entry.grid(row=0, column=4, sticky=tk.W, padx=5)
         self.add_context_menu(delay_entry)
-        ttk.Label(opt_frame, text="（每页加载后）", foreground="gray").grid(row=0, column=5, sticky=tk.W, padx=5)
+        ttk.Label(opt_frame, text=get_text("delay_hint"), foreground="gray").grid(row=0, column=5, sticky=tk.W, padx=5)
 
         # 第二行：超时时间 和 窗口显示比例
-        ttk.Label(opt_frame, text="超时时间 (秒):").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.timeout_var = tk.IntVar(value=50)
+        ttk.Label(opt_frame, text=get_text("timeout_label")).grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.timeout_var = getattr(self, 'timeout_var', tk.IntVar(value=50))
         timeout_entry = ttk.Entry(opt_frame, textvariable=self.timeout_var, width=8)
         timeout_entry.grid(row=1, column=1, sticky=tk.W, padx=5, pady=5)
         self.add_context_menu(timeout_entry)
-        ttk.Label(opt_frame, text="（单页最大处理）", foreground="gray").grid(row=1, column=2, sticky=tk.W, padx=5, pady=5)
+        ttk.Label(opt_frame, text=get_text("timeout_hint"), foreground="gray").grid(row=1, column=2, sticky=tk.W, padx=5, pady=5)
 
-        ttk.Label(opt_frame, text="窗口显示比例:").grid(row=1, column=3, sticky=tk.W, pady=5, padx=(20, 0))
-        self.ratio_var = tk.DoubleVar(value=0.8)
+        ttk.Label(opt_frame, text=get_text("ratio_label")).grid(row=1, column=3, sticky=tk.W, pady=5, padx=(20, 0))
+        self.ratio_var = getattr(self, 'ratio_var', tk.DoubleVar(value=0.8))
         ratio_entry = ttk.Entry(opt_frame, textvariable=self.ratio_var, width=8)
         ratio_entry.grid(row=1, column=4, sticky=tk.W, padx=5, pady=5)
         self.add_context_menu(ratio_entry)
-        ttk.Label(opt_frame, text="（建议 0.7-0.9）", foreground="gray").grid(row=1, column=5, sticky=tk.W, padx=5, pady=5)
+        ttk.Label(opt_frame, text=get_text("ratio_hint"), foreground="gray").grid(row=1, column=5, sticky=tk.W, padx=5, pady=5)
 
         # 第三行：去除水印 和 修复方法
-        self.inpaint_var = tk.BooleanVar(value=True)
-        ttk.Checkbutton(opt_frame, text="去除水印", variable=self.inpaint_var).grid(row=2, column=0, sticky=tk.W, pady=5)
+        self.inpaint_var = getattr(self, 'inpaint_var', tk.BooleanVar(value=True))
+        ttk.Checkbutton(opt_frame, text=get_text("inpaint_label"), variable=self.inpaint_var).grid(row=2, column=0, sticky=tk.W, pady=5)
 
-        ttk.Label(opt_frame, text="图像修复方法:").grid(row=2, column=1, sticky=tk.W, pady=5, padx=(10, 0))
-        self.inpaint_method_var = tk.StringVar(value=get_method_names()[0])
+        ttk.Label(opt_frame, text=get_text("inpaint_method_label")).grid(row=2, column=1, sticky=tk.W, pady=5, padx=(10, 0))
+        self.inpaint_method_var = getattr(self, 'inpaint_method_var', tk.StringVar(value=self.get_translated_method_names()[0]))
         inpaint_method_combo = ttk.Combobox(opt_frame, textvariable=self.inpaint_method_var, width=16, state="readonly")
-        inpaint_method_combo['values'] = get_method_names()
+        inpaint_method_combo['values'] = self.get_translated_method_names()
         inpaint_method_combo.grid(row=2, column=2, sticky=tk.W, padx=5, pady=5)
-        ttk.Button(opt_frame, text="说明", command=self.show_inpaint_method_info).grid(row=2, column=3, pady=5, padx=5)
+        ttk.Button(opt_frame, text=get_text("info_btn"), command=self.show_inpaint_method_info).grid(row=2, column=3, pady=5, padx=5)
 
         # 第四行：仅图片模式 和 强制重新生成
-        self.image_only_var = tk.BooleanVar(value=False)
-        self.image_only_var.trace_add('write', self.on_image_only_changed)
-        ttk.Checkbutton(opt_frame, text="仅图片模式（跳过智能圈选，PPT不可编辑）", variable=self.image_only_var).grid(row=3, column=0, columnspan=3, sticky=tk.W, pady=5)
+        self.image_only_var = getattr(self, 'image_only_var', tk.BooleanVar(value=False))
+        if not hasattr(self, '_image_only_trace'):
+            self._image_only_trace = self.image_only_var.trace_add('write', self.on_image_only_changed)
+        ttk.Checkbutton(opt_frame, text=get_text("image_only_label"), variable=self.image_only_var).grid(row=3, column=0, columnspan=3, sticky=tk.W, pady=5)
 
-        self.force_regenerate_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(opt_frame, text="强制重新生成所有页面", variable=self.force_regenerate_var).grid(row=3, column=3, columnspan=3, sticky=tk.W, pady=5, padx=(20, 0))
+        self.force_regenerate_var = getattr(self, 'force_regenerate_var', tk.BooleanVar(value=False))
+        ttk.Checkbutton(opt_frame, text=get_text("force_regenerate_label"), variable=self.force_regenerate_var).grid(row=3, column=3, columnspan=3, sticky=tk.W, pady=5, padx=(20, 0))
 
         # 第五行：页码范围
-        ttk.Label(opt_frame, text="页码范围:").grid(row=4, column=0, sticky=tk.W, pady=5)
-        self.page_range_var = tk.StringVar(value="")
+        ttk.Label(opt_frame, text=get_text("page_range_label")).grid(row=4, column=0, sticky=tk.W, pady=5)
+        self.page_range_var = getattr(self, 'page_range_var', tk.StringVar(value=""))
         page_range_entry = ttk.Entry(opt_frame, textvariable=self.page_range_var, width=20)
         page_range_entry.grid(row=4, column=1, sticky="ew", padx=5, pady=5)
         self.add_context_menu(page_range_entry)
-        ttk.Label(opt_frame, text="留空=全部，示例: 1-3,5,7-9", foreground="gray").grid(row=4, column=2, sticky=tk.W, padx=5, pady=5)
+        ttk.Label(opt_frame, text=get_text("page_range_hint"), foreground="gray").grid(row=4, column=2, sticky=tk.W, padx=5, pady=5)
 
         # 第六行：按钮偏移
-        ttk.Label(opt_frame, text="按钮偏移 (像素):").grid(row=5, column=0, sticky=tk.W, pady=5)
-        self.done_offset_var = tk.StringVar(value="")
+        ttk.Label(opt_frame, text=get_text("button_offset_label")).grid(row=5, column=0, sticky=tk.W, pady=5)
+        self.done_offset_var = getattr(self, 'done_offset_var', tk.StringVar(value=""))
         done_offset_entry = ttk.Entry(opt_frame, textvariable=self.done_offset_var, width=8)
         done_offset_entry.grid(row=5, column=1, sticky=tk.W, padx=5, pady=5)
         self.add_context_menu(done_offset_entry)
-        self.saved_offset_var = tk.StringVar(value="")
+        self.saved_offset_var = getattr(self, 'saved_offset_var', tk.StringVar(value=""))
         ttk.Label(opt_frame, textvariable=self.saved_offset_var, foreground="blue").grid(row=5, column=2, sticky=tk.W, padx=5, pady=5)
 
-        self.calibrate_var = tk.BooleanVar(value=True)
-        ttk.Checkbutton(opt_frame, text="校准按钮位置", variable=self.calibrate_var).grid(row=6, column=0, columnspan=3, sticky=tk.W, pady=5)
+        self.calibrate_var = getattr(self, 'calibrate_var', tk.BooleanVar(value=True))
+        ttk.Checkbutton(opt_frame, text=get_text("calibrate_label"), variable=self.calibrate_var).grid(row=6, column=0, columnspan=3, sticky=tk.W, pady=5)
 
         # 提示信息
-        ttk.Label(opt_frame, text="⚠️ 核心参数：程序通过模拟鼠标点击'转换为PPT'按钮实现转换", foreground="red").grid(row=7, column=0, columnspan=6, sticky=tk.W)
-        ttk.Label(opt_frame, text="   如果无法准确定位按钮位置，核心功能将无法实现！可通过勾选'校准按钮位置'进行校准", foreground="red").grid(row=8, column=0, columnspan=6, sticky=tk.W)
-        ttk.Label(opt_frame, text="   提示: 程序会自动保存校准结果，下次无需重复校准", foreground="red").grid(row=9, column=0, columnspan=6, sticky=tk.W)
+        ttk.Label(opt_frame, text=get_text("core_param_warning"), foreground="red").grid(row=7, column=0, columnspan=6, sticky=tk.W)
+        ttk.Label(opt_frame, text=get_text("core_param_warning2"), foreground="red").grid(row=8, column=0, columnspan=6, sticky=tk.W)
+        ttk.Label(opt_frame, text=get_text("core_param_warning3"), foreground="red").grid(row=9, column=0, columnspan=6, sticky=tk.W)
 
 
         # Control
         ctrl_frame = ttk.Frame(main_frame, padding="10")
         ctrl_frame.pack(fill=tk.X)
 
-        self.start_btn = ttk.Button(ctrl_frame, text="🚀 开始转换", command=self.start_conversion)
+        self.start_btn = ttk.Button(ctrl_frame, text=get_text("start_btn"), command=self.start_conversion)
         self.start_btn.pack(side=tk.LEFT, padx=5)
 
-        self.stop_btn = ttk.Button(ctrl_frame, text="⏹️ 停止转换", command=self.stop_conversion, state=tk.DISABLED)
+        self.stop_btn = ttk.Button(ctrl_frame, text=get_text("stop_btn"), command=self.stop_conversion, state=tk.DISABLED)
         self.stop_btn.pack(side=tk.LEFT, padx=5)
 
         # Log Area
-        log_frame = ttk.LabelFrame(main_frame, text="📋 运行日志", padding="5")
+        log_frame = ttk.LabelFrame(main_frame, text=get_text("log_area_label"), padding="5")
         log_frame.pack(fill=tk.BOTH, expand=True, pady=5)
 
         self.log_area = scrolledtext.ScrolledText(log_frame, state='disabled', height=15)
         self.log_area.pack(fill=tk.BOTH, expand=True)
         self.log_area.tag_config("stderr", foreground="red")
-
-        self.load_config_from_disk()
 
     def browse_pdf(self):
         current_path = self.pdf_path_var.get().strip().strip('"')
@@ -327,7 +395,7 @@ class AppGUI:
         
         filename = filedialog.askopenfilename(
             parent=self.root,
-            title="选择 PDF 文件",
+            title=get_text("select_pdf_title"),
             initialdir=initial_dir,
             filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")]
         )
@@ -342,31 +410,31 @@ class AppGUI:
         
         directory = filedialog.askdirectory(
             parent=self.root,
-            title="选择输出目录",
+            title=get_text("select_output_title"),
             initialdir=initial_dir
         )
         if directory:
             self.output_dir_var.set(directory)
-            print(f"已设置新目录: {directory}")
+            print(get_text("set_new_dir_msg", directory=directory))
 
     def open_output_dir(self):
         output_dir = self.output_dir_var.get().strip().strip('"')
         if not output_dir:
-            messagebox.showwarning("提示", "请先设置输出目录")
+            messagebox.showwarning(get_text("info_btn"), get_text("set_output_dir_warning"))
             return
         
         if not os.path.exists(output_dir):
             try:
                 os.makedirs(output_dir, exist_ok=True)
-                print(f"已创建输出目录: {output_dir}")
+                print(get_text("create_output_dir_msg", output_dir=output_dir))
             except Exception as e:
-                messagebox.showerror("错误", f"无法创建输出目录: {str(e)}")
+                messagebox.showerror(get_text("error_btn"), get_text("create_output_dir_error", error=str(e)))
                 return
         
         try:
             os.startfile(output_dir)
         except Exception as e:
-            messagebox.showerror("错误", f"无法打开输出目录: {str(e)}")
+            messagebox.showerror(get_text("error_btn"), get_text("open_output_dir_error", error=str(e)))
 
     def browse_json(self):
         current_path = self.mineru_json_var.get().strip().strip('"')
@@ -379,7 +447,7 @@ class AppGUI:
         
         filename = filedialog.askopenfilename(
             parent=self.root,
-            title="选择 Mineru JSON 文件",
+            title=get_text("select_json_title"),
             initialdir=initial_dir,
             filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
         )
@@ -390,13 +458,8 @@ class AppGUI:
     def on_image_only_changed(self, *args):
         if self.image_only_var.get():
             result = messagebox.askyesno(
-                "确认仅图片模式",
-                "仅图片模式将：\n\n"
-                "• 跳过智能圈选功能\n"
-                "• 直接将去水印后的PNG图片插入PPT\n"
-                "• 不生成可编辑的文本内容\n"
-                "• 速度更快，但PPT内容不可编辑\n\n"
-                "是否继续启用仅图片模式？",
+                get_text("image_only_confirm_title"),
+                get_text("image_only_confirm_msg"),
                 icon='question'
             )
             if not result:
@@ -405,20 +468,22 @@ class AppGUI:
     def show_inpaint_method_info(self):
         from .utils.image_inpainter import INPAINT_METHODS
         
-        info_lines = ["图像修复方法说明：\n"]
+        info_lines = [get_text("inpaint_method_info_prefix")]
         for method in INPAINT_METHODS:
-            info_lines.append(f"• {method['name']}\n  {method['description']}\n")
+            name = get_text(f"method_{method['id']}_name")
+            desc = get_text(f"method_{method['id']}_desc")
+            info_lines.append(f"• {name}\n  {desc}\n")
         
         info = "".join(info_lines)
         
-        top = self.create_toplevel("图像修复方法说明", 600, 400)
+        top = self.create_toplevel(get_text("inpaint_method_info_title"), 600, 400)
         txt = scrolledtext.ScrolledText(top, wrap=tk.WORD, height=15)
         txt.pack(fill=tk.BOTH, expand=True, padx=8, pady=(8,6))
         txt.insert(tk.END, info)
         txt.configure(state='disabled')
         btn_frame = ttk.Frame(top)
         btn_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=8, pady=6)
-        ttk.Button(btn_frame, text="关闭", command=top.destroy).pack(side=tk.LEFT, padx=6)
+        ttk.Button(btn_frame, text=get_text("close_btn"), command=top.destroy).pack(side=tk.LEFT, padx=6)
 
     def start_conversion(self):
         pdf_path = self.pdf_path_var.get().strip().strip('"')
@@ -428,7 +493,7 @@ class AppGUI:
         self.output_dir_var.set(output_dir)
 
         if not pdf_path or not os.path.exists(pdf_path):
-            messagebox.showerror("错误", "请先选择一个 PDF 文件")
+            messagebox.showerror(get_text("error_btn"), get_text("select_pdf_error"))
             return
 
         self.stop_flag = False
@@ -438,20 +503,22 @@ class AppGUI:
 
     def stop_conversion(self):
         self.stop_flag = True
-        print("正在停止转换...")
+        print(get_text("stopping_msg"))
         self.stop_btn.config(state=tk.DISABLED)
 
     def dump_config_to_disk(self):
-        current_method = self.inpaint_method_var.get()
+        current_method_name = self.inpaint_method_var.get()
+        current_method_id = self.get_method_id_from_translated_name(current_method_name)
         
         config_data = {
+            "language": self.lang,
             "output_dir": self.output_dir_var.get(),
             "dpi": self.dpi_var.get(),
             "delay": self.delay_var.get(),
             "timeout": self.timeout_var.get(),
             "ratio": self.ratio_var.get(),
             "inpaint": self.inpaint_var.get(),
-            "inpaint_method": current_method,
+            "inpaint_method": current_method_id,
             "image_only": self.image_only_var.get(),
             "force_regenerate": self.force_regenerate_var.get(),
             "done_offset": self.done_offset_var.get(),
@@ -461,34 +528,38 @@ class AppGUI:
         try:
             with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
                 json.dump(config_data, f, ensure_ascii=False, indent=4)
-            print("配置已保存到磁盘")
+            print(get_text("config_saved"))
         except Exception as e:
-            print(f"配置保存失败: {str(e)}")
+            print(get_text("config_save_fail", error=str(e)))
 
     def load_config_from_disk(self):
         try:
+            if not CONFIG_FILE.exists():
+                return
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                 config_data = json.load(f)
-                self.output_dir_var.set(config_data.get("output_dir", "workspace"))
-                self.dpi_var.set(config_data.get("dpi", 150))
-                self.delay_var.set(config_data.get("delay", 2))
-                self.timeout_var.set(config_data.get("timeout", 50))
-                self.ratio_var.set(config_data.get("ratio", 0.8))
-                self.inpaint_var.set(config_data.get("inpaint", True))
-                
-                old_method = config_data.get("inpaint_method", get_method_names()[0])
-                self.inpaint_method_var.set(get_method_name_from_id(old_method))
-                
-                self.image_only_var.set(config_data.get("image_only", False))
-                self.force_regenerate_var.set(config_data.get("force_regenerate", False))
-                offset_value = config_data.get("done_offset", "")
-                self.update_offset_related_gui(offset_value)
-                self.last_pdf_dir = config_data.get("last_pdf_dir", '')
-                self.last_json_dir = config_data.get("last_json_dir", '')
+                self.lang = config_data.get("language", "zh_cn")
+                if hasattr(self, 'output_dir_var'):
+                    self.output_dir_var.set(config_data.get("output_dir", "workspace"))
+                    self.dpi_var.set(config_data.get("dpi", 150))
+                    self.delay_var.set(config_data.get("delay", 2))
+                    self.timeout_var.set(config_data.get("timeout", 50))
+                    self.ratio_var.set(config_data.get("ratio", 0.8))
+                    self.inpaint_var.set(config_data.get("inpaint", True))
+                    
+                    method_id = config_data.get("inpaint_method", "background_smooth")
+                    self.inpaint_method_var.set(self.get_translated_name_from_id(method_id))
+                    
+                    self.image_only_var.set(config_data.get("image_only", False))
+                    self.force_regenerate_var.set(config_data.get("force_regenerate", False))
+                    offset_value = config_data.get("done_offset", "")
+                    self.update_offset_related_gui(offset_value)
+                    self.last_pdf_dir = config_data.get("last_pdf_dir", '')
+                    self.last_json_dir = config_data.get("last_json_dir", '')
         except Exception as e:
-            print(f"配置加载失败: {str(e)}")
+            print(get_text("config_load_fail", error=str(e)))
             self.dump_config_to_disk()
-            print("已创建默认配置文件")
+            print(get_text("default_config_created"))
 
 
     def update_offset_disk(self, offset_value):
@@ -500,11 +571,11 @@ class AppGUI:
         saved = done_offset_value
         is_valid = saved is not None and saved != ""
         if is_valid:
-            self.saved_offset_var.set(f"已保存: {saved}px")
+            self.saved_offset_var.set(get_text("saved_offset", offset=saved))
             if not self.done_offset_var.get().strip():
                 self.done_offset_var.set(str(saved))
         else:
-            self.saved_offset_var.set("未保存: 将自动校准")
+            self.saved_offset_var.set(get_text("unsaved_offset"))
         self.calibrate_var.set(not is_valid)
         
     def show_startup_dialog(self):
@@ -522,19 +593,13 @@ class AppGUI:
         if not show_dialog:
             return
         
-        top = self.create_toplevel("欢迎使用", 500, 300)
+        top = self.create_toplevel(get_text("startup_dialog_title"), 500, 300)
         top.resizable(False, False)
         
         info_frame = ttk.Frame(top, padding="20")
         info_frame.pack(fill=tk.BOTH, expand=True)
         
-        info_text = (
-            "本软件是免费开源的 PDF 转 PPT 工具\n\n"
-            "开发者：Elliott Zheng\n\n"
-            "如果您感觉本软件对您有所帮助，请在项目GitHub上给个star或是介绍给您的朋友，谢谢。\n\n"
-            "本软件免费开源，如果您是以付费的方式获得本软件，那么你应该是被骗了。[○･｀Д´･○]\n\n"
-            "感谢使用本工具！"
-        )
+        info_text = get_text("startup_info")
         
         txt = scrolledtext.ScrolledText(info_frame, wrap=tk.WORD, height=8)
         txt.pack(fill=tk.BOTH, expand=True)
@@ -548,7 +613,7 @@ class AppGUI:
             try:
                 webbrowser.open_new_tab(GITHUB_URL)
             except Exception as e:
-                messagebox.showerror("错误", f"无法打开网页: {e}")
+                messagebox.showerror(get_text("error_btn"), f"无法打开网页: {e}")
         
         def on_ok():
             top.destroy()
@@ -566,29 +631,21 @@ class AppGUI:
                 with open(config_file, 'w', encoding='utf-8') as f:
                     json.dump(config_data, f, ensure_ascii=False, indent=4)
             except Exception as e:
-                print(f"⚠️ 保存配置失败: {e}")
+                print(get_text("config_save_fail", error=str(e)))
             
             top.destroy()
         
-        ttk.Button(btn_frame, text="打开 GitHub 主页", command=open_github).pack(side=tk.LEFT, padx=5)
-        ttk.Button(btn_frame, text="不再显示", command=on_dont_show).pack(side=tk.RIGHT, padx=5)
-        ttk.Button(btn_frame, text="确定", command=on_ok).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(btn_frame, text=get_text("open_github_btn"), command=open_github).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text=get_text("dont_show_again_btn"), command=on_dont_show).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(btn_frame, text=get_text("ok_btn"), command=on_ok).pack(side=tk.RIGHT, padx=5)
         
         top.transient(self.root)
         top.grab_set()
         self.root.wait_window(top)
         
     def show_mineru_info(self):
-        info = (
-            "MinerU 是一个可在线使用的文档解析工具。\n\n"
-            "使用步骤：\n"
-            "1. 在 MinerU 网站 https://mineru.net/ 上传你的 PDF，等待解析完成。\n"
-            "2. 解析完成后下载生成的 JSON 文件。\n"
-            "3. 在本程序的“输入PDF对应的MinerU JSON (可选)”中选择该 JSON 文件。\n\n"
-            "说明：该 JSON 包含页面结构、文本和排版等信息；本程序会利用它进一步优化输出 PPT 的图像、背景和文本，从而提升生成效果。\n\n"
-            "注意：请确保 JSON 与要转换的 PDF 对应，否则优化效果可能不正确。"
-        )
-        top = self.create_toplevel("关于 MinerU", 640, 360)
+        info = get_text("mineru_info_content")
+        top = self.create_toplevel(get_text("mineru_info_title"), 640, 360)
         txt = scrolledtext.ScrolledText(top, wrap=tk.WORD, height=12)
         txt.pack(fill=tk.BOTH, expand=True, padx=8, pady=(8,6))
         txt.insert(tk.END, info)
@@ -600,10 +657,10 @@ class AppGUI:
             try:
                 webbrowser.open_new_tab(MINERU_URL)
             except Exception as e:
-                messagebox.showerror("错误", f"无法打开网页: {e}")
+                messagebox.showerror(get_text("error_btn"), f"无法打开网页: {e}")
 
-        ttk.Button(btn_frame, text="打开 MinerU 网站", command=open_mineru_website).pack(side=tk.LEFT, padx=6)
-        ttk.Button(btn_frame, text="关闭", command=top.destroy).pack(side=tk.LEFT, padx=6)
+        ttk.Button(btn_frame, text=get_text("open_mineru_website"), command=open_mineru_website).pack(side=tk.LEFT, padx=6)
+        ttk.Button(btn_frame, text=get_text("close_btn"), command=top.destroy).pack(side=tk.LEFT, padx=6)
         
     def run_conversion(self):
         try:
@@ -622,7 +679,7 @@ class AppGUI:
                 try:
                     done_offset = int(offset_raw)
                 except ValueError:
-                    raise ValueError("完成按钮偏移需填写整数或留空")
+                    raise ValueError(get_text("offset_value_error"))
 
             ratio = min(screen_width/16, screen_height/9)
             max_display_width = int(16 * ratio)
@@ -631,7 +688,7 @@ class AppGUI:
             display_width = int(max_display_width * self.ratio_var.get())
             display_height = int(max_display_height * self.ratio_var.get())
 
-            print(f"开始处理: {pdf_file}")
+            print(get_text("start_processing", file=pdf_file))
 
             # 解析页范围
             def parse_page_range(range_str):
@@ -681,15 +738,17 @@ class AppGUI:
             try:
                 pages_list = parse_page_range(self.page_range_var.get().strip())
             except Exception as e:
-                raise ValueError("页范围格式错误，请使用 1-3,5,7- 类似格式")
+                raise ValueError(get_text("page_range_error"))
             
             # 根据页码范围生成文件名后缀
             page_suffix = format_page_suffix(pages_list)
             out_ppt_file = workspace_dir / f"{pdf_name}{page_suffix}.pptx"
             
+            method_id = self.get_method_id_from_translated_name(self.inpaint_method_var.get())
+            
             if self.image_only_var.get():
                 print("=" * 60)
-                print("仅图片模式：直接将PNG图片插入PPT")
+                print(get_text("image_only_mode_start"))
                 print("=" * 60)
                 
                 png_names = pdf_to_png(
@@ -698,17 +757,17 @@ class AppGUI:
                     dpi=self.dpi_var.get(),
                     inpaint=self.inpaint_var.get(),
                     pages=pages_list,
-                    inpaint_method=self.inpaint_method_var.get(),
+                    inpaint_method=method_id,
                     force_regenerate=self.force_regenerate_var.get()
                 )
                 
                 if self.stop_flag:
-                    print("\n⏹️ 转换已被用户停止")
-                    messagebox.showinfo("转换已停止", "转换已被用户停止")
+                    print("\n" + get_text("conversion_stopped_msg"))
+                    messagebox.showinfo(get_text("conversion_stopped_title"), get_text("conversion_stopped_msg"))
                     return
                 
                 png_names = create_ppt_from_images(png_dir, out_ppt_file, png_names=png_names)
-                extra_message = "（仅图片模式）"
+                extra_message = f" ({get_text('image_only_label')})"
             else:
                 png_names = process_pdf_to_ppt(
                     pdf_path=pdf_file,
@@ -726,12 +785,12 @@ class AppGUI:
                     update_offset_callback=self.update_offset_disk,
                     stop_flag=lambda: self.stop_flag,
                     force_regenerate=self.force_regenerate_var.get(),
-                    inpaint_method=self.inpaint_method_var.get()
+                    inpaint_method=method_id
                 )
 
                 if self.stop_flag:
-                    print("\n⏹️ 转换已被用户停止")
-                    messagebox.showinfo("转换已停止", "转换已被用户停止")
+                    print("\n" + get_text("conversion_stopped_msg"))
+                    messagebox.showinfo(get_text("conversion_stopped_title"), get_text("conversion_stopped_msg"))
                     return
 
                 png_names = combine_ppt(ppt_dir, out_ppt_file, png_names=png_names)
@@ -741,27 +800,27 @@ class AppGUI:
                 mineru_json = self.mineru_json_var.get().strip().strip('"')
                 if mineru_json:
                     if not os.path.exists(mineru_json):
-                        print(f"⚠️ 提供的 MinerU JSON 文件不存在，跳过 PPT 优化: {mineru_json}")
+                        print(f"⚠️ {mineru_json} not exists")
                     else:
-                        refined_out = workspace_dir / f"{pdf_name}{page_suffix}_优化.pptx"
-                        print(f"开始利用MinerU信息优化 PPT: {mineru_json}")
+                        refined_out = workspace_dir / f"{pdf_name}{page_suffix}_optimized.pptx"
+                        print(get_text("mineru_optimizing", file=mineru_json))
                         refine_ppt(str(tmp_image_dir), mineru_json, str(out_ppt_file), str(png_dir), png_names, str(refined_out))
                         
-                        print("✅ refine_ppt 完成")
-                        extra_message = "优化前的PPT已保存在同一目录下"
+                        print(get_text("refine_ppt_done"))
+                        extra_message = "\n\n" + get_text("refine_extra_msg")
                         out_ppt_file = os.path.abspath(refined_out)
                 else:
                     extra_message = ""
             else:
-                extra_message = "（仅图片模式）"
+                extra_message = f" ({get_text('image_only_label')})"
             out_ppt_file = os.path.abspath(out_ppt_file)
-            print(f"\n✅ 转换完成！")
-            print(f"📄 输出文件: {out_ppt_file}")
+            print("\n" + get_text("conversion_done"))
+            print(get_text("output_file", file=out_ppt_file))
             os.startfile(out_ppt_file)
-            messagebox.showinfo("转换成功", f"PDF 已成功转换为 PPT！\n\n文件位置:\n{out_ppt_file}"+extra_message)
+            messagebox.showinfo(get_text("conversion_success_title"), get_text("conversion_success_msg", file=out_ppt_file) + extra_message)
         except Exception as e:
-            print(f"\n❌ 转换失败: {str(e)}")
-            messagebox.showerror("转换失败", f"处理过程中出现错误:\n{str(e)}")
+            print("\n" + get_text("conversion_fail", error=str(e)))
+            messagebox.showerror(get_text("conversion_fail_title"), get_text("conversion_fail_msg", error=str(e)))
         finally:
             self.start_btn.config(state=tk.NORMAL)
             self.stop_btn.config(state=tk.DISABLED)
