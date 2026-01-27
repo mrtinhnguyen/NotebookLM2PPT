@@ -111,8 +111,8 @@ class AppGUI:
         set_language(self.lang)
         
         self.root.title(get_text("root_title", version=__version__))
-        self.root.geometry("850x800")
-        self.root.minsize(750, 800)
+        self.root.geometry("850x920")
+        self.root.minsize(750, 850)
         self.center_window()
         
         self.stop_flag = False
@@ -139,13 +139,29 @@ class AppGUI:
 
     def on_drop_files(self, files):
         if files:
-            file_path = files[0].decode('gbk') if isinstance(files[0], bytes) else files[0]
-            lower_file_path = file_path.lower()
-            if lower_file_path.endswith('.pdf'):
-                self.pdf_path_var.set(file_path)
-                print(get_text("file_added_msg", file=file_path))
-            elif lower_file_path.endswith('.json'):
-                self.mineru_json_var.set(file_path)
+            decoded_files = []
+            for f in files:
+                decoded_files.append(f.decode('gbk') if isinstance(f, bytes) else f)
+            pdfs = [f for f in decoded_files if f.lower().endswith('.pdf')]
+            jsons = [f for f in decoded_files if f.lower().endswith('.json')]
+            if len(pdfs) <= 1 and len(decoded_files) == 1:
+                file_path = decoded_files[0]
+                lower_file_path = file_path.lower()
+                if lower_file_path.endswith('.pdf'):
+                    self.pdf_path_var.set(file_path)
+                    print(get_text("file_added_msg", file=file_path))
+                elif lower_file_path.endswith('.json'):
+                    self.mineru_json_var.set(file_path)
+                else:
+                    messagebox.showwarning(get_text("info_btn"), get_text("drag_drop_warning"))
+                return
+            if pdfs:
+                json_map = {Path(j).stem: j for j in jsons}
+                for p in pdfs:
+                    matched_json = json_map.get(Path(p).stem, "")
+                    if not matched_json and len(jsons) == 1:
+                        matched_json = jsons[0]
+                    self.add_task(p, matched_json or None)
             else:
                 messagebox.showwarning(get_text("info_btn"), get_text("drag_drop_warning"))
 
@@ -158,7 +174,7 @@ class AppGUI:
     def center_window(self):
         """将窗口居中显示"""
         width = 850
-        height = 800
+        height = 920
         x = (self.root.winfo_screenwidth() // 2) - (width // 2)
         y = (self.root.winfo_screenheight() // 2) - (height // 2)
         self.root.geometry(f'{width}x{height}+{x}+{y}')
@@ -242,6 +258,12 @@ class AppGUI:
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.pack(fill=tk.BOTH, expand=True)
         main_frame.columnconfigure(0, weight=1)
+
+        self.task_queue = getattr(self, 'task_queue', [])
+        self.task_id_counter = getattr(self, 'task_id_counter', 1)
+        self.queue_thread = None
+        self.queue_stop_flag = False
+        self.is_queue_running = False
 
         # 语言切换栏
         header_frame = ttk.Frame(main_frame)
@@ -353,7 +375,7 @@ class AppGUI:
         self.add_context_menu(page_range_entry)
         ttk.Label(opt_frame, text=get_text("page_range_hint"), foreground="gray").grid(row=4, column=2, sticky=tk.W, padx=5, pady=5)
 
-        # 第六行：按钮偏移
+        # 第六行：按钮偏移 和 自动校准
         ttk.Label(opt_frame, text=get_text("button_offset_label")).grid(row=5, column=0, sticky=tk.W, pady=5)
         self.done_offset_var = getattr(self, 'done_offset_var', tk.StringVar(value=""))
         done_offset_entry = ttk.Entry(opt_frame, textvariable=self.done_offset_var, width=8)
@@ -363,29 +385,58 @@ class AppGUI:
         ttk.Label(opt_frame, textvariable=self.saved_offset_var, foreground="blue").grid(row=5, column=2, sticky=tk.W, padx=5, pady=5)
 
         self.calibrate_var = getattr(self, 'calibrate_var', tk.BooleanVar(value=True))
-        ttk.Checkbutton(opt_frame, text=get_text("calibrate_label"), variable=self.calibrate_var).grid(row=6, column=0, columnspan=3, sticky=tk.W, pady=5)
+        ttk.Checkbutton(opt_frame, text=get_text("calibrate_label"), variable=self.calibrate_var).grid(row=5, column=3, columnspan=3, sticky=tk.W, pady=5, padx=(20, 0))
 
         # 提示信息
-        ttk.Label(opt_frame, text=get_text("core_param_warning"), foreground="red").grid(row=7, column=0, columnspan=6, sticky=tk.W)
-        ttk.Label(opt_frame, text=get_text("core_param_warning2"), foreground="red").grid(row=8, column=0, columnspan=6, sticky=tk.W)
-        ttk.Label(opt_frame, text=get_text("core_param_warning3"), foreground="red").grid(row=9, column=0, columnspan=6, sticky=tk.W)
+        ttk.Label(opt_frame, text=get_text("core_param_warning"), foreground="red").grid(row=6, column=0, columnspan=6, sticky=tk.W)
+        ttk.Label(opt_frame, text=get_text("core_param_warning2"), foreground="red").grid(row=7, column=0, columnspan=6, sticky=tk.W)
+        ttk.Label(opt_frame, text=get_text("core_param_warning3"), foreground="red").grid(row=8, column=0, columnspan=6, sticky=tk.W)
 
 
         # Control
         ctrl_frame = ttk.Frame(main_frame, padding="10")
         ctrl_frame.pack(fill=tk.X)
 
-        self.start_btn = ttk.Button(ctrl_frame, text=get_text("start_btn"), command=self.start_conversion)
+        self.start_btn = ttk.Button(ctrl_frame, text=get_text("start_btn"), command=self.start_queue)
         self.start_btn.pack(side=tk.LEFT, padx=5)
 
-        self.stop_btn = ttk.Button(ctrl_frame, text=get_text("stop_btn"), command=self.stop_conversion, state=tk.DISABLED)
+        self.stop_btn = ttk.Button(ctrl_frame, text=get_text("stop_btn"), command=self.stop_queue, state=tk.DISABLED)
         self.stop_btn.pack(side=tk.LEFT, padx=5)
+
+        queue_frame = ttk.LabelFrame(main_frame, text=get_text("queue_label"), padding="10")
+        queue_frame.pack(fill=tk.BOTH, expand=False, pady=5)
+        queue_frame.columnconfigure(0, weight=1)
+
+        columns = ("id", "pdf", "json", "status", "output")
+        self.queue_tree = ttk.Treeview(queue_frame, columns=columns, show="headings", height=5)
+        self.queue_tree.heading("id", text=get_text("queue_col_id"))
+        self.queue_tree.heading("pdf", text=get_text("queue_col_pdf"))
+        self.queue_tree.heading("json", text=get_text("queue_col_json"))
+        self.queue_tree.heading("status", text=get_text("queue_col_status"))
+        self.queue_tree.heading("output", text=get_text("queue_col_output"))
+        self.queue_tree.column("id", width=60, anchor="center")
+        self.queue_tree.column("pdf", width=220)
+        self.queue_tree.column("json", width=200)
+        self.queue_tree.column("status", width=100, anchor="center")
+        self.queue_tree.column("output", width=220)
+        self.queue_tree.grid(row=0, column=0, columnspan=6, sticky="nsew", pady=(0, 8))
+        self.queue_tree.bind("<Double-1>", self.on_task_double_click)
+
+        for task in self.task_queue:
+            self.queue_tree.insert("", tk.END, iid=str(task["id"]), values=(task["id"], task["pdf"], task["json"], task["status"], task["output"]))
+
+        queue_btns = ttk.Frame(queue_frame)
+        queue_btns.grid(row=1, column=0, columnspan=6, sticky="ew")
+        ttk.Button(queue_btns, text=get_text("queue_add_task"), command=self.add_task_dialog).pack(side=tk.LEFT, padx=5)
+        ttk.Button(queue_btns, text=get_text("queue_add_multi_pdf"), command=self.add_tasks_multi_pdfs).pack(side=tk.LEFT, padx=5)
+        ttk.Button(queue_btns, text=get_text("queue_remove_selected"), command=self.remove_selected_task).pack(side=tk.LEFT, padx=5)
+        ttk.Button(queue_btns, text=get_text("queue_clear"), command=self.clear_tasks).pack(side=tk.LEFT, padx=5)
 
         # Log Area
         log_frame = ttk.LabelFrame(main_frame, text=get_text("log_area_label"), padding="5")
         log_frame.pack(fill=tk.BOTH, expand=True, pady=5)
 
-        self.log_area = scrolledtext.ScrolledText(log_frame, state='disabled', height=15)
+        self.log_area = scrolledtext.ScrolledText(log_frame, state='disabled', height=12)
         self.log_area.pack(fill=tk.BOTH, expand=True)
         self.log_area.tag_config("stderr", foreground="red")
 
@@ -865,6 +916,504 @@ class AppGUI:
         finally:
             self.start_btn.config(state=tk.NORMAL)
             self.stop_btn.config(state=tk.DISABLED)
+
+    def add_task(self, pdf_path, json_path=None):
+        # 捕获当前界面的所有设置
+        settings = {
+            "output_dir": self.output_dir_var.get().strip().strip('"'),
+            "dpi": self.dpi_var.get(),
+            "ratio": self.ratio_var.get(),
+            "inpaint": self.inpaint_var.get(),
+            "inpaint_method": self.inpaint_method_var.get(),
+            "image_only": self.image_only_var.get(),
+            "force_regenerate": self.force_regenerate_var.get(),
+            "page_range": self.page_range_var.get().strip()
+        }
+
+        # 检查是否已存在相同 PDF 的任务
+        for task in self.task_queue:
+            if task["pdf"] == pdf_path:
+                # 更新现有任务的 JSON 路径和状态，以及所有设置
+                task["json"] = json_path or ""
+                task["status"] = get_text("queue_status_pending")
+                task["settings"] = settings
+                self.update_task_row(task)
+                print(get_text("queue_task_updated", file=pdf_path))
+                return
+
+        task = {
+            "id": self.task_id_counter,
+            "pdf": pdf_path,
+            "json": json_path or "",
+            "status": get_text("queue_status_pending"),
+            "output": "",
+            "settings": settings
+        }
+        self.task_queue.append(task)
+        self.queue_tree.insert("", tk.END, iid=str(task["id"]), values=(task["id"], task["pdf"], task["json"], task["status"], task["output"]))
+        self.task_id_counter += 1
+        print(get_text("queue_task_added", file=pdf_path))
+
+    def add_task_dialog(self):
+        # 优先使用界面上已选择的文件
+        current_pdf = self.pdf_path_var.get().strip().strip('"')
+        current_json = self.mineru_json_var.get().strip().strip('"')
+        
+        if current_pdf and os.path.exists(current_pdf):
+            # 如果已经选了 PDF，直接添加到队列
+            self.add_task(current_pdf, current_json or None)
+            # 添加完后可以考虑清空主界面，或者保持不变。通常保持不变比较好，用户可能想改个参数再加一个
+            return
+
+        pdf = filedialog.askopenfilename(parent=self.root, title=get_text("select_pdf_title"), filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")])
+        if not pdf:
+            return
+        json_file = filedialog.askopenfilename(parent=self.root, title=get_text("select_json_title"), filetypes=[("JSON files", "*.json"), ("All files", "*.*")])
+        if json_file and not os.path.exists(json_file):
+            json_file = ""
+        self.add_task(pdf, json_file or None)
+
+    def add_tasks_multi_pdfs(self):
+        pdfs = filedialog.askopenfilenames(parent=self.root, title=get_text("select_pdf_title"), filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")])
+        if not pdfs:
+            return
+        for p in pdfs:
+            self.add_task(p, None)
+
+    def remove_selected_task(self):
+        sel = self.queue_tree.selection()
+        if not sel:
+            return
+        for iid in sel:
+            tid = int(iid)
+            self.queue_tree.delete(iid)
+            self.task_queue = [t for t in self.task_queue if t["id"] != tid]
+        print(get_text("queue_task_removed"))
+
+    def clear_tasks(self):
+        for item in self.queue_tree.get_children():
+            self.queue_tree.delete(item)
+        self.task_queue = []
+        print(get_text("queue_cleared"))
+
+    def on_task_double_click(self, event):
+        item_id = self.queue_tree.identify_row(event.y)
+        if not item_id:
+            return
+        
+        # item_id is stored as string of task id
+        try:
+            task_id = int(item_id)
+        except ValueError:
+            return
+
+        task = next((t for t in self.task_queue if t["id"] == task_id), None)
+        if not task:
+            return
+
+        self.show_task_details(task)
+
+    def show_task_details(self, task):
+        # 减小默认高度到 650，宽度保持 700，适配更多屏幕
+        top = self.create_toplevel(get_text("task_details_title"), 700, 650)
+        
+        # 使用 Canvas 和 Scrollbar 支持滚动
+        canvas = tk.Canvas(top, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(top, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        
+        # 让内部框架宽度随 Canvas 变化，防止内容被遮挡
+        canvas.bind('<Configure>', lambda e: canvas.itemconfig(canvas_window, width=e.width))
+        
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        info_frame = ttk.LabelFrame(scrollable_frame, text=get_text("queue_label"), padding="10")
+        info_frame.pack(fill=tk.X, expand=True, padx=10, pady=5)
+        
+        # 存储可编辑的变量
+        edit_vars = {}
+
+        # Helper to create rows (只读)
+        def add_readonly_row(parent, label_key, value, row, is_path=False):
+            # 增加标签宽度到 120，移除换行限制，使布局更舒展
+            ttk.Label(parent, text=get_text(label_key), font=("", 9, "bold")).grid(row=row, column=0, sticky="nw", pady=5)
+            val_frame = ttk.Frame(parent)
+            val_frame.grid(row=row, column=1, sticky="ew", padx=10, pady=5)
+            
+            display_value = str(value) if value is not None else get_text("none")
+            
+            # 使用较高的 height 确保长路径显示，width 设置为 10 并配合 expand 填充
+            txt = tk.Text(val_frame, height=3 if is_path else 1, width=10, wrap=tk.CHAR, borderwidth=0, bg=top.cget("bg"), font=("", 9))
+            txt.insert("1.0", display_value)
+            txt.configure(state="disabled")
+            txt.pack(side=tk.LEFT, fill=tk.X, expand=True)
+            
+            if is_path and value and os.path.exists(value):
+                def open_path():
+                    try:
+                        if os.path.isfile(value):
+                            os.startfile(os.path.dirname(value))
+                        else:
+                            os.startfile(value)
+                    except Exception:
+                        pass
+                ttk.Button(val_frame, text=get_text("open_btn"), command=open_path, width=6).pack(side=tk.RIGHT, padx=5)
+
+        info_frame.columnconfigure(1, weight=1)
+        
+        # 判断任务是否可编辑（只有未开始或出错的任务可以修改）
+        is_editable = task["status"] not in [get_text("queue_status_done"), get_text("queue_status_running")]
+        
+        # 统一锁定状态下的颜色：使用 Entry 的 readonly 状态，并设置 readonlybackground 为窗口背景色，确保文字清晰
+        # 即使是禁用状态，也要保证文字颜色是黑色或深灰
+        style = ttk.Style()
+        style.configure("ReadOnly.TEntry", fieldbackground=top.cget("bg"), foreground="black")
+        style.configure("ReadOnly.TCombobox", fieldbackground=top.cget("bg"), foreground="black")
+
+        widget_state = "normal" if is_editable else "disabled"
+        entry_state = "normal" if is_editable else "readonly"
+
+        add_readonly_row(info_frame, "queue_col_id", task["id"], 0)
+        add_readonly_row(info_frame, "queue_col_status", task["status"], 1)
+        add_readonly_row(info_frame, "queue_col_pdf", task["pdf"], 2, is_path=True)
+        
+        # JSON 路径支持编辑
+        ttk.Label(info_frame, text=get_text("queue_col_json"), font=("", 9, "bold")).grid(row=3, column=0, sticky="nw", pady=5)
+        json_frame = ttk.Frame(info_frame)
+        json_frame.grid(row=3, column=1, sticky="ew", padx=10, pady=5)
+        json_var = tk.StringVar(value=task["json"] or "")
+        ttk.Entry(json_frame, textvariable=json_var, state=entry_state, style="ReadOnly.TEntry" if not is_editable else "").pack(side=tk.LEFT, fill=tk.X, expand=True)
+        def browse_json():
+            f = filedialog.askopenfilename(filetypes=[("JSON", "*.json")])
+            if f: json_var.set(f)
+        ttk.Button(json_frame, text=get_text("browse_btn"), command=browse_json, width=6, state=widget_state).pack(side=tk.RIGHT, padx=5)
+
+        add_readonly_row(info_frame, "queue_col_output", task["output"], 4, is_path=True)
+
+        # 设置项区域 - 可编辑
+        settings = task.get("settings", {})
+        # 即使没有settings，也要初始化一个空字典以便编辑（理论上新建任务都有）
+        if settings is None:
+            settings = {}
+            
+        set_frame = ttk.LabelFrame(scrollable_frame, text=get_text("task_settings_title"), padding="10")
+        set_frame.pack(fill=tk.X, expand=True, padx=10, pady=5)
+        set_frame.columnconfigure(1, weight=1)
+        
+        # 定义每个设置项的类型和对应的键
+        # type: entry, int_entry, bool, combo
+        s_items = [
+            ("output_dir_label", "output_dir", "dir_entry"),
+            ("dpi_label", "dpi", "int_entry"),
+            ("ratio_label", "ratio", "float_entry"),
+            ("inpaint_label", "inpaint", "bool"),
+            ("inpaint_method_label", "inpaint_method", "combo_method"),
+            ("image_only_label", "image_only", "bool"),
+            ("force_regenerate_label", "force_regenerate", "bool"),
+            ("page_range_label", "page_range", "entry"),
+        ]
+        
+        for i, (lbl_key, set_key, widget_type) in enumerate(s_items):
+            # 移除 wraplength，让标签自然显示，同时增加 grid 的权重配置
+            ttk.Label(set_frame, text=get_text(lbl_key), font=("", 9, "bold")).grid(row=i, column=0, sticky="nw", pady=5)
+            
+            curr_val = settings.get(set_key)
+            
+            if widget_type == "bool":
+                var = tk.BooleanVar(value=bool(curr_val))
+                edit_vars[set_key] = var
+                # Checkbutton 在禁用时很难看清，如果是锁定状态，我们用 Label 显示“是/否”
+                if not is_editable:
+                    val_text = get_text("yes") if var.get() else get_text("no")
+                    ttk.Label(set_frame, text=val_text).grid(row=i, column=1, sticky="w", padx=10)
+                else:
+                    ttk.Checkbutton(set_frame, variable=var).grid(row=i, column=1, sticky="w", padx=10)
+                
+            elif widget_type == "combo_method":
+                var = tk.StringVar(value=str(curr_val))
+                edit_vars[set_key] = var
+                if not is_editable:
+                    # 锁定状态用只读 Entry 模拟，确保文字清晰
+                    ent = ttk.Entry(set_frame, textvariable=var, state="readonly", style="ReadOnly.TEntry")
+                    ent.grid(row=i, column=1, sticky="ew", padx=10)
+                else:
+                    cb = ttk.Combobox(set_frame, textvariable=var, values=self.get_translated_method_names(), state="readonly")
+                    cb.grid(row=i, column=1, sticky="ew", padx=10)
+                
+            elif widget_type == "dir_entry":
+                frame = ttk.Frame(set_frame)
+                frame.grid(row=i, column=1, sticky="ew", padx=10)
+                var = tk.StringVar(value=str(curr_val) if curr_val is not None else "")
+                edit_vars[set_key] = var
+                ttk.Entry(frame, textvariable=var, state=entry_state, style="ReadOnly.TEntry" if not is_editable else "").pack(side=tk.LEFT, fill=tk.X, expand=True)
+                def browse_dir(v=var):
+                    d = filedialog.askdirectory(parent=top)
+                    if d: v.set(d)
+                if is_editable:
+                    ttk.Button(frame, text=get_text("browse_btn"), command=browse_dir).pack(side=tk.RIGHT, padx=5)
+                
+            else: # entry, int_entry, float_entry
+                var = tk.StringVar(value=str(curr_val) if curr_val is not None else "")
+                edit_vars[set_key] = var
+                ttk.Entry(set_frame, textvariable=var, state=entry_state, style="ReadOnly.TEntry" if not is_editable else "").grid(row=i, column=1, sticky="ew", padx=10)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # 底部按钮区域
+        btn_frame = ttk.Frame(top, padding="10")
+        btn_frame.pack(fill=tk.X, side=tk.BOTTOM)
+        
+        def save_changes():
+            # 更新 task["settings"]
+            new_settings = {}
+            for k, v in edit_vars.items():
+                val = v.get()
+                # 类型转换处理
+                # 注意：这里为了简单起见，大部分存为原始类型，读取时 run_conversion_for_task 会再处理
+                # 但为了保持一致性，尽量还原类型
+                orig_type_item = next((x for x in s_items if x[1] == k), None)
+                if orig_type_item:
+                    w_type = orig_type_item[2]
+                    if w_type == "int_entry":
+                        try:
+                            new_settings[k] = int(val)
+                        except:
+                            new_settings[k] = val # fallback
+                    elif w_type == "float_entry":
+                        try:
+                            new_settings[k] = float(val)
+                        except:
+                            new_settings[k] = val
+                    elif w_type == "bool":
+                        new_settings[k] = bool(val)
+                    else:
+                        new_settings[k] = val
+                else:
+                    new_settings[k] = val
+            
+            task["settings"] = new_settings
+            # 更新 JSON 路径
+            task["json"] = json_var.get().strip().strip('"')
+            # 更新 Treeview 显示
+            self.update_task_row(task)
+            
+            print(f"Task {task['id']} updated.")
+            top.destroy()
+
+        ttk.Button(btn_frame, text=get_text("close_btn"), command=top.destroy).pack(side=tk.RIGHT, padx=5)
+        # 只有未开始的任务允许修改设置
+        if is_editable:
+            ttk.Button(btn_frame, text=get_text("save_btn"), command=save_changes).pack(side=tk.RIGHT, padx=5)
+
+    def update_task_row(self, task):
+        self.queue_tree.item(str(task["id"]), values=(task["id"], task["pdf"], task["json"], task["status"], task["output"]))
+
+    def start_queue(self):
+        if self.is_queue_running:
+            return
+
+        # 如果队列为空，但主界面有选 PDF，则先自动添加
+        if not self.task_queue:
+            current_pdf = self.pdf_path_var.get().strip().strip('"')
+            current_json = self.mineru_json_var.get().strip().strip('"')
+            if current_pdf and os.path.exists(current_pdf):
+                self.add_task(current_pdf, current_json or None)
+
+        if not self.image_only_var.get():
+            if not self.ensure_pc_manager_running():
+                return
+        if not self.task_queue:
+            messagebox.showinfo(get_text("info_btn"), get_text("queue_empty_msg"))
+            return
+        self.queue_stop_flag = False
+        self.is_queue_running = True
+        self.start_btn.config(state=tk.DISABLED)
+        self.stop_btn.config(state=tk.NORMAL)
+        threading.Thread(target=self.process_queue, daemon=True).start()
+
+    def stop_queue(self):
+        if not self.is_queue_running:
+            return
+        self.queue_stop_flag = True
+        print(get_text("queue_stopping"))
+        self.stop_btn.config(state=tk.DISABLED)
+
+    def process_queue(self):
+        try:
+            print(get_text("queue_started"))
+            for task in list(self.task_queue):
+                if self.queue_stop_flag:
+                    break
+                if not os.path.exists(task["pdf"]):
+                    task["status"] = get_text("queue_status_error")
+                    self.update_task_row(task)
+                    continue
+                task["status"] = get_text("queue_status_running")
+                self.update_task_row(task)
+                ok, out_file = self.run_conversion_for_task(task)
+                task["output"] = out_file or ""
+                task["status"] = get_text("queue_status_done") if ok else get_text("queue_status_error")
+                self.update_task_row(task)
+            if self.queue_stop_flag:
+                print(get_text("queue_stopped"))
+            else:
+                print(get_text("queue_finished"))
+        finally:
+            self.is_queue_running = False
+            self.start_btn.config(state=tk.NORMAL)
+            self.stop_btn.config(state=tk.DISABLED)
+
+    def run_conversion_for_task(self, task):
+        try:
+            pdf_file = task["pdf"]
+            mineru_json = task["json"]
+            settings = task.get("settings", {})
+            
+            # 从任务设置中提取参数，如果缺失则使用当前界面值（兼容旧任务）
+            output_dir = settings.get("output_dir", self.output_dir_var.get())
+            dpi = settings.get("dpi", self.dpi_var.get())
+            ratio_val = settings.get("ratio", self.ratio_var.get())
+            inpaint = settings.get("inpaint", self.inpaint_var.get())
+            inpaint_method = settings.get("inpaint_method", self.inpaint_method_var.get())
+            image_only = settings.get("image_only", self.image_only_var.get())
+            force_regenerate = settings.get("force_regenerate", self.force_regenerate_var.get())
+            page_range = settings.get("page_range", self.page_range_var.get())
+            
+            # 全局设置（不随任务存储，始终使用界面当前值）
+            delay = self.delay_var.get()
+            timeout = self.timeout_var.get()
+            done_offset_str = self.done_offset_var.get().strip()
+            calibrate = self.calibrate_var.get()
+
+            pdf_name = Path(pdf_file).stem
+            workspace_dir = Path(output_dir)
+            png_dir = workspace_dir / f"{pdf_name}_pngs"
+            ppt_dir = workspace_dir / f"{pdf_name}_ppt"
+            tmp_image_dir = workspace_dir / "tmp_images"
+            workspace_dir.mkdir(exist_ok=True, parents=True)
+            
+            done_offset = None
+            if done_offset_str:
+                try:
+                    done_offset = int(done_offset_str)
+                except ValueError:
+                    pass
+
+            ratio = min(screen_width/16, screen_height/9)
+            max_display_width = int(16 * ratio)
+            max_display_height = int(9 * ratio)
+            display_width = int(max_display_width * ratio_val)
+            display_height = int(max_display_height * ratio_val)
+            
+            def parse_page_range(range_str):
+                if not range_str:
+                    return None
+                pages = set()
+                range_str = range_str.replace('，', ',')
+                range_str = range_str.replace('—', '-').replace('–', '-').replace('－', '-')
+                for part in [p.strip() for p in range_str.split(',') if p.strip()]:
+                    if '-' in part:
+                        start_end = part.split('-')
+                        if start_end[0] == '':
+                            continue
+                        start = int(start_end[0])
+                        if start_end[1] == '':
+                            pages.update(range(start, start + 10000))
+                        else:
+                            end = int(start_end[1])
+                            if end >= start:
+                                pages.update(range(start, end + 1))
+                    else:
+                        pages.add(int(part))
+                return sorted(pages)
+                
+            def format_page_suffix(pages):
+                if not pages:
+                    return ""
+                result = []
+                i = 0
+                while i < len(pages):
+                    start = pages[i]
+                    end = start
+                    while i + 1 < len(pages) and pages[i + 1] == end + 1:
+                        i += 1
+                        end = pages[i]
+                    if start == end:
+                        result.append(str(start))
+                    else:
+                        result.append(f"{start}-{end}")
+                    i += 1
+                return f"_p{','.join(result)}"
+            
+            pages_list = None
+            try:
+                pages_list = parse_page_range(page_range)
+            except Exception:
+                pages_list = None
+                
+            page_suffix = format_page_suffix(pages_list)
+            out_ppt_file = workspace_dir / f"{pdf_name}{page_suffix}.pptx"
+            
+            method_id = self.get_method_id_from_translated_name(inpaint_method)
+            
+            if image_only:
+                png_names = pdf_to_png(
+                    pdf_path=pdf_file,
+                    output_dir=png_dir,
+                    dpi=dpi,
+                    inpaint=inpaint,
+                    pages=pages_list,
+                    inpaint_method=method_id,
+                    force_regenerate=force_regenerate
+                )
+                if self.queue_stop_flag:
+                    return False, None
+                png_names = create_ppt_from_images(png_dir, out_ppt_file, png_names=png_names)
+            else:
+                png_names = process_pdf_to_ppt(
+                    pdf_path=pdf_file,
+                    png_dir=png_dir,
+                    ppt_dir=ppt_dir,
+                    delay_between_images=delay,
+                    inpaint=inpaint,
+                    dpi=dpi,
+                    timeout=timeout,
+                    display_height=display_height,
+                    display_width=display_width,
+                    done_button_offset=done_offset,
+                    capture_done_offset=calibrate,
+                    pages=pages_list,
+                    update_offset_callback=self.update_offset_disk,
+                    stop_flag=lambda: self.queue_stop_flag,
+                    force_regenerate=force_regenerate,
+                    inpaint_method=method_id
+                )
+                if self.queue_stop_flag:
+                    return False, None
+                png_names = combine_ppt(ppt_dir, out_ppt_file, png_names=png_names)
+                
+            if not image_only and mineru_json:
+                if os.path.exists(mineru_json):
+                    refined_out = workspace_dir / f"{pdf_name}{page_suffix}_optimized.pptx"
+                    refine_ppt(str(tmp_image_dir), mineru_json, str(out_ppt_file), str(png_dir), png_names, str(refined_out))
+                    out_ppt_file = os.path.abspath(refined_out)
+            
+            out_ppt_file = os.path.abspath(out_ppt_file)
+            print(get_text("queue_task_done", file=out_ppt_file))
+            return True, out_ppt_file
+        except Exception as e:
+            print(get_text("conversion_fail", error=str(e)))
+            return False, None
 
 def launch_gui():
     # Enable Windows DPI awareness before creating the Tk root where possible

@@ -11,6 +11,7 @@ from .pdf2png import pdf_to_png
 from .utils.image_viewer import show_image_fullscreen
 from .utils.screenshot_automation import take_fullscreen_snip, screen_height, screen_width
 from .utils.image_inpainter import INPAINT_METHODS
+from .i18n import get_text
 
 
 def process_pdf_to_ppt(pdf_path, png_dir, ppt_dir, delay_between_images=2, inpaint=True, dpi=150, timeout=50, display_height=None, 
