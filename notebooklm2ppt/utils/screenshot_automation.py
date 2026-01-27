@@ -385,7 +385,7 @@ def create_topmost_dialog():
 
 
 def take_fullscreen_snip(
-    delay_before_hotkey: float = 1.0,
+    delay_before_hotkey: float = 0.0,
     drag_duration: float = 3,
     click_duration: float = 0.1,
     check_ppt_window: bool = True,
@@ -514,7 +514,7 @@ def take_fullscreen_snip(
         if done_button[1] > screen_height:
             done_button = (done_button[0], height - 35)
         mouse.move(coords=done_button)
-        time.sleep(1)
+        time.sleep(0)
         mouse.click(button='left', coords=done_button)
     
     # 检查是否出现新的PPT窗口

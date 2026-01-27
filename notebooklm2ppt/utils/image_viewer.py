@@ -58,6 +58,32 @@ def show_image_fullscreen(image_path: str, display_height: int = None, stop_even
         # LANCZOS 是高质量的重采样滤波器
         img = img.resize((new_w, new_h), Image.LANCZOS)
 
+    # 创建稍大一些的图像并进行边缘填充 (Edge Padding)
+    # 仅在图片右侧和下方各扩展一小块区域（约20像素）
+    # 如果图片已经填满或超出屏幕，则不进行处理
+    if new_w < screen_w or new_h < screen_h:
+        pad = 20
+        target_w = min(screen_w, new_w + pad)
+        target_h = min(screen_h, new_h + pad)
+
+        final_img = Image.new("RGB", (target_w, target_h))
+        final_img.paste(img, (0, 0))
+
+        # 填充右侧
+        if new_w < target_w:
+            right_edge = img.crop((new_w - 1, 0, new_w, new_h))
+            right_pad = right_edge.resize((target_w - new_w, new_h), Image.NEAREST)
+            final_img.paste(right_pad, (new_w, 0))
+
+        # 填充下方
+        if new_h < target_h:
+            # 从 final_img 获取最后一行（包含可能已填充的右侧部分）
+            bottom_edge = final_img.crop((0, new_h - 1, target_w, new_h))
+            bottom_pad = bottom_edge.resize((target_w, target_h - new_h), Image.NEAREST)
+            final_img.paste(bottom_pad, (0, new_h))
+
+        img = final_img
+
     # 检查是否已有Tkinter root，如果有则使用Toplevel，否则创建新的Tk
     is_toplevel = False
     try:

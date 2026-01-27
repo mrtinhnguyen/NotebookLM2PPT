@@ -302,7 +302,7 @@ class AppGUI:
         ttk.Label(opt_frame, text=get_text("dpi_hint"), foreground="gray").grid(row=0, column=2, sticky=tk.W, padx=5)
 
         ttk.Label(opt_frame, text=get_text("delay_label")).grid(row=0, column=3, sticky=tk.W, padx=(20, 0))
-        self.delay_var = getattr(self, 'delay_var', tk.IntVar(value=1))
+        self.delay_var = getattr(self, 'delay_var', tk.IntVar(value=0))
         delay_entry = ttk.Entry(opt_frame, textvariable=self.delay_var, width=8)
         delay_entry.grid(row=0, column=4, sticky=tk.W, padx=5)
         self.add_context_menu(delay_entry)
@@ -545,7 +545,7 @@ class AppGUI:
                 if hasattr(self, 'output_dir_var'):
                     self.output_dir_var.set(config_data.get("output_dir", "workspace"))
                     self.dpi_var.set(config_data.get("dpi", 150))
-                    self.delay_var.set(config_data.get("delay", 1))
+                    self.delay_var.set(config_data.get("delay", 0))
                     self.timeout_var.set(config_data.get("timeout", 50))
                     self.ratio_var.set(config_data.get("ratio", 0.8))
                     self.inpaint_var.set(config_data.get("inpaint", True))
