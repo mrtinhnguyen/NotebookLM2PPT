@@ -16,9 +16,11 @@ import ctypes
 import webbrowser
 from . import __version__
 from .i18n import get_text, SUPPORTED_LANGUAGES, set_language
+from .utils.process_checker import is_process_running, PROCESS_NAME
 
 MINERU_URL = "https://mineru.net/"
 GITHUB_URL = "https://github.com/elliottzheng/NotebookLM2PPT"
+PC_MANAGER_URL = "https://pcmanager.microsoft.com/"
 
 
 CONFIG_FILE = Path("./config.json")
@@ -488,6 +490,38 @@ class AppGUI:
         btn_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=8, pady=6)
         ttk.Button(btn_frame, text=get_text("close_btn"), command=top.destroy).pack(side=tk.LEFT, padx=6)
 
+    def ensure_pc_manager_running(self):
+        if sys.platform != "win32":
+            return True
+        try:
+            running = is_process_running(PROCESS_NAME)
+        except Exception as e:
+            messagebox.showerror(
+                get_text("error_btn"),
+                f"检测电脑管家运行状态失败: {e}",
+            )
+            return False
+        if not running:
+            full_msg = (
+                get_text("pc_manager_not_running_msg")
+                + "\n\n"
+                + get_text("pc_manager_open_website_confirm")
+            )
+            open_site = messagebox.askyesno(
+                get_text("error_btn"),
+                full_msg,
+            )
+            if open_site:
+                try:
+                    webbrowser.open_new_tab(PC_MANAGER_URL)
+                except Exception as e:
+                    messagebox.showerror(
+                        get_text("error_btn"),
+                        get_text("open_pc_manager_website_error", error=str(e)),
+                    )
+            return False
+        return True
+
     def start_conversion(self):
         pdf_path = self.pdf_path_var.get().strip().strip('"')
         output_dir = self.output_dir_var.get().strip().strip('"')
@@ -498,6 +532,10 @@ class AppGUI:
         if not pdf_path or not os.path.exists(pdf_path):
             messagebox.showerror(get_text("error_btn"), get_text("select_pdf_error"))
             return
+
+        if not self.image_only_var.get():
+            if not self.ensure_pc_manager_running():
+                return
 
         self.stop_flag = False
         self.start_btn.config(state=tk.DISABLED)

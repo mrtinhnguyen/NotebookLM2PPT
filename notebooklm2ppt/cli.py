@@ -150,6 +150,8 @@ def process_pdf_to_ppt(pdf_path, png_dir, ppt_dir, delay_between_images=2, inpai
                 height=display_height,
                 done_button_right_offset=done_button_offset,
                 stop_flag=combined_stop_flag,
+                calibration_title=get_text("calibration_dialog_title"),
+                calibration_msg=get_text("calibration_dialog_msg")
             )
             if combined_stop_flag():
                 print("\n⏹️ 用户请求停止转换")

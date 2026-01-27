@@ -4,6 +4,8 @@ TRANSLATIONS = {
     "startup_info": (
         "This software is a free and open-source PDF to PPT tool.\n\n"
         "Developer: Elliott Zheng\n\n"
+        "⚠️ IMPORTANT: This software depends on the 'Smart Select' feature of [Microsoft PC Manager].\n"
+        "Please ensure you have installed and started Microsoft PC Manager, and that the Smart Select feature can be activated with Ctrl+Shift+A, otherwise the conversion will not proceed.\n\n"
         "If you find this software helpful, please give it a star on GitHub or introduce it to your friends. Thank you!\n\n"
         "This software is free and open-source. If you paid for it, you have been scammed. [○･｀Д´･○]\n\n"
         "Thanks for using this tool!"
@@ -120,4 +122,22 @@ TRANSLATIONS = {
     "method_griddata_desc": "Calculates smooth surface transitions, suitable for backgrounds with gradients",
     "method_skimage_name": "Biharmonic Repair",
     "method_skimage_desc": "Computationally intensive and slow, but better at maintaining lighting continuity",
+    "calibration_dialog_title": "Tip",
+    "calibration_dialog_msg": (
+        "Button position calibration in progress. A confirmation is required. Please read this carefully.\n\n"
+        "⚠️ Please ensure that [Microsoft PC Manager] is installed and running, and that the 'Smart Select' feature can be activated via Ctrl+Shift+A. Otherwise, the Smart Select toolbar will not appear!\n\n"
+        'After clicking "OK", do not move the mouse. Wait for the Smart Select toolbar to appear, then manually move the mouse and click the "Smart Copy to PPT" button to complete the calibration.\n\n'
+        'Click "OK" when ready. Do not minimize the window or interfere with mouse operations during the conversion.'
+    ),
+    "pc_manager_not_running_msg": (
+        "Microsoft PC Manager is not running.\n\n"
+        "This tool depends on the 'Smart Select / Smart Copy to PPT' feature of "
+        "Microsoft PC Manager to automatically capture pages and generate PPT. "
+        "If PC Manager is not installed or not running, the automatic conversion "
+        "cannot work.\n\n"
+        "Please install and start Microsoft PC Manager (process name: MSPCManager.exe), "
+        "then try the conversion again."
+    ),
+    "pc_manager_open_website_confirm": "Open the Microsoft PC Manager official website to download it?",
+    "open_pc_manager_website_error": "Failed to open Microsoft PC Manager website: {error}",
 }
