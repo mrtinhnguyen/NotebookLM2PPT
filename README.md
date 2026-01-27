@@ -1,267 +1,92 @@
-# 🚀 NotebookLM2PPT - 将 PDF 转换为可编辑 PowerPoint 的自动化工具
+# 🚀 NotebookLM2PPT
 
-## 🎉 最新更新
+> **让 NotebookLM 的演示文稿真正为你所用**
+> 从 PDF 到全可编辑 PPT 的智能转换工具
 
-### 🆕 v0.6.0 - 极致轻量化与性能优化 (2026-01-23)
 
-本次更新专注于核心架构的深度优化，在保持 MinerU 后处理功能完整性的同时，大幅提升了程序性能。
-
-**核心优化：**
-- ⚡ **依赖瘦身**：完全移除 OpenCV 和 Scikit-learn，程序体积大幅减小，启动速度显著提升
-- 🔧 **算法升级**：图像修复和边缘多样性检测改用 Numpy 原生实现，处理效率更高
-- 🖼️ **显示引擎迁移**：全屏图像显示迁移至 Tkinter，降低内存占用
-
-**功能增强：**
-- ⌨️ **ESC 键全局支持**：在截图、处理或转换流程中，均可通过 ESC 键即时中断任务
-- 🎯 **PPT 精炼优化**：改进文本块与图片块识别逻辑，修复"双层图片"问题
+[最新版本 ![](https://img.shields.io/github/release/elliottzheng/NotebookLM2PPT.svg)] | [文档中心](https://elliottzheng.github.io/NotebookLM2PPT) | [下载地址](https://github.com/elliottzheng/NotebookLM2PPT/releases)
 
 ---
 
-### 🆕 v0.5.0 - 基于MinerU的PPT后处理优化（重大实验性更新）
+## 项目简介
 
-我们很高兴宣布 NotebookLM2PPT v0.5.0 的发布！本次更新集成了 [MinerU](https://mineru.net/) 文档解析能力，为用户提供更强大的 PDF 转 PPT 转换体验。
+**NotebookLM2PPT** 是一款强大的自动化工具，旨在将不可编辑的 PDF 文档（特别是 NotebookLM 生成的演示文稿）转换为**完全可编辑**的 PowerPoint 演示文稿。
 
-**重要说明：MinerU 是一个后处理功能**
-- 程序首先使用微软电脑管家的"智能圈选"功能将 PDF 转换为可编辑的 PPT（基础转换）
-- 如果提供了 MinerU JSON 文件，程序会在基础转换完成后，自动对生成的 PPT 进行深度优化（后处理）
-- MinerU 优化是可选的，不影响基础转换功能的使用
-
-**后处理优化内容：**
-- ✨ **智能文本框筛选**：基于 IOU 算法自动识别并保留相关文本框，删除冗余文本框
-- 🎨 **字体统一处理**：自动将所有文本框字体统一为"微软雅黑"
-- 🖼️ **高质量图片替换**：从 MinerU JSON 提取原始高清图片，替换截图图片
-- 🎭 **智能背景处理**：根据内容特征智能处理背景，实现最佳视觉效果
-
-**使用方式：**
-1. 在 [MinerU 官网](https://mineru.net/) 上传 PDF 并解析
-2. 下载生成的 JSON 文件
-3. 在程序 GUI 中选择 PDF 和对应的 JSON 文件
-4. 开始转换，程序会先执行基础转换，完成后自动执行 MinerU 后处理优化
-
-详细使用说明请查看下方 [🆕 MinerU 后处理优化功能](#-mineru-后处理优化功能) 章节。
+### 核心价值
+- **🤖 全自动化**：利用微软电脑管家"智能圈选"，自动完成截图、识别、转换和合并。
+- **🧠 MinerU 深度优化**：(可选) 集成 MinerU 解析能力，智能重排文本、统一字体、替换高清图片。
+- **✨ 智能去水印**：内置针对 NotebookLM 的智能水印去除算法。
 
 ---
 
-## 📝 项目简介
+## 🌟 效果展示
 
-**NotebookLM2PPT** 是一款强大的自动化工具，旨在将不可编辑的 PDF 文档（特别是 [NotebookLM](https://notebooklm.google.com/) 生成的演示文稿）转换为**完全可编辑**的 PowerPoint 演示文稿。
+左侧为基础转换（截图识别），右侧为 **MinerU 优化后**（重排版+高清图）：
 
-### 💡 核心价值
+| 基础转换 PPT | **MinerU 优化后 PPT** |
+| :--- | :--- |
+| ![Basic](docs/public/page_0004_1_converted.jpg) | ![MinerU](docs/public/page_0004_2_converted.jpg) |
+| ![Basic](docs/public/page_0003_1_converted.jpg) | ![MinerU](docs/public/page_0003_2_converted.jpg) |
 
-- **打破限制**：将 NotebookLM 生成的精美但不可编辑的 PDF 转化为可二次创作的 PPT。
-- **智能去水印**：内置针对 NotebookLM 的智能水印去除算法。
-- **全自动化**：利用微软电脑管家的"智能圈选"功能，自动完成截图、识别、转换和合并的全流程。
-- **通用性**：不仅限于 NotebookLM，适用于任何需要将 PDF 转换为可编辑 PPT 的场景。
-- **🆕 MinerU 后处理优化**：在基础转换完成后，可选地使用 MinerU 文档解析能力对生成的 PPT 进行深度优化，大幅提升排版质量、图片清晰度和文本准确性。
-
----
-
-## ✨ 主要功能
-
-- 📄 **高质量转换**：确保 PDF 到图片的无损转换，支持自定义 DPI 参数。
-- 🖼️ **智能修复**：自动识别并抹除 NotebookLM 的特定水印，保持图像质量。
-- 🤖 **自动化流程**：模拟快捷键和鼠标点击，实现无人值守操作。
-- 🔄 **无缝合并**：将零散的幻灯片完美整合为一个完整的演示文稿。
-- ⚙️ **高度可定制**：支持 DPI、延迟、显示比例等多种参数微调。
-- 🆕 **MinerU 后处理优化**（可选）：
-  - 在基础转换完成后，使用 MinerU JSON 对生成的 PPT 进行优化
-  - **智能文本框筛选**：基于 IOU 算法，自动识别并保留与 PDF 内容相关的文本框，删除冗余文本框
-  - **字体统一**：将所有文本框字体统一为"微软雅黑"，提升演示文稿的专业性
-  - **高质量图片替换**：从 MinerU JSON 中提取原始高清图片，替换基础转换中的截图图片，确保图像清晰度
-  - **智能背景处理**：根据内容特征智能处理背景，实现最佳视觉效果
-
-> 💡 **想了解更多技术实现细节？** 请查看 [实现细节文档](docs/implementation.md)
+> 💡 **效果惊人？** 查看 [详细对比](https://elliottzheng.github.io/NotebookLM2PPT/compare.html) 和 [基准测试数据](https://elliottzheng.github.io/NotebookLM2PPT/features.html#效果评估)。
 
 ---
 
 ## 🚀 快速开始
 
+详细教程请查看 [快速开始指南](https://elliottzheng.github.io/NotebookLM2PPT/quickstart.html)。
+
 ### 1. 系统要求
+- **Windows 10/11**
+- **Microsoft PowerPoint** 或 **WPS Office** (v0.6.5+ 支持)
+- **[微软电脑管家](https://pcmanager.microsoft.com/)** (版本 $\ge$ 3.17.50.0，必须开启"智能圈选")
 
-- **操作系统**: Windows 10/11 (必须，因为依赖微软电脑管家)
-- **Python**: 3.8 或更高版本
-- **软件依赖**:
-  - **Microsoft PowerPoint**: 用于生成和合并幻灯片。
-  - **[微软电脑管家](https://pcmanager.microsoft.com/)**: 必须安装并确保版本 $\ge$ **3.17.50.0**。
+### 2. 安装
+- **推荐**：直接在 [Releases](https://github.com/elliottzheng/NotebookLM2PPT/releases) 下载 `.exe` 文件运行。
+- **开发者**：`pip install notebooklm2ppt -U`
 
-### 2. 配置微软电脑管家
-
-1. 打开微软电脑管家 -> **工具箱**。
-2. 找到 **智能圈选**，确保其已开启。
-3. 默认快捷键应为 `Ctrl + Shift + A`。如果修改了，请同步修改代码中的配置。
-4. **测试**：手动按下快捷键，确保能看到圈选界面并出现“转换为PPT”选项。
-
-### 3. 安装
-
-#### 方式 A：下载预编译版本（推荐）
-直接前往 [Releases](https://github.com/elliottzheng/NotebookLM2PPT/releases) 页面下载最新的 `.exe` 执行文件。无需安装 Python 环境，开箱即用。
-
-#### 方式 B：通过 pip 安装
-如果你已经安装了 Python，可以直接通过 pip 安装：
-
-```bash
-pip install notebooklm2ppt -U
-```
-
-#### 方式 C：从源码安装
-```bash
-pip install git+https://github.com/elliottzheng/NotebookLM2PPT.git
-```
+### 3. 使用步骤
+1. **启动程序**：运行 exe 或命令行输入 `notebooklm2ppt`。
+2. **选择文件**：选择需要转换的 PDF。
+3. **校准位置**：**首次使用务必勾选"校准按钮位置"**，根据提示点击屏幕上的"转换为PPT"按钮。
+4. **开始转换**：程序将自动接管鼠标完成操作。
 
 ---
 
-## 📖 使用指南
+## 🧠 进阶功能：MinerU 后处理优化
 
-```bash
-notebooklm2ppt
-```
-或者
-```bash
-python main.py
-```
+想要获得专业级的排版效果？使用 MinerU 优化功能：
 
-这将启动一个简单的图形界面，你可以通过它选择文件、设置参数并查看转换进度。
+1. 在 [MinerU 官网](https://mineru.net/) 上传 PDF 并下载解析后的 JSON 文件。
+2. 在本工具中选择 PDF 时，同时选择对应的 JSON 文件。
+3. 程序将在基础转换完成后，自动执行深度优化（文本重排、字体统一、高清图替换）。
 
-你可以在任何目录下运行该命令，程序会在当前目录下创建一个 `workspace` 文件夹存放中间文件和最终输出的 PPT。
+👉 [了解 MinerU 优化详情](https://elliottzheng.github.io/NotebookLM2PPT/mineru.html)
 
 ---
 
-## 🆕 MinerU 后处理优化功能
+## ⚠️ 常见问题与注意事项
 
-### 什么是 MinerU？
-
-[MinerU](https://mineru.net/) 是一个强大的在线文档解析工具，能够智能识别 PDF 文档的结构、文本、图片和排版信息，并生成包含详细元数据的 JSON 文件。
-
-### MinerU 在本工具中的作用
-
-**重要理解：MinerU 是一个后处理优化功能，不是转换的核心功能**
-
-本工具的转换流程分为两个阶段：
-
-1. **基础转换阶段**（必须）
-   - 使用微软电脑管家的"智能圈选"功能
-   - 将 PDF 页面转换为图片
-   - 通过 OCR 识别生成可编辑的 PPT
-   - 这个阶段不依赖 MinerU，可以独立完成
-
-2. **MinerU 后处理优化阶段**（可选）
-   - 在基础转换完成后，如果提供了 MinerU JSON 文件
-   - 程序会读取 JSON 中的结构化信息
-   - 对基础转换生成的 PPT 进行深度优化
-   - 这个阶段依赖 MinerU JSON 文件，是可选的增强功能
-
-### 为什么使用 MinerU 后处理优化？
-
-虽然本工具的基础转换功能已经能够将 PDF 转换为可编辑的 PPT，但在以下场景中，使用 MinerU 后处理优化可以显著提升转换质量：
-
-- **复杂排版文档**：包含多栏、表格、图文混排的复杂文档，基础转换可能产生大量冗余文本框
-- **高质量图片需求**：基础转换使用截图，图片清晰度受限于 DPI，后处理可替换为原始高清图片
-- **专业演示文稿**：对字体、排版、背景有较高要求的商业演示，需要统一的字体和优化的背景
-- **批量转换**：需要保证多份文档风格统一的情况，后处理可确保一致性
-
-效果如下图所示，左边为无后处理，右边为有后处理，有很显著的改善。
-
-![](assets/compare.png)
-![](assets/compare2.png)
-
-### 如何使用 MinerU 后处理优化？
-
-#### 步骤 1：在 MinerU 网站解析 PDF
-
-1. 访问 [MinerU 官网](https://mineru.net/)
-2. 上传你的 PDF 文件
-3. 等待解析完成（通常需要几分钟，取决于文档大小）
-4. 下载生成的 JSON 文件
-
-#### 步骤 2：在程序中使用 JSON 文件
-
-在 GUI 界面的"文件设置"区域：
-- 选择要转换的 PDF 文件
-- 在"输入PDF对应的MinerU JSON (可选)"字段中选择刚才下载的 JSON 文件
-- 点击"开始转换"按钮
-
-**转换流程说明：**
-1. 程序首先执行基础转换：使用微软电脑管家的"智能圈选"功能将 PDF 转换为可编辑的 PPT
-2. 如果提供了 MinerU JSON 文件，程序会在基础转换完成后自动执行后处理优化
-3. 后处理优化包括：智能文本框筛选、字体统一、高质量图片替换、智能背景处理
-4. 最终输出经过优化的高质量 PPT 文件
-
-**注意：** 如果不提供 JSON 文件，程序只会执行基础转换，跳过后处理优化阶段。
-
-### 优化效果对比
-
-为了客观评估转换质量，我们建立了配套的基准测试项目 [PDF2PPT-Benchmark](https://github.com/elliottzheng/PDF2PPT-Benchmark)。
-
-通过在 72 页真实文档数据集上对比 **WPS PDF转PPT**、**微软智能圈选原生转换** 以及 **NotebookLM2PPT (MinerU优化)**，结果显示：
-
-| 方法 | PSNR (↑) | SSIM (↑) | LPIPS (↓) | 说明 |
-| :--- | :--- | :--- | :--- | :--- |
-| **MinerU优化** | **36.48** | **0.86** | **0.191** | **综合效果最佳，还原度最高** |
-| WPS | 35.47 | 0.85 | 0.193 | 传统办公软件基线 |
-| 仅智能圈选 | 35.92 | 0.84 | 0.215 | 截图识别原生效果 |
-
-> **结论**：结合 MinerU 后处理的转换方案在图像保真度（PSNR/SSIM）和视觉感知质量（LPIPS）上均优于传统商业软件和原生截图方案。
-
-### 常见问题
-
-**Q: MinerU JSON 文件是必需的吗？**
-A: 不是必需的。如果不提供 JSON 文件，程序会使用基础转换功能，仍然能够生成可编辑的 PPT。
-
-**Q: MinerU 是免费服务吗？**
-A: MinerU 目前看来是免费服务，只需要注册即可免费试用。
-
-**Q: 如果 JSON 文件与 PDF 不匹配会怎样？**
-A: 程序会尝试使用 JSON 信息，但可能导致优化效果不正确。请确保 JSON 文件与要转换的 PDF 完全对应。
-
-**Q: 想了解更多技术实现细节？**
-A: 请查看 [实现细节文档](docs/implementation.md) 和 [MinerU 技术实现细节文档](docs/mineru.md)。
+- **🔴 核心关键：按钮偏移校准**
+  本工具依赖模拟点击。如果无法自动点击"转换为PPT"，请务必在界面勾选"校准按钮位置"重新校准。
+- **🚫 请勿干扰**
+  转换过程中程序会控制鼠标，请不要移动鼠标或操作键盘（按 `ESC` 可紧急停止）。
+- **📂 找不到文件？**
+  默认情况下，程序会从系统的"下载"文件夹抓取临时文件，请确保下载路径未被修改。
 
 ---
 
-## ⚠️ 注意事项与常见问题
+## 📚 文档导航
 
-### 1. 按钮偏移参数的重要性（核心功能）
-
-**⚠️ 这是最关键的参数！**
-
-本工具通过模拟鼠标点击微软电脑管家的"转换为PPT"按钮来实现自动转换，按钮偏移参数决定了程序能否准确定位并点击该按钮。
-
-**首次使用建议**：
-- 勾选"校准按钮位置"选项
-- 程序会引导你手动点击按钮位置，自动保存偏移值
-- 校准后的偏移值会自动保存，下次使用时无需重复校准
-
-**如果校准失败**：
-- 确保微软电脑管家已更新到最新版本
-- 检查智能圈选功能是否正常工作
-- 尝试手动校准按钮位置
-- 清除保存的偏移值，重新进行校准
-
-> 💡 **想了解按钮偏移参数的技术原理？** 请查看 [实现细节文档](docs/implementation-details.md#按钮偏移参数)
-
-### 2. 转换失败或卡住？
-- **窗口焦点**：运行期间请勿操作鼠标键盘，以免干扰自动化流程。
-- **显示比例**：如果图片超出屏幕导致无法圈选，请尝试减小显示比例参数。
-- **网络/性能**：如果 PPT 生成较慢，请增加超时时间。
-
-### 3. 找不到生成的 PPT？
-- 本工具默认从系统的 **下载 (Downloads)** 文件夹抓取微软电脑管家生成的临时文件。请确保下载路径未被重定向。
-
-### 4. 智能圈选没有"转换为PPT"选项？
-- 请确保微软电脑管家已更新到最新版本。
-- 该功能可能在某些地区或版本中处于灰度测试，请检查设置中的"预览体验计划"。
+- [快速开始](https://elliottzheng.github.io/NotebookLM2PPT/quickstart.html) - 详细安装和使用教程
+- [功能特性](https://elliottzheng.github.io/NotebookLM2PPT/features.html) - 了解所有强大功能
+- [MinerU 优化](https://elliottzheng.github.io/NotebookLM2PPT/mineru.html) - 学习如何获得最佳效果
+- [实现细节](https://elliottzheng.github.io/NotebookLM2PPT/implementation.html) - 技术原理揭秘
+- [更新日志](https://elliottzheng.github.io/NotebookLM2PPT/changelog.html) - 查看版本历史
 
 ---
 
-## 📄 开源协议
+## 📄 开源协议与反馈
 
 本项目基于 [MIT License](LICENSE) 开源。
-
-## 🤝 贡献与反馈
-
-- 提交 [Issues](https://github.com/elliottzheng/NotebookLM2PPT/issues) 反馈 Bug 或建议。
-- 欢迎提交 Pull Request 改进代码。
-
----
-<p align="center">Made with ❤️ for better productivity</p>
-
+欢迎提交 [Issues](https://github.com/elliottzheng/NotebookLM2PPT/issues) 或 Pull Request。
