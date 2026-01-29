@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
 import threading
+import queue
 import sys
 import os
 import difflib
@@ -110,6 +111,11 @@ class AppGUI:
         self.root = root
         self.lang = "zh_cn"  # Default
         self.top_left = (10, 10)
+        
+        # 初始化拖拽队列和轮询机制（用于线程安全处理）
+        self._drop_queue = queue.Queue()
+        self._poll_drop_queue()
+        
         self.load_config_from_disk()
         set_language(self.lang)
         
@@ -140,6 +146,32 @@ class AppGUI:
         #     windnd.hook_dropfiles(self.root, func=self.on_drop_files)
         
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def _poll_drop_queue(self):
+        """轮询拖拽队列，在主线程中处理拖拽事件"""
+        try:
+            while True:
+                try:
+                    item = self._drop_queue.get_nowait()
+                    drop_type = item[0]
+                    
+                    if drop_type == 'pdf':
+                        _, files, pdf_listbox, pairing_dict, sync_func, update_func = item
+                        self._handle_batch_pdf_drop(files, pdf_listbox, pairing_dict, sync_func, update_func)
+                    elif drop_type == 'json':
+                        _, files, json_listbox, pairing_dict, sync_func, update_func = item
+                        self._handle_batch_json_drop(files, json_listbox, pairing_dict, sync_func, update_func)
+                    elif drop_type == 'dialog':
+                        _, files, pdf_var, json_var = item
+                        self._handle_dialog_drop_files_impl(files, pdf_var, json_var)
+                        
+                except queue.Empty:
+                    break
+        except Exception as e:
+            print(f"处理拖拽队列时出错: {e}")
+        finally:
+            # 每100ms轮询一次
+            self.root.after(100, self._poll_drop_queue)
 
     def _setup_path_entry(self, entry):
         """为路径输入框添加右键菜单、全选和自动滚动功能"""
@@ -212,7 +244,6 @@ class AppGUI:
         self.center_toplevel(top, width, height)
         # 设置窗口属性（不使用模态以避免与拖拽功能冲突）
         top.transient(self.root)
-        top.focus_set()
         return top
 
     def center_toplevel(self, window, width, height):
@@ -636,8 +667,7 @@ class AppGUI:
         ttk.Button(btn_frame, text=get_text("ok_btn"), command=on_ok).pack(side=tk.RIGHT, padx=5)
         
         top.transient(self.root)
-        top.grab_set()
-        self.root.wait_window(top)
+        # 使用异步窗口（不使用模态），避免阻塞与拖拽冲突
         
     def show_mineru_info(self):
         info = get_text("mineru_info_content")
@@ -947,22 +977,16 @@ class AppGUI:
         # 为整个对话框窗口添加拖拽功能
         if windnd:
             def on_dialog_drop(files):
-                decoded_files = []
-                for f in files:
-                    try:
-                        decoded_files.append(f.decode('gbk'))
-                    except:
-                        decoded_files.append(f.decode('utf-8', errors='ignore'))
-                
-                pdfs = [f for f in decoded_files if f.lower().endswith('.pdf')]
-                jsons = [f for f in decoded_files if f.lower().endswith('.json')]
-                
-                if pdfs:
-                    pdf_var.set(pdfs[0])
-                if jsons:
-                    json_var.set(jsons[0])
+                """线程安全的拖拽处理函数 - 使用队列"""
+                try:
+                    self._drop_queue.put(('dialog', files, pdf_var, json_var))
+                except:
+                    pass
             
-            windnd.hook_dropfiles(top, func=on_dialog_drop)
+            try:
+                windnd.hook_dropfiles(top, func=on_dialog_drop)
+            except Exception as e:
+                print(f"拖拽功能初始化失败: {e}")
 
         # 任务参数区域 - 使用 Canvas 支持滚动
         param_container = ttk.Frame(main_frame)
@@ -1326,37 +1350,30 @@ class AppGUI:
         # 为PDF listbox添加拖拽功能
         if windnd:
             def on_pdf_drop(files):
-                decoded_files = []
-                for f in files:
-                    try:
-                        decoded_files.append(f.decode('gbk'))
-                    except:
-                        decoded_files.append(f.decode('utf-8', errors='ignore'))
-                pdfs = [f for f in decoded_files if f.lower().endswith('.pdf')]
-                for pdf in pdfs:
-                    if pdf not in [pdf_listbox.get(i) for i in range(pdf_listbox.size())]:
-                        pdf_listbox.insert(tk.END, pdf)
-                        pairing_dict[pdf] = None
-                sync_listbox_sizes()
-                update_pair_display()
-            windnd.hook_dropfiles(pdf_listbox, func=on_pdf_drop)
+                """线程安全的PDF拖拽处理 - 使用队列"""
+                try:
+                    self._drop_queue.put(('pdf', files, pdf_listbox, pairing_dict, sync_listbox_sizes, update_pair_display))
+                except:
+                    pass
+            
+            try:
+                windnd.hook_dropfiles(pdf_listbox, func=on_pdf_drop)
+            except Exception as e:
+                print(f"PDF拖拽功能初始化失败: {e}")
         
         # 为JSON listbox添加拖拽功能
         if windnd:
             def on_json_drop(files):
-                decoded_files = []
-                for f in files:
-                    try:
-                        decoded_files.append(f.decode('gbk'))
-                    except:
-                        decoded_files.append(f.decode('utf-8', errors='ignore'))
-                jsons = [f for f in decoded_files if f.lower().endswith('.json')]
-                for json_file in jsons:
-                    if json_file not in [json_listbox.get(i) for i in range(json_listbox.size())]:
-                        json_listbox.insert(tk.END, json_file)
-                sync_listbox_sizes()
-                update_pair_display()
-            windnd.hook_dropfiles(json_listbox, func=on_json_drop)
+                """线程安全的JSON拖拽处理 - 使用队列"""
+                try:
+                    self._drop_queue.put(('json', files, json_listbox, pairing_dict, sync_listbox_sizes, update_pair_display))
+                except:
+                    pass
+            
+            try:
+                windnd.hook_dropfiles(json_listbox, func=on_json_drop)
+            except Exception as e:
+                print(f"JSON拖拽功能初始化失败: {e}")
         
         # 底部按钮区域 - 分为自动配对区和操作区
         ttk.Separator(main_container, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=8)
@@ -1415,6 +1432,92 @@ class AppGUI:
         ).pack(side=tk.RIGHT, padx=5, pady=5)
         
         update_pair_display()
+
+    def _handle_dialog_drop_files_impl(self, files, pdf_var, json_var):
+        """处理对话框拖拽文件的线程安全版本"""
+        try:
+            if not files:
+                return
+            
+            decoded_files = []
+            for f in files:
+                try:
+                    decoded_files.append(f.decode('gbk') if isinstance(f, bytes) else f)
+                except:
+                    decoded_files.append(f.decode('utf-8', errors='ignore') if isinstance(f, bytes) else f)
+            
+            pdfs = [f for f in decoded_files if f.lower().endswith('.pdf')]
+            jsons = [f for f in decoded_files if f.lower().endswith('.json')]
+            
+            if pdfs and not pdf_var.get():
+                pdf_var.set(pdfs[0])
+                print(f"已添加PDF文件: {pdfs[0]}")
+            
+            if jsons and not json_var.get():
+                json_var.set(jsons[0])
+                print(f"已添加JSON文件: {jsons[0]}")
+                
+        except Exception as e:
+            print(f"处理拖拽文件时出错: {e}")
+    
+    def _handle_batch_pdf_drop(self, files, pdf_listbox, pairing_dict, sync_func, update_func):
+        """处理批量PDF拖拽的线程安全版本"""
+        try:
+            if not files:
+                return
+            
+            decoded_files = []
+            for f in files:
+                try:
+                    decoded_files.append(f.decode('gbk') if isinstance(f, bytes) else f)
+                except:
+                    decoded_files.append(f.decode('utf-8', errors='ignore') if isinstance(f, bytes) else f)
+            
+            pdfs = [f for f in decoded_files if f.lower().endswith('.pdf')]
+            
+            if pdfs:
+                for pdf in pdfs:
+                    if pdf not in [pdf_listbox.get(i) for i in range(pdf_listbox.size())]:
+                        pdf_listbox.insert(tk.END, pdf)
+                        pairing_dict[pdf] = None
+                
+                sync_func()
+                update_func()
+                print(f"已添加 {len(pdfs)} 个PDF文件")
+            else:
+                print("请拖拽PDF文件")
+                
+        except Exception as e:
+            print(f"处理PDF拖拽时出错: {e}")
+    
+    def _handle_batch_json_drop(self, files, json_listbox, pairing_dict, sync_func, update_func):
+        """处理批量JSON拖拽的线程安全版本"""
+        try:
+            if not files:
+                return
+            
+            decoded_files = []
+            for f in files:
+                try:
+                    decoded_files.append(f.decode('gbk') if isinstance(f, bytes) else f)
+                except:
+                    decoded_files.append(f.decode('utf-8', errors='ignore') if isinstance(f, bytes) else f)
+            
+            jsons = [f for f in decoded_files if f.lower().endswith('.json')]
+            
+            if jsons:
+                for json_file in jsons:
+                    if json_file not in [json_listbox.get(i) for i in range(json_listbox.size())]:
+                        json_listbox.insert(tk.END, json_file)
+                
+                sync_func()
+                update_func()
+                print(f"已添加 {len(jsons)} 个JSON文件")
+            else:
+                print("请拖拽JSON文件")
+                
+        except Exception as e:
+            print(f"处理JSON拖拽时出错: {e}")
 
     def _move_item_up(self, listbox):
         """向上移动选中项"""
