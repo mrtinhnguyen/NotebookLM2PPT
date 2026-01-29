@@ -195,22 +195,23 @@ def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out
         def to_bg(x):
             return round(x * ppt_to_bg_factor)
         
-        def fill_blocks(blocks_to_fill):
+        def fill_blocks(blocks_to_fill, is_image):
             for block_to_fill in blocks_to_fill:
                 bbox = block_to_fill['bbox']
                 l, t, r, b = map(round, bbox)
-                diversity, fill_color = compute_edge_diversity_numpy(image_cv, l, t, r, b, tolerance=15)
-                if old_bg_cv is None or diversity < 0.5: # 边缘多样性低，认为是纯色区域，则可以直接填充
-                    image_cv[t:b, l:r] = fill_color
+                diversity, fill_color = compute_edge_diversity_numpy(image_cv, l, t, r, b, tolerance=20)
+                # 如果是图片块，或者原背景图为空，或者边缘多样性低，认为是纯色区域，则可以直接填充
+                if is_image or old_bg_cv is None or diversity < 0.5:
+                    image_cv[t-1:b-1, l+1:r+1] = fill_color
                     action = 'fill'
                 else: # 边缘多样性高，保留原背景
-                    image_cv[t:b, l:r] = old_bg_cv[t:b, l:r] # 保留原背景的前提是要有原背景图
+                    image_cv[t-1:b-1, l+1:r+1] = old_bg_cv[t-1:b-1, l+1:r+1] # 保留原背景的前提是要有原背景图
                     action = 'keep'
                 print("div=", diversity, action, fill_color, " block_to_fill=", block_to_fill)
 
         # 对于所有文本块进行填充
         text_blocks = get_scaled_para_blocks(image_scale, pdf_info, page_index, cond='no_image')
-        fill_blocks(text_blocks)
+        fill_blocks(text_blocks, is_image=False)
 
         # 替换图片    
         image_blocks = get_scaled_para_blocks(ppt_scale,pdf_info, page_index,'only_image')
@@ -224,9 +225,9 @@ def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out
                     left, top, right, bottom = image_block['bbox']
 
                     left_bg = to_bg(left)
-                    top_bg = to_bg(top)
+                    top_bg = to_bg(top) + 1
                     right_bg = to_bg(right)
-                    bottom_bg = to_bg(bottom)
+                    bottom_bg = to_bg(bottom) + 1
                     
                     image_crop = image_cv[top_bg:bottom_bg, left_bg:right_bg]
                     Image.fromarray(image_crop).save(tmp_image_path)
@@ -239,7 +240,7 @@ def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out
                     image.ZOrderPosition = 0  # 设置图片在最底层
         # 擦除图片块的背景
         image_blocks = get_scaled_para_blocks(image_scale, pdf_info, page_index, cond='only_image')
-        fill_blocks(image_blocks)
+        fill_blocks(image_blocks, is_image=True)
 
         tmp_bg_file = png_file.replace('.png', '_bg.png')
         Image.fromarray(image_cv).save(tmp_bg_file)
