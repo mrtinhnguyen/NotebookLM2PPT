@@ -1,93 +1,93 @@
 # 🚀 NotebookLM2PPT
 
-> **让 NotebookLM 的演示文稿真正为你所用**
-> 从 PDF 到全可编辑 PPT 的智能转换工具
+> **Biến các bản trình chiếu do NotebookLM tạo thành công cụ thực sự phục vụ bạn**
+> Công cụ chuyển đổi thông minh từ PDF sang PowerPoint có thể chỉnh sửa hoàn toàn
 
 
-[最新版本 ![](https://img.shields.io/github/release/elliottzheng/NotebookLM2PPT.svg)] | [文档中心](https://elliottzheng.github.io/NotebookLM2PPT) | [下载地址](https://github.com/elliottzheng/NotebookLM2PPT/releases)
-
----
-
-## 项目简介
-
-**NotebookLM2PPT** 是一款强大的自动化工具，旨在将不可编辑的 PDF 文档（特别是 NotebookLM 生成的演示文稿）转换为**完全可编辑**的 PowerPoint 演示文稿。
-
-### 核心价值
-- **🤖 全自动化**：利用微软电脑管家"智能圈选"，自动完成截图、识别、转换和合并。
-- **🧠 MinerU 深度优化**：(可选) 集成 MinerU 解析能力，智能重排文本、统一字体、替换高清图片。
-- **✨ 智能去水印**：内置针对 NotebookLM 的智能水印去除算法。
-- **📦 批量处理**：(v0.7.0) 支持任务队列，可批量添加多个 PDF 及其 MinerU JSON 进行自动化顺序处理。
+[Phiên bản mới nhất ![](https://img.shields.io/github/release/mrtinhnguyen/NotebookLM2PPT.svg)] | [Tài liệu](https://elliottzheng.github.io/NotebookLM2PPT) | [Tải về](https://github.com/elliottzheng/NotebookLM2PPT/releases)
 
 ---
 
-## 🌟 效果展示
+## Giới thiệu dự án
 
-左侧为基础转换（截图识别），右侧为 **MinerU 优化后**（重排版+高清图）：
+**NotebookLM2PPT** là một công cụ tự động mạnh mẽ, giúp chuyển các tài liệu PDF không thể chỉnh sửa (đặc biệt là các slide do NotebookLM tạo) thành các bản PowerPoint có thể chỉnh sửa hoàn toàn.
 
-| 基础转换 PPT | **MinerU 优化后 PPT** |
+### Giá trị chính
+- **🤖 Tự động hoàn toàn**: Sử dụng tính năng "Smart Select" của Microsoft PC Manager để tự động chụp màn hình, nhận diện, chuyển đổi và ghép slide.
+- **🧠 Tối ưu sâu bằng MinerU** (tuỳ chọn): Tích hợp khả năng phân tích của MinerU để tái bố cục văn bản, đồng nhất font và thay thế bằng ảnh chất lượng cao.
+- **✨ Loại bỏ watermark thông minh**: Thuật toán tích hợp để xử lý watermark đặc thù từ NotebookLM.
+- **📦 Xử lý hàng loạt** (v1.1.0): Hỗ trợ hàng đợi tác vụ, cho phép thêm nhiều PDF và JSON MinerU để xử lý tự động theo thứ tự。
+
+---
+
+## 🌟 Minh hoạ kết quả
+
+Bên trái là chuyển đổi cơ bản (chụp màn hình + nhận dạng), bên phải là **sau khi tối ưu bằng MinerU** (tái bố cục + ảnh HD):
+
+| **PPT chuyển đổi cơ bản** | **PPT được tối ưu hóa bằng MinerU** |
 | :--- | :--- |
 | ![Basic](docs/public/page_0004_1_converted.jpg) | ![MinerU](docs/public/page_0004_2_converted.jpg) |
 | ![Basic](docs/public/page_0003_1_converted.jpg) | ![MinerU](docs/public/page_0003_2_converted.jpg) |
 
-> 💡 **效果惊人？** 查看 [详细对比](https://elliottzheng.github.io/NotebookLM2PPT/compare.html) 和 [基准测试数据](https://elliottzheng.github.io/NotebookLM2PPT/features.html#%F0%9F%93%8A-%E6%95%88%E6%9E%9C%E8%AF%84%E4%BC%B0)。
+> 💡 **Ấn tượng với kết quả?** Xem [so sánh chi tiết](https://mrtinhnguyen.github.io/NotebookLM2PPT/compare.html) và [dữ liệu hiệu suất](https://mrtinhnguyen.github.io/NotebookLM2PPT/features.html)。
 
 ---
 
-## 🚀 快速开始
+## 🚀 Bắt đầu nhanh
 
-详细教程请查看 [快速开始指南](https://elliottzheng.github.io/NotebookLM2PPT/quickstart.html)。
+Xem hướng dẫn chi tiết tại [Hướng dẫn bắt đầu nhanh](https://mrtinhnguyen.github.io/NotebookLM2PPT/quickstart.html).
 
-### 1. 系统要求
+### 1. Yêu cầu hệ thống
 - **Windows 10/11**
-- **Microsoft PowerPoint** 或 **WPS Office** (v0.6.5+ 支持)
-- **[微软电脑管家](https://pcmanager.microsoft.com/)** (版本 $\ge$ 3.17.50.0，必须开启"智能圈选")
+- **Microsoft PowerPoint** hoặc **WPS Office** (hỗ trợ từ v0.6.5+)
+- **Microsoft PC Manager** ([tải ở đây](https://pcmanager.microsoft.com/)) (phiên bản $\ge$ 3.17.50.0 và bật tính năng "Smart Select")
 
-### 2. 安装
-- **推荐**：直接在 [Releases](https://github.com/elliottzheng/NotebookLM2PPT/releases) 下载 `.exe` 文件运行。
-- **开发者**：`pip install notebooklm2ppt -U`
+### 2. Cài đặt
+- **Khuyến nghị**: Tải tệp `.exe` từ trang [Releases](https://github.com/mrtinhnguyen/NotebookLM2PPT/releases) và chạy.
+- **Dành cho nhà phát triển**: `pip install notebooklm2ppt -U`
 
-### 3. 使用步骤
-1. **启动程序**：运行 exe 或命令行输入 `notebooklm2ppt`。
-2. **选择文件**：选择需要转换的 PDF。
-3. **校准位置**：**首次使用务必勾选"校准按钮位置"**，根据提示点击屏幕上的"转换为PPT"按钮。
-4. **开始转换**：程序将自动接管鼠标完成操作。
-
----
-
-## 🧠 进阶功能：MinerU 后处理优化
-
-想要获得专业级的排版效果？使用 MinerU 优化功能：
-
-1. 在 [MinerU 官网](https://mineru.net/) 上传 PDF 并下载解析后的 JSON 文件。
-2. 在本工具中选择 PDF 时，同时选择对应的 JSON 文件。
-3. 程序将在基础转换完成后，自动执行深度优化（文本重排、字体统一、高清图替换）。
-
-👉 [了解 MinerU 优化详情](https://elliottzheng.github.io/NotebookLM2PPT/mineru.html)
+### 3. Các bước sử dụng
+1. **Khởi chạy ứng dụng**: chạy file exe hoặc gõ `notebooklm2ppt` trong dòng lệnh.
+2. **Chọn tệp**: chọn PDF cần chuyển đổi.
+3. **Hiệu chuẩn vị trí**: **lần đầu sử dụng hãy bật 'Calibrate button position'** và làm theo hướng dẫn để click nút "Convert to PPT" trên màn hình.
+4. **Bắt đầu chuyển đổi**: chương trình sẽ tự điều khiển chuột để hoàn thành thao tác。
 
 ---
 
-## ⚠️ 常见问题与注意事项
+## 🧠 Tính năng nâng cao: Tối ưu hóa xử lý hậu kỳ MinerU
 
-- **🔴 核心关键：按钮偏移校准**
-  本工具依赖模拟点击。如果无法自动点击"转换为PPT"，请务必在界面勾选"校准按钮位置"重新校准。
-- **🚫 请勿干扰**
-  转换过程中程序会控制鼠标，请不要移动鼠标或操作键盘（按 `ESC` 可紧急停止）。
-- **📂 找不到文件？**
-  默认情况下，程序会从系统的"下载"文件夹抓取临时文件，请确保下载路径未被修改。
+Muốn có bố cục chuyên nghiệp? Hãy sử dụng các tính năng tối ưu hóa của MinerU:
 
----
+1. Tải tệp PDF của bạn lên [trang web MinerU](https://mineru.net/) và tải xuống tệp JSON đã được phân tích cú pháp.
+2. Khi chọn tệp PDF trong công cụ này, hãy chọn cả tệp JSON tương ứng.
+3. Sau khi quá trình chuyển đổi cơ bản hoàn tất, chương trình sẽ tự động thực hiện tối ưu hóa chuyên sâu (sắp xếp lại văn bản, thống nhất phông chữ và thay thế hình ảnh độ phân giải cao).
 
-## 📚 文档导航
-
-- [快速开始](https://elliottzheng.github.io/NotebookLM2PPT/quickstart.html) - 详细安装和使用教程
-- [功能特性](https://elliottzheng.github.io/NotebookLM2PPT/features.html) - 了解所有强大功能
-- [MinerU 优化](https://elliottzheng.github.io/NotebookLM2PPT/mineru.html) - 学习如何获得最佳效果
-- [实现细节](https://elliottzheng.github.io/NotebookLM2PPT/implementation.html) - 技术原理揭秘
-- [更新日志](https://elliottzheng.github.io/NotebookLM2PPT/changelog.html) - 查看版本历史
+👉 [Tìm hiểu thêm về chi tiết tối ưu hóa của MinerU](https://mrtinhnguyen.github.io/NotebookLM2PPT/mineru.html)
 
 ---
 
-## 📄 开源协议与反馈
+## ⚠️ Câu hỏi thường gặp và lưu ý quan trọng
 
-本项目基于 [MIT License](LICENSE) 开源。
-欢迎提交 [Issues](https://github.com/elliottzheng/NotebookLM2PPT/issues) 或 Pull Request。
+- **🔴 Điểm then chốt: Hiệu chuẩn độ lệch nút bấm**
+  Công cụ này dựa vào mô phỏng nhấp chuột. Nếu không thể tự động nhấp nút "Chuyển đổi thành PPT", hãy chắc chắn chọn "Hiệu chuẩn vị trí nút" trên giao diện để hiệu chuẩn lại.
+- **🚫 Vui lòng không can thiệp**
+  Trong quá trình chuyển đổi, chương trình sẽ kiểm soát chuột, vui lòng không di chuyển chuột hoặc nhấn phím (nhấn `ESC` có thể dừng khẩn cấp).
+- **📂 Không tìm thấy tệp?**
+  Theo mặc định, chương trình sẽ trích xuất tệp tạm thời từ thư mục "Tải xuống" của hệ thống, vui lòng đảm bảo đường dẫn tải xuống không thay đổi.
+
+---
+
+## 📚 Hướng dẫn tài liệu
+
+- [Bắt đầu nhanh](https://mrtinhnguyen.github.io/NotebookLM2PPT/quickstart.html) - Hướng dẫn cài đặt và sử dụng chi tiết
+- [Tính năng](https://mrtinhnguyen.github.io/NotebookLM2PPT/features.html) - Tìm hiểu tất cả các tính năng mạnh mẽ
+- [Tối ưu hóa MinerU](https://mrtinhnguyen.github.io/NotebookLM2PPT/mineru.html) - Tìm hiểu cách đạt kết quả tốt nhất
+- [Chi tiết triển khai](https://mrtinhnguyen.github.io/NotebookLM2PPT/implementation.html) - Tiết lộ các nguyên tắc kỹ thuật
+- [Nhật ký cập nhật](https://mrtinhnguyen.github.io/NotebookLM2PPT/changelog.html) - Xem lịch sử phiên bản
+
+---
+
+## 📄 Giấy phép mã nguồn mở và Phản hồi
+
+Dự án này được cấp phép theo [MIT License](LICENSE).
+Hoan nghênh gửi [Issues](https://github.com/mrtinhnguyen/NotebookLM2PPT/issues) hoặc Pull Request。

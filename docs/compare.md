@@ -1,5 +1,5 @@
 ---
-title: 样例对比
+title: So sánh mẫu
 layout: page
 ---
 
@@ -18,8 +18,8 @@ layout: page
 <table class="compare-table">
   <thead>
     <tr>
-      <th>基础转换PPT（仅使用智能圈选）</th>
-      <th style="color: red;">MinerU 优化后PPT</th>
+      <th>PPT chuyển đổi cơ bản (chỉ sử dụng Smart Select)</th>
+      <th style="color: red;">PPT sau tối ưu hóa MinerU</th>
     </tr>
   </thead>
   <tbody>
@@ -85,4 +85,3 @@ layout: page
     </tr>
   </tbody>
 </table>
-

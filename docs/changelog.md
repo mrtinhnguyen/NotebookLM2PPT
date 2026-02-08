@@ -1,311 +1,311 @@
 # Changelog
 
-本文档记录了 NotebookLM2PPT 的所有版本更新历史。
+Tài liệu này ghi lại tất cả lịch sử cập nhật phiên bản của NotebookLM2PPT.
 
 ## [v0.7.0] - 2026-01-29
 
-### ⚙️ 配置管理与用户体验优化
+### ⚙️ Quản lý cấu hình và tối ưu hóa trải nghiệm người dùng
 
-- **添加配置管理系统**：支持用户设置记忆，自动保存并加载上次的任务设置（如输出目录、DPI、语言等）
-- **自定义截图偏移**：新增自定义截图区域偏移坐标功能，支持在 GUI 中设置偏移量，并自动防止超出屏幕边界
-- **统一字体功能**：在 MinerU 优化模式下支持统一替换 PPT 字体，提升文档视觉一致性
+- **Thêm hệ thống quản lý cấu hình**: Hỗ trợ lưu nhớ các cài đặt của người dùng, tự động lưu và tải lại các cài đặt tác vụ lần cuối (đường dẫn đầu ra, DPI, ngôn ngữ, v.v.)
+- **Tọa độ chụp ảnh tùy chỉnh**: Thêm chức năng tùy chỉnh tọa độ xu hướng vùng chụp, hỗ trợ cài đặt xu hướng trong GUI, và tự động ngăn chặn vượt quá biên màn hình
+- **Chức năng thống nhất phông chữ**: Hỗ trợ thay thế công thống nhất phông chữ PPT ở chế độ tối ưu hóa MinerU, nâng cao tính nhất quán thẩm mỹ của tài liệu
 
-### 🚀 批量处理增强
+### 🚀 Năng lực xử lý hàng loạt
 
-- **智能任务配对**：新增批量任务配对对话框，支持智能配对和顺序配对两种模式
-- **文件配对引导优化**：改进 JSON 配对状态检测逻辑，区分“未配对”与“无 JSON”状态，并加强任务添加时的合法性校验
-- **拖拽功能增强**：批量添加界面支持文件拖拽，提升操作便捷性
-- **队列管理优化**：优化任务队列显示，支持区分优化版与未优化版输出文件
+- **Ghép cặp tác vụ thông minh**: Thêm hộp thoại ghép cặp tác vụ hàng loạt, hỗ trợ hai chế độ ghép cặp thông minh và ghép cặp theo thứ tự
+- **Tối ưu hóa hướng dẫn ghép cặp tệp**: Cải thiện logic phát hiện trạng thái ghép cặp JSON, phân biệt giữa "Đã ghép cặp" và "không có JSON", và tăng cường kiểm tra tính hợp lệ khi thêm tác vụ
+- **Cải tiến chức năng kéo thả**: Giao diện thêm hàng loạt hỗ trợ kéo tệp, nâng cao tiện lợi hoạt động
+- **Tối ưu hóa quản lý hàng đợi**: Tối ưu hóa hiển thị hàng đợi tác vụ, hỗ trợ phân biệt giữa tệp đầu ra phiên bản được tối ưu hóa và phiên bản không tối ưu hóa
 
-### 🎨 GUI 与国际化
+### 🎨 GUI và quốc tế hóa
 
-- **UI 布局调整**：将语言选择器移至全局设置区域，提升设置项的组织性
-- **交互稳定性提升**：修复拖拽功能的线程安全问题，引入队列机制处理；优化对话框行为，改为非模态显示以提升交互流畅度
-- **国际化补充**：为自动化设置、任务管理等新增翻译键，完善中英文多语言支持
+- **Cảnh chỉnh bố cục UI**: Chuyển chọn ngôn ngữ đến khu vực cài đặt toàn cục, nâng cao tính tổ chức của các mục cài đặt
+- **Nâng cao tính ổn định tương tác**: Sửa chữa vấn đề an toàn luồng trong chức năng kéo, giới thiệu cơ chế hàng đợi; tối ưu hóa hành vi hộp thoại, đổi thành hiển thị không phương thức để nâng cao độ mượt mà tương tác
+- **Hoàn tất quốc tế hóa**: Thêm các khóa dịch cho các tài liệu tự động hóa, quản lý tác vụ, v.v., hoàn thành hỗ trợ đa ngôn ngữ Trung - Việt
 
-### 🛠️ 稳定性与算法改进
+### 🛠️ Ổn định và cải tiến thuật toán
 
-- **图片填充修复**：修复 PPT 优化过程中图片块填充的边界偏移问题，提升背景擦除与图片替换的精确度
-- **背景处理优化**：调整背景处理顺序，解决图片覆盖问题，并将边缘多样性检测容差调优至 15
+- **Sửa chữa điều khiển tính chảy**: Sửa chữa vấn đề điều khiển lệ tính quá trình tối ưu hóa PPT, nâng cao độ chính xác và xóa bỏ nền lịch thừa cạnh
+- **Tối ưu hóa xử lý nền**: Sắp xếp lại thứ tự xử lý nền, giải quyết vấn đề phủ nạp hình ảnh, và tối ưu hóa độ lệch của cảm nhận đa dạng thế tăng đến 15
 
 ---
 
 ## [v0.6.6] - 2026-01-28
 
-### 📦 批量任务支持
+### 📦 Hỗ trợ tác vụ hàng loạt
 
-- **新增任务队列**：支持批量添加、编辑、删除和后台顺序执行 PDF 转换任务
-- **多文件拖放**：支持一次性拖入多个 PDF 和 JSON 文件进行批量处理
+- **Hàng đợi tác vụ mới**: Hỗ trợ thêm, chỉnh sửa, xóa và thực hiện theo thứ tự ở phía sau các tác vụ chuyển đổi PDF hàng loạt
+- **Kéo thả nhiều tệp**: Hỗ trợ kéo cùng lúc nhiều tệp PDF và JSON để xử lý hàng loạt
 
-### ⚡ 性能与自动化优化
+### ⚡ Hiệu suất và tối ưu hóa tự động hóa
 
-- **极致响应**：移除截图流程中的不必要延迟（由 1-2s 降至 0s），大幅提升自动化执行速度
-- **环境检测**：新增微软电脑管家运行状态检测，未运行时提供安装引导
+- **Phản ứng cực tốc**: Xóa các độ trễ không cần thiết trong quy trình chụp ảnh (giảm từ 1-2s xuống 0s), đáng kể cải thiện tốc độ thực hiện tự động hóa
+- **Phát hiện môi trường**: Thêm phát hiện trạng thái chạy của Microsoft PC Manager, cung cấp hướng dẫn cài đặt khi chưa chạy
 
-### 🛠️ 修复与改进
+### 🛠️ Sửa chữa và cải tiến
 
-- **显示优化**：为全屏图像显示添加边缘填充，修复屏幕边缘黑边问题
-- **配置修复**：修复 GUI 加载配置后部分 UI 变量未同步更新的问题
-- **文档完善**：更新背景处理算法文档，详细阐述边缘多样性检测原理
+- **Tối ưu hóa hiển thị**: Thêm đệm cạnh cho hiển thị hình ảnh toàn màn hình, sửa chữa vấn đề đường viền đen ở cạnh màn hình
+- **Sửa chữa cấu hình**: Sửa chữa vấn đề các biến UI không được cập nhật đồng bộ sau khi GUI tải cấu hình
+- **Hoàn thiện tài liệu**: Cập nhật tài liệu thuật toán xử lý nền, giải thích chi tiết nguyên tắc phát hiện đa dạng cạnh
 
 ---
 
 ## [v0.6.5] - 2026-01-27
 
-### 🔄 WPS 支持
+### 🔄 Hỗ trợ WPS
 
-- 增加对默认PPT应用为WPS的支持
-- 之前只能识别默认是PowerPoint
-- 感谢 MadCatPX 的贡献
+- Thêm hỗ trợ cho ứng dụng PPT mặc định là WPS
+- Trước đây chỉ có thể nhận dạng PowerPoint là mặc định
+- Cảm ơn MadCatPX vì đã đóng góp
 
 ---
 
 ## [v0.6.4] - 2026-01-26
 
-### 🌍 多语言支持
+### 🌍 Hỗ trợ đa ngôn ngữ
 
-- **添加多语言支持**
-- 新增i18n模块，包含中英文翻译文件
-- 在GUI中添加语言切换功能，支持简体中文和English
-- 重构GUI代码以使用动态文本替换，所有界面文本可翻译
-- 更新版本号至0.6.4以反映新功能
+- **Thêm hỗ trợ đa ngôn ngữ**
+- Thêm mô-đun i18n mới, chứa các tệp dịch tiếng Trung và Anh
+- Thêm chức năng chuyển đổi ngôn ngữ trong GUI, hỗ trợ Tiếng Trung Giản Thể và Tiếng Anh
+- Tái cấu trúc mã GUI để sử dụng thay thế văn bản động, tất cả văn bản giao diện có thể dịch
+- Cập nhật số phiên bản lên 0.6.4 để phản ánh các tính năng mới
 
 ---
 
 ## [v0.6.3] - 2026-01-25
 
-### 🛠️ 稳定性提升
+### 🛠️ Nâng cao ổn định
 
-- **轻微稳定性提升**，如能正常使用无需升级
-- 改进PPT窗口检测功能，增加对完整路径的支持
-- 优化资源管理器窗口关闭逻辑，支持精确路径匹配
-- 添加COM接口获取PPT文件信息，提高稳定性
+- **Nâng cao ổn định nhẹ**, nếu sử dụng bình thường không cần nâng cấp
+- Cải thiện chức năng phát hiện cửa sổ PPT, tăng hỗ trợ cho đường dẫn đầy đủ
+- Tối ưu hóa logic đóng cửa sổ trình khám phá tài nguyên, hỗ trợ khớp đường dẫn chính xác
+- Thêm giao diện COM để lấy thông tin tệp PPT, cải thiện ổn định
 
 ---
 
 ## [v0.6.2] - 2026-01-23
 
-### 🎨 图像修复方法增强与功能优化
+### 🎨 Cải tiến phương pháp sửa chữa hình ảnh và tối ưu hóa chức năng
 
-本次更新专注于图像修复功能的深度增强和整体用户体验的优化，提供更专业的修复方法和更灵活的使用模式。
+Bản cập nhật này tập trung vào nâng cao sâu chức năng sửa chữa hình ảnh và tối ưu hóa trải nghiệm người dùng tổng thể, cung cấp các phương pháp sửa chữa chuyên nghiệp hơn và chế độ sử dụng linh hoạt hơn.
 
-#### 核心优化
+#### Tối ưu hóa lõi
 
-**6 种专业图像修复方法**
-重构图像修复模块，提供多种修复算法选择：
-- **智能平滑（推荐）** - 综合效果最佳，适合大多数去除文字、水印的场景
-- **边缘均值填充** - 取周围像素平均色填充，适合纯色或简单背景
-- **极速纯色填充** - 直接填充单一背景色，仅适合极简底色，速度最快
-- **逐层内缩修补** - 由外向内逐层修补，适合细长划痕或线条修复
-- **渐变过渡插值** - 计算平滑的曲面过渡，适合带有渐变的背景
-- **双调和光影修补** - 计算量大，速度较慢，但能更好保持光影连续性
+**6 phương pháp sửa chữa hình ảnh chuyên nghiệp**
+Tái cấu trúc mô-đun sửa chữa hình ảnh, cung cấp lựa chọn nhiều thuật toán sửa chữa:
+- **Làm mịn thông minh (Khuyên dùng)** - Hiệu ứng tổng hợp tốt nhất, phù hợp với hầu hết các khoảnh khắc xóa văn bản, hình mờ
+- **Điền giá trị trung bình cạnh** - Lấy màu sắc pixel trung bình xung quanh để điền, thích hợp cho nền đơn sắc hoặc đơn giản
+- **Điền nhanh siêu ngoài** - Điền trực tiếp màu nền duy nhất, chỉ thích hợp cho mục tiêu siêu tối giản, tốc độ nhanh nhất
+- **Sửa chữa lớp trong ngoài** - Sửa chữa lớp từ ngoài vào, thích hợp với các đường gạch ngang hoặc kéo dài tháp
+- **Nội suy chuyển tiếp dần** - Tính toán chuyển tiếp bề mặt mịn, thích hợp với nền có dải màu
+- **Sửa chữa điều hòa kép với ánh sáng bóng** - Khối lượng tính toán lớn, tốc độ chậm hơn, nhưng có thể tốt hơn bài tập ánh sáng bóng tính liên tục
 
-#### 功能增强
+#### Cải tiến chức năng
 
-- **🖼️ 仅图片模式**：新增仅图片模式选项，允许用户跳过智能圈选功能
-  - 直接将去水印后的 PNG 图片插入 PPT
-  - 生成速度更快，但 PPT 内容不可编辑
-  - 添加确认对话框，确保用户了解模式特点
+- **🖼️ Chế độ chỉ hình ảnh**: Thêm tùy chọn chế độ chỉ hình ảnh mới, cho phép ngư dân bỏ qua chức năng vòng tròn thông minh
+  - Chèn trực tiếp hình ảnh PNG đã xóa hình mờ vào PPT
+  - Tốc độ tạo nhanh hơn, nhưng nội dung trong PPT không thể chỉnh sửa được
+  - Thêm hộp thoại xác nhận, đảm bảo người dùng hiểu các tính năng chế độ
 
-- **📖 修复方法说明窗口**：添加详细的图像修复方法说明对话框，帮助用户了解各种方法的特点和适用场景
+- **📖 Cửa sổ hướng dẫn phương pháp sửa chữa**: Thêm hộp thoại hướng dẫn chi tiết phương pháp sửa chữa hình ảnh, giúp người dùng hiểu các tính năng và trường hợp sử dụng của các phương pháp khác nhau
 
-#### GUI 布局优化
+#### Tối ưu hóa bố cục GUI
 
-- 重构图像修复模块的界面布局，提供更直观的方法选择体验
-- 所有窗口（主窗口、对话框）默认居中显示，改进用户体验
-- 使用英文标识保存修复方法配置，提高兼容性
+- Tái cấu trúc bố cục giao diện mô-đun sửa chữa hình ảnh, cung cấp trải nghiệm chọn phương pháp trực quan hơn
+- Tất cả cửa sổ (cửa sổ chính, hộp thoại) mặc định hiển thị ở giữa, cải thiện trải nghiệm người dùng
+- Sử dụng nhận dạng tiếng Anh để lưu cấu hình phương pháp sửa chữa, cải thiện khả năng tương thích
 
 ---
 
 ## [v0.6.1] - 2026-01-23
 
-### 🖼️ 仅图片模式
+### 🖼️ Chế độ chỉ hình ảnh
 
-- 添加新的仅图片模式选项，允许用户跳过智能圈选功能
-- 直接将去水印后的 PNG 图片插入 PPT
-- 此模式生成速度更快但内容不可编辑
-- 添加相关确认对话框和逻辑处理
+- Thêm tùy chọn chế độ chỉ hình ảnh mới, cho phép người dùng bỏ qua chức năng vòng tròn thông minh
+- Chèn trực tiếp hình ảnh PNG đã xóa hình mờ vào PPT
+- Chế độ này tạo nhanh hơn nhưng nội dung không thể chỉnh sửa
+- Thêm hộp thoại xác nhận liên quan và xử lý logic
 
 ---
 
 ## [v0.6.0] - 2026-01-23
 
-### 💎 版本核心：迈向极致轻量化
+### 💎 Phiên bản lõi: Hướng tới siêu nhẹ cực tính
 
-在 v0.6.0 中，我们完成了项目自发布以来最彻底的一次底层重构。通过完全移除 OpenCV 和 Scikit-learn 两大重型依赖，不仅解决了由于二进制包过大导致的启动缓慢问题，更将编译后的程序体积压缩到了极致。
+Trong v0.6.0, chúng tôi đã hoàn thành việc tái cấu trúc cơ bản toàn diện nhất kể từ khi dự án phát hành. Bằng việc hoàn toàn loại bỏ hai thư viện nặng OpenCV và Scikit-learn, không chỉ giải quyết vấn đề khởi động chậm do gói nhị phân quá lớn, mà còn nén lại thể tích chương trình biên dịch đến mức cực.
 
-#### 🚀 性能与架构优化
+#### 🚀 Tối ưu hóa hiệu suất và kinh trúc
 
-**1. 依赖库全量"瘦身"**
-- **移除 Scikit-learn**：将原有的 DBSCAN 边缘多样性检测替换为高性能的 Numpy 原生实现
-- **移除 OpenCV**：全屏图像显示引擎全面迁移至 Tkinter
-- **体积效益**：编译后的 .exe 或二进制文件大小大大减小，冷启动速度与内存占用大幅优化
+**1. Toàn bộ "giảm cân" thư viện phụ thuộc**
+- **Loại bỏ Scikit-learn**: Thay thế phát hiện đa dạng cạnh DBSCAN ban đầu bằng triển khai Numpy gốc hiệu suất cao
+- **Loại bỏ OpenCV**: Muộn hiển thị hình ảnh toàn màn hình hoàn toàn sang Tkinter
+- **Lợi ích thể tích**: Kích thước tệp .exe hoặc nhị phân biên dịch giảm đáng kể, tốc độ khởi động lạnh và tiêu thụ bộ nhớ tối ưu đáng kể
 
-**2. 核心算法升级**
-- **图像修复 2.0**：采用全新的 Numpy 向量化逻辑替代聚类算法，在保持精度的同时，显著提升了处理大尺寸图片的效率
-- **边缘多样性检测**：新增边缘多样性计算工具，专门优化了幻灯片中纯色背景区域的填充效果，过渡更自然
+**2. Nâng cấp thuật toán lõi**
+- **Sửa chữa hình ảnh 2.0**: Sử dụng logic véc-tơ hóa Numpy mới thay thế thuật toán nhóm, trong khi duy trì độ chính xác, đáng kể cải thiện hiệu quả xử lý hình ảnh kích thước lớn
+- **Phát hiện đa dạng cạnh**: Thêm công cụ tính toán đa dạng cạnh mới, tối ưu hóa đặc biệt hiệu ứng điền cho các vùng nền đơn sắc trong tập diễn lamppet, chuyển tiếp tự nhiên hơn
 
-#### 🆕 新增功能与改进
+#### 🆕 Tính năng mới và cải tiến
 
-**交互逻辑**
-- 新增"一键强行停止"功能
-- 为图片查看器添加 ESC 键全局支持
-- 无论是在截图、处理还是转换流程中，均可通过 ESC 键或外部信号即时中断任务
+**Logic tương tác**
+- Thêm chức năng "dừng tinh kiêu ngay lập tức"
+- Cho trình xem hình ảnh thêm hỗ trợ phím ESC toàn cầu
+- Dù ở quá trình chụp ảnh, xử lý hay quy trình chuyên đổi, tất cả có thể ngay lập tức gián đoạn tác vụ qua phím ESC hoặc tín hiệu bên ngoài
 
-**PPT 精炼处理增强**
-- 优化了对 PPT 文本块与图片块的识别与填充逻辑
-- 修复了"双层图片"问题，确保每个元素块在幻灯片中仅生成唯一且正确的层级
+**Cải tiến xử lý chút lại PPT**
+- Tối ưu hóa logic nhận dạng và điền khối văn bản và khối hình ảnh PPT
+- Sửa chữa vấn đề "hình ảnh hai lớp", đảm bảo mỗi khối yếu tố tạo ra lớp độc nhất và đúng trong tập tính
 
-**GUI 体验调整**
-- 调整了默认窗口尺寸，使其在各种分辨率的显示器上都能获得最佳的视觉比例
+**Điều chỉnh trải nghiệm GUI**
+- Điều chỉnh kích thước cửa sổ mặc định, nhằm đạt tỷ lệ hình ảnh tốt nhất trên các màn hình có độ phân giải khác nhau
 
-#### 🛠️ 内部维护
+#### 🛠️ Bảo trì nội bộ
 
-- 构建系统更新：同步更新了 pyinstaller 编译指令，移除了不必要的 Hook 和打包路径
-- 健壮性提升：新增了边缘多样性检测的专项测试用例，确保算法在各种复杂背景下的稳定性
+- Cập nhật hệ thống xây dựng: Đồng bộ hóa-mã lệnh biên dịch pyinstaller, loại bỏ Hook không cần thiết và đường dẫn đóng gói
+- Nâng cao độ vững chắc: Thêm các trường hợp kiểm tra chuyên biệt cho phát hiện đa dạng cạnh, đảm bảo ổn định thuật toán trong các nền phức tạp khác nhau
 
 ---
 
 ## [v0.5.5] - 2026-01-23
 
-### 🎯 PPT 文本块处理优化
+### 🎯 Tối ưu hóa xử lý khối văn bản PPT
 
-- 在 PPT 精炼处理中增加对图片块的处理
-- 确保所有文本块和图片块都能被正确填充
-- 修复"双层图片"问题，现在不会出现双层图片
+- Thêm xử lý khối hình ảnh trong xử lý tinh chỉnh PPT
+- Đảm bảo tất cả khối văn bản và khối hình ảnh có thể được điền đúng cách
+- Sửa chữa vấn đề "hình ảnh hai lớp", bây giờ sẽ không xuất hiện hình ảnh hai lớp
 
 ---
 
 ## [v0.5.4] - 2026-01-23
 
-### 📂 文件对话框记忆功能
+### 📂 Chức năng nhớ hộp thoại tệp
 
-- 在文件选择区域添加"打开"按钮，用于快速访问输出目录
-- 改进页码范围处理，支持中文标点符号并自动生成带页码的文件名
-- 优化 PPT 输出文件名格式，包含页码范围信息
-- 添加对上次打开文件目录的记忆功能，提升用户体验
+- Thêm nút "Mở" trong khu vực chọn tệp, để truy cập nhanh thư mục đầu ra
+- Cải thiện xử lý phạm vi trang, hỗ trợ dấu chấm câu Trung Quốc và tự động tạo tên tệp với phạm vi trang
+- Tối ưu hóa định dạng tên tệp đầu ra PPT, bao gồm thông tin phạm vi trang
+- Thêm chức năng nhớ thư mục tệp mở lần cuối, cải thiện trải nghiệm người dùng
 
 ---
 
 ## [v0.5.3] - 2026-01-19
 
-### 📦 依赖补充
+### 📦 Bổ sung phụ thuộc
 
-- 添加 scikit-learn 到项目依赖中
-- 更新 pyproject.toml 中的版本号至 0.5.3
-- 取消 build.cmd 中 twine 上传命令的注释
+- Thêm scikit-learn vào các phụ thuộc dự án
+- Cập nhật số phiên bản trong pyproject.toml thành 0.5.3
+- Hủy bình luận lệnh tải lên twine trong build.cmd
 
 ---
 
 ## [v0.5.2] - 2026-01-17
 
-### 🎨 MinerU 优化效果改进
+### 🎨 Cải tiến hiệu ứng tối ưu hóa MinerU
 
-- 使用 DBSCAN 聚类算法替代标准差计算边缘多样性，提高准确性
-- 移除不再使用的四点颜色差异计算函数
-- 调整文本块背景处理逻辑，基于聚类结果决定是否填充纯色
+- Sử dụng thuật toán nhóm DBSCAN thay thế tính toán độ lệch chuẩn để phát hiện đa dạng cạnh, cải thiện độ chính xác
+- Loại bỏ hàm tính toán chênh lệch màu bốn điểm không còn sử dụng
+- Điều chỉnh logic xử lý nền khối văn bản, quyết định có nên điền màu thuần chủng dựa trên kết quả nhóm
 
 ---
 
 ## [v0.5.1] - 2026-01-14
 
-### 🐛 修复程序崩溃问题
+### 🐛 Sửa chữa sự cố chương trình bị sập
 
-- 处理幻灯片无背景图时的情况
-- 添加对无背景图情况的处理，避免程序崩溃
-- 当幻灯片无背景图时，跳过背景替换逻辑中的相关操作
+- Xử lý tình huống tập diễn lamppet vô nền
+- Thêm xử lý cho tình huống vô nền, tránh chương trình sập
+- Khi tập diễn lamppet vô nền, bỏ qua các thao tác liên quan trong logic thay thế nền
 
 ---
 
 ## [v0.5.0] - 2026-01-14
 
-### 🆕 基于 MinerU 的 PPT 后处理优化（重大实验性更新）
+### 🆕 Tối ưu hóa xử lý hậu kỳ PPT dựa trên MinerU (Cập nhật thử nghiệm quan trọng)
 
-新增基于 MinerU 的 PPT 后处理优化功能，包括智能文本框筛选、字体统一、高质量图片替换和智能背景处理。
+Thêm chức năng tối ưu hóa xử lý hậu kỳ PPT dựa trên MinerU mới, bao gồm lọc hộp văn bản thông minh, thống nhất phông chữ, thay thế hình ảnh chất lượng cao và xử lý nền thông minh.
 
-#### 核心功能
+#### Chức năng lõi
 
-- **✨ 智能文本框筛选**：基于 IOU 算法自动识别并保留相关文本框，删除冗余文本框
-- **🎨 字体统一处理**：自动将所有文本框字体统一为"微软雅黑"
-- **🖼️ 高质量图片替换**：从 MinerU JSON 提取原始高清图片，替换截图图片
-- **🎭 智能背景处理**：根据内容特征智能处理背景，实现最佳视觉效果
+- **✨ Lọc hộp văn bản thông minh**: Tự động xác định và giữ lại các hộp văn bản liên quan dựa trên thuật toán IOU, xóa các hộp văn bản dư thừa
+- **🎨 Xử lý thống nhất phông chữ**: Tự động thống nhất tất cả phông chữ hộp văn bản thành "Microsoft YaHei"
+- **🖼️ Thay thế hình ảnh chất lượng cao**: Trích xuất hình ảnh gốc độ phân giải cao từ JSON MinerU, thay thế hình ảnh chụp ảnh
+- **🎭 Xử lý nền thông minh**: Xử lý nền thông minh dựa trên tính năng nội dung, đạt kết quả hình ảnh tốt nhất
 
-#### GUI 更新
+#### Cập nhật GUI
 
-- 更新 GUI 以支持 MinerU JSON 文件输入
-- 添加启动欢迎对话框，显示软件信息和 GitHub 链接，并提供不再显示的选项
+- Cập nhật GUI để hỗ trợ nhập tệp MinerU JSON
+- Thêm hộp thoại chào mừng khởi động, hiển thị thông tin phần mềm và liên kết GitHub, cung cấp tùy chọn không hiển thị lại
 
-#### 文档完善
+#### Hoàn thiện tài liệu
 
-- 添加相关文档说明
-- 新增 compare.png 和 compare2.png 作为示例对比图
-- 重构代码结构，将 ppt_combiner.py 移至 utils 目录
-- 更新 README 详细说明 MinerU 优化功能的使用方法和优势
-- 添加 mineru-technical-details.md 文档详细解释技术实现细节
+- Thêm tài liệu hướng dẫn liên quan
+- Thêm compare.png và compare2.png làm hình ảnh ví dụ so sánh
+- Tái cấu trúc cấu trúc mã, di chuyển ppt_combiner.py sang thư mục tiện ích
+- Cập nhật README giải thích chi tiết phương pháp sử dụng chức năng tối ưu hóa MinerU và lợi ích
+- Thêm tài liệu mineru-technical-details.md giải thích chi tiết chi tiết triển khai kỹ thuật
 
 ---
 
 ## [v0.4.0] - 2026-01-13
 
-### 🖥️ 图形用户界面 (GUI) 支持
+### 🖥️ Giao diện người dùng đồ họa (GUI)
 
-- 重新设计 GUI 布局，增加配置保存和加载功能
-- 移除 CLI 模式，专注 GUI 体验
-- 优化按钮偏移校准逻辑，自动保存配置
-- 增强日志输出和用户提示信息
-- 更新 README 文档，移除过时内容
-- 增加版本号到 0.4.0
+- Thiết kế lại bố cục GUI, thêm chức năng lưu và tải cấu hình
+- Loại bỏ chế độ CLI, tập trung vào trải nghiệm GUI
+- Tối ưu hóa logic hiệu chuẩn bù nút, tự động lưu cấu hình
+- Cải thiện đầu ra nhật ký và tin nhắn gợi ý người dùng
+- Cập nhật tài liệu README, loại bỏ nội dung lỗi thời
+- Tăng số phiên bản lên 0.4.0
 
-#### 功能增强
+#### Cải tiến chức năng
 
-- 添加页范围选择功能
-- 改进按钮偏移校准流程
-- 在 GUI 界面添加页范围输入和偏移校准选项
+- Thêm chức năng chọn phạm vi trang
+- Cải thiện quy trình hiệu chuẩn bù nút
+- Thêm nhập phạm vi trang và các tùy chọn hiệu chuẩn bù nút vào giao diện GUI
 
 ---
 
 ## [v0.3.0] - 2025-12-31
 
-### ⚙️ 电脑管家版本和完成按钮偏移功能
+### ⚙️ Phiên bản Quản lý PC và Chức năng bù nút hoàn thành
 
-- 添加电脑管家版本检测功能
-- 新增完成按钮偏移功能，提高自动化准确性
-- 更新编译命令和版本号至 0.3.0
+- Thêm chức năng phát hiện phiên bản Quản lý PC
+- Thêm chức năng bù nút hoàn thành mới, cải thiện độ chính xác tự động hóa
+- Cập nhật lệnh biên dịch và số phiên bản lên 0.3.0
 
 ---
 
 ## [v0.2.0] - 2025-12-22
 
-### 🖱️ 图形用户界面 (GUI) 支持
+### 🖱️ Giao diện người dùng đồ họa (GUI)
 
-- 添加图形用户界面 (GUI) 支持
-- 允许用户通过拖拽选择 PDF 文件并设置转换参数
-- 修复截图自动化中的按钮位置计算
-- 更新 README.md，增加安装和使用指南
-- 添加编译指南文档
-- 更新依赖项，确保在 Windows 平台上支持拖拽功能
-- 修正构建命令中的文件上传格式
+- Thêm hỗ trợ giao diện người dùng đồ họa (GUI)
+- Cho phép người dùng chọn tệp PDF qua kéo thả và đặt các tham số chuyên đổi
+- Sửa chữa tính toán vị trí nút trong tự động hóa chụp ảnh
+- Cập nhật README.md, thêm hướng dẫn cài đặt và sử dụng
+- Thêm tài liệu hướng dẫn biên dịch
+- Cập nhật các phụ thuộc, đảm bảo hỗ trợ chức năng kéo trên nền tảng Windows
+- Sửa lại định dạng tải lên tệp trong lệnh xây dựng
 
 ---
 
 ## [v0.1.0] - 2025-12-22
 
-### 🎉 初始版本
+### 🎉 Phiên bản ban đầu
 
-实现 PDF 到 PPT 转换工具的基础功能：
+Triển khai chức năng cơ bản của công cụ chuyên đổi PDF sang PPT:
 
-- 添加 PDF 文件转换为 PNG 图像并处理成 PowerPoint 演示文稿的核心功能
-- 集成图像查看器，支持全屏显示图像
-- 使用 Microsoft 智能圈选工具实现截图自动化
-- 添加图像修复功能，用于去除图像中的水印
-- 创建实用工具函数，用于处理图像查看、修复和截图自动化
-- 开发 PPT 合并工具，在保留原始设计的同时合并生成的 PPT 文件
-- 更新 requirements.txt，包含项目所需的依赖项
-- 添加模块文档和版本控制，以提高可维护性
+- Thêm chức năng cơ bản chuyên đổi tệp PDF thành hình ảnh PNG và xử lý thành bản trình chiếu PowerPoint
+- Tích hợp trình xem hình ảnh, hỗ trợ hiển thị hình ảnh toàn màn hình
+- Sử dụng công cụ vòng tròn thông minh Microsoft để triển khai tự động hóa chụp ảnh
+- Thêm chức năng sửa chữa hình ảnh, dùng để xóa hình mờ trong hình ảnh
+- Tạo các hàm tiện ích, dùng để xử lý chế độ xem hình ảnh, sửa chữa và tự động hóa chụp ảnh
+- Phát triển công cụ hợp nhất PPT, hợp nhất các tệp PPT được tạo trong khi giữ lại thiết kế ban đầu
+- Cập nhật requirements.txt, bao gồm các phụ thuộc cần thiết của dự án
+- Thêm tài liệu mô-đun và kiểm soát phiên bản, để cải thiện khả năng bảo trì
 
 ---
 
-## 版本说明
+## Ghi chú phiên bản
 
-本文档遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/) 格式，
-版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/) 规范。
+Tài liệu này tuân theo định dạng [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/),
+Số phiên bản tuân theo thông quy [Semantic Versioning](https://semver.org/lang/zh-CN/).

@@ -1,155 +1,155 @@
 ---
-title: 快速开始
+title: Bắt đầu nhanh
 ---
 
-# 🚀 快速开始
+# Bắt đầu nhanh
 
-本文档将指导您如何快速开始使用 NotebookLM2PPT 工具，将 PDF 转换为高质量的可编辑 PowerPoint 演示文稿。
+Tài liệu này sẽ hướng dẫn bạn cách nhanh chóng bắt đầu sử dụng công cụ NotebookLM2PPT để chuyển đổi PDF thành bản trình chiếu PowerPoint có thể chỉnh sửa chất lượng cao.
 
-## 📋 系统要求
+## Yêu cầu hệ thống
 
-- **操作系统**: Windows 10/11
-- **Microsoft PowerPoint 或 WPS**: 用于打开和编辑生成的 PPT 文件
-- **[微软电脑管家](https://pcmanager.microsoft.com/)**: 版本 ≥ 3.17.50.0
+- **Hệ điều hành**: Windows 10/11
+- **Microsoft PowerPoint hoặc WPS**: Dùng để mở và chỉnh sửa tệp PPT đã tạo
+- **[Microsoft PC Manager](https://pcmanager.microsoft.com/)**: Phiên bản ≥ 3.17.50.0
 
-## 📦 安装方法
+## Cài đặt
 
-### 推荐：下载预编译版本
+### Khuyến nghị: Tải phiên bản biên dịch sẵn
 
-1. 前往 [Releases](https://github.com/elliottzheng/NotebookLM2PPT/releases) 页面
-2. 下载最新的 `.exe` 执行文件
-3. 双击运行即可，无需安装 Python 环境
+1. Truy cập trang [Releases](https://github.com/elliottzheng/NotebookLM2PPT/releases)
+2. Tải tệp thực thi `.exe` mới nhất
+3. Nhấp đúp để chạy, không cần cài đặt môi trường Python
 
-### 其他安装方式
+### Các cách cài đặt khác
 
-**通过 pip 安装**：
+**Cài đặt qua pip**:
 ```bash
 pip install notebooklm2ppt -U
 ```
 
-**从源码安装**：
+**Cài đặt từ mã nguồn**:
 ```bash
 pip install git+https://github.com/elliottzheng/NotebookLM2PPT.git
 ```
 
-## ⚙️ 配置微软电脑管家
+## Cấu hình Microsoft PC Manager
 
-1. 打开微软电脑管家 -> **工具箱**
-2. 找到 **智能圈选**，确保其已开启
-3. 确认快捷键为 `Ctrl + Shift + A`
-4. 测试：按下快捷键，确保能看到圈选界面并出现“转换为PPT”选项
+1. Mở Microsoft PC Manager -> **Hộp công cụ**
+2. Tìm **Smart Select**, đảm bảo đã bật
+3. Xác nhận phím tắt là `Ctrl + Shift + A`
+4. Kiểm tra: Nhấn phím tắt, đảm bảo có thể thấy giao diện chọn vùng và xuất hiện tùy chọn "Chuyển đổi sang PPT"
 
-## 📝 基础使用流程
+## Quy trình sử dụng cơ bản
 
-### 步骤 1：启动程序
+### Bước 1: Khởi động chương trình
 
-- 双击下载的 `.exe` 文件，或
-- 在命令行中运行：`notebooklm2ppt`
+- Nhấp đúp vào tệp `.exe` đã tải, hoặc
+- Chạy trong dòng lệnh: `notebooklm2ppt`
 
-### 步骤 2：选择文件
+### Bước 2: Chọn tệp
 
-- 点击"浏览"按钮选择要转换的 PDF 文件
-- （可选）选择对应的 MinerU JSON 文件以获得更好的转换效果
+- Nhấp nút "Duyệt" để chọn tệp PDF cần chuyển đổi
+- (Tùy chọn) Chọn tệp MinerU JSON tương ứng để có kết quả chuyển đổi tốt hơn
 
-### 步骤 3：设置参数
+### Bước 3: Thiết lập tham số
 
-对于首次使用，建议使用默认参数：
-- **DPI**: 200（控制图片质量）
-- **显示比例**: 0.8（控制图片大小）
-- **延迟**: 2 秒（控制操作间隔）
-- **超时**: 60 秒（控制等待时间）
+Đối với lần sử dụng đầu tiên, khuyến nghị sử dụng tham số mặc định:
+- **DPI**: 200 (điều khiển chất lượng hình ảnh)
+- **Tỷ lệ hiển thị**: 0.8 (điều khiển kích thước hình ảnh)
+- **Độ trễ**: 2 giây (điều khiển khoảng cách giữa các thao tác)
+- **Thời gian chờ**: 60 giây (điều khiển thời gian chờ đợi)
 
-### 步骤 4：校准按钮位置（首次使用必须）
+### Bước 4: Hiệu chuẩn vị trí nút (bắt buộc khi sử dụng lần đầu)
 
-1. 勾选"校准按钮位置"选项
-2. 程序会显示智能圈选界面
-3. 手动点击"转换为PPT"按钮
-4. 程序会自动保存偏移值，下次使用时无需重复校准
+1. Đánh dấu tùy chọn "Hiệu chuẩn vị trí nút"
+2. Chương trình sẽ hiển thị giao diện Smart Select
+3. Nhấp thủ công vào nút "Chuyển đổi sang PPT"
+4. Chương trình sẽ tự động lưu giá trị offset, lần sử dụng tiếp theo không cần hiệu chuẩn lại
 
-### 步骤 5：开始转换
+### Bước 5: Bắt đầu chuyển đổi
 
-1. 点击"开始转换"按钮
-2. 程序会自动执行转换流程
-3. 转换过程中请勿操作鼠标键盘
-4. 转换完成后，会在 `workspace` 文件夹生成 PPT 文件
+1. Nhấp nút "Bắt đầu chuyển đổi"
+2. Chương trình sẽ tự động thực hiện quy trình chuyển đổi
+3. Trong quá trình chuyển đổi, vui lòng không thao tác chuột bàn phím
+4. Sau khi chuyển đổi hoàn tất, tệp PPT sẽ được tạo trong thư mục `workspace`
 
-## 🧠 使用 MinerU 优化
+## Tối ưu hóa với MinerU
 
-### 步骤 1：获取 MinerU JSON
+### Bước 1: Lấy MinerU JSON
 
-1. 访问 [MinerU 官网](https://mineru.net/)
-2. 上传您的 PDF 文件
-3. 等待解析完成（通常需要几分钟）
-4. 下载生成的 JSON 文件
+1. Truy cập [trang web MinerU](https://mineru.net/)
+2. Tải lên tệp PDF của bạn
+3. Chờ phân tích hoàn tất (thường mất vài phút)
+4. Tải xuống tệp JSON đã tạo
 
-### 步骤 2：使用 JSON 文件
+### Bước 2: Sử dụng tệp JSON
 
-1. 在程序中选择 PDF 文件
-2. 选择对应的 JSON 文件
-3. 点击"开始转换"按钮
-4. 程序会在基础转换后执行 MinerU 优化
+1. Chọn tệp PDF trong chương trình
+2. Chọn tệp JSON tương ứng
+3. Nhấp nút "Bắt đầu chuyển đổi"
+4. Chương trình sẽ thực hiện tối ưu hóa MinerU sau khi chuyển đổi cơ bản
 
-## 🖼️ 仅图片模式
+## Chế độ chỉ hình ảnh
 
-对于快速转换，可使用仅图片模式：
+Để chuyển đổi nhanh, có thể sử dụng chế độ chỉ hình ảnh:
 
-1. 勾选"仅图片模式"选项
-2. 选择要转换的 PDF 文件
-3. 点击"开始转换"按钮
-4. 程序会直接将图片插入 PPT，速度更快但内容不可编辑
+1. Đánh dấu tùy chọn "Chế độ chỉ hình ảnh"
+2. Chọn tệp PDF cần chuyển đổi
+3. Nhấp nút "Bắt đầu chuyển đổi"
+4. Chương trình sẽ trực tiếp chèn hình ảnh vào PPT, nhanh hơn nhưng nội dung không thể chỉnh sửa
 
-## 🎨 图像修复方法
+## Phương pháp sửa chữa hình ảnh
 
-在程序中，您可以选择不同的图像修复方法：
+Trong chương trình, bạn có thể chọn các phương pháp sửa chữa hình ảnh khác nhau:
 
-- **智能平滑**（推荐）：综合效果最佳，适合大多数场景
-- **边缘均值填充**：适合纯色背景
-- **极速纯色填充**：适合极简背景，速度最快
-- **逐层内缩修补**：适合细长划痕或线条修复
-- **渐变过渡插值**：适合带有渐变的背景
-- **双调和光影修补**：保持光影连续性，速度较慢
+- **Làm mịn thông minh** (khuyến nghị): Hiệu quả tổng hợp tốt nhất, phù hợp với hầu hết các tình huống
+- **Lấp đầy trung bình cạnh**: Phù hợp với nền đơn sắc
+- **Lấp đầy đơn sắc siêu tốc**: Phù hợp với nền tối giản, tốc độ nhanh nhất
+- **Sửa chữa co dần từng lớp**: Phù hợp sửa chữa vết xước hoặc đường kẻ mỏng dài
+- **Nội suy chuyển tiếp gradient**: Phù hợp với nền có gradient
+- **Sửa chữa ánh sáng song điều hòa**: Giữ tính liên tục của ánh sáng, tốc độ chậm hơn
 
-## ⚠️ 注意事项
+## Lưu ý
 
-- **保持窗口焦点**：转换过程中请勿操作鼠标键盘
-- **检查下载目录**：确保临时文件能正确保存到系统下载文件夹
-- **更新软件**：确保微软电脑管家已更新到最新版本
-- **网络连接**：使用 MinerU 优化时需要稳定的网络连接
+- **Giữ tiêu điểm cửa sổ**: Trong quá trình chuyển đổi, vui lòng không thao tác chuột bàn phím
+- **Kiểm tra thư mục tải xuống**: Đảm bảo tệp tạm thời có thể lưu đúng vào thư mục tải xuống của hệ thống
+- **Cập nhật phần mềm**: Đảm bảo Microsoft PC Manager đã được cập nhật lên phiên bản mới nhất
+- **Kết nối mạng**: Khi sử dụng tối ưu hóa MinerU cần kết nối mạng ổn định
 
-## 📊 常见问题
+## Câu hỏi thường gặp
 
-**Q: MinerU JSON 文件是必需的吗？**
-A: 不是必需的。不提供 JSON 文件时，程序会使用基础转换功能。
+**Q: Tệp MinerU JSON có bắt buộc không?**
+A: Không bắt buộc. Khi không cung cấp tệp JSON, chương trình sẽ sử dụng chức năng chuyển đổi cơ bản.
 
-**Q: MinerU 是免费服务吗？**
-A: 是的，目前 MinerU 是免费服务，只需要注册即可使用。
+**Q: MinerU có phải dịch vụ miễn phí không?**
+A: Có, hiện tại MinerU là dịch vụ miễn phí, chỉ cần đăng ký để sử dụng.
 
-**Q: 转换速度太慢怎么办？**
-A: 可以尝试降低 DPI 参数、使用仅图片模式或关闭其他占用资源的应用。
+**Q: Tốc độ chuyển đổi quá chậm thì phải làm sao?**
+A: Có thể thử giảm tham số DPI, sử dụng chế độ chỉ hình ảnh hoặc đóng các ứng dụng chiếm tài nguyên khác.
 
-**Q: 生成的 PPT 中图片质量不好怎么办？**
-A: 可以提高 DPI 参数（如设置为 300）或使用 MinerU 优化获取原始高清图片。
+**Q: Chất lượng hình ảnh trong PPT tạo ra không tốt thì phải làm sao?**
+A: Có thể tăng tham số DPI (ví dụ đặt thành 300) hoặc sử dụng tối ưu hóa MinerU để lấy hình ảnh gốc chất lượng cao.
 
-## 🚀 最佳实践
+## Thực tiễn tốt nhất
 
-1. **首次使用**：
-   - 确保微软电脑管家已更新到最新版本
-   - 校准按钮位置
-   - 使用默认参数进行测试
+1. **Sử dụng lần đầu**:
+   - Đảm bảo Microsoft PC Manager đã được cập nhật lên phiên bản mới nhất
+   - Hiệu chuẩn vị trí nút
+   - Sử dụng tham số mặc định để kiểm tra
 
-2. **参数优化**：
-   - 对于一般文档，使用默认参数即可
-   - 对于高质量要求，将 DPI 设置为 300
-   - 对于大型文档，适当增加延迟和超时时间
+2. **Tối ưu tham số**:
+   - Đối với tài liệu thông thường, sử dụng tham số mặc định là đủ
+   - Đối với yêu cầu chất lượng cao, đặt DPI thành 300
+   - Đối với tài liệu lớn, tăng thời gian trễ và thời gian chờ phù hợp
 
-3. **流程选择**：
-   - 对于重要文档，使用 MinerU 优化
-   - 对于快速转换，使用仅图片模式
-   - 对于复杂背景，选择智能平滑修复方法
+3. **Lựa chọn quy trình**:
+   - Đối với tài liệu quan trọng, sử dụng tối ưu hóa MinerU
+   - Đối với chuyển đổi nhanh, sử dụng chế độ chỉ hình ảnh
+   - Đối với nền phức tạp, chọn phương pháp làm mịn thông minh
 
-4. **结果检查**：
-   - 转换完成后检查生成的 PPT
-   - 确认文本框、图片和背景是否正确
-   - 根据需要进行手动调整
+4. **Kiểm tra kết quả**:
+   - Kiểm tra PPT đã tạo sau khi chuyển đổi hoàn tất
+   - Xác nhận hộp văn bản, hình ảnh và nền có chính xác không
+   - Điều chỉnh thủ công theo nhu cầu
 
-通过遵循以上指南，您可以快速上手 NotebookLM2PPT，将 PDF 转换为高质量的可编辑 PowerPoint 演示文稿。
+Bằng cách tuân theo hướng dẫn trên, bạn có thể nhanh chóng làm quen với NotebookLM2PPT và chuyển đổi PDF thành bản trình chiếu PowerPoint có thể chỉnh sửa chất lượng cao.

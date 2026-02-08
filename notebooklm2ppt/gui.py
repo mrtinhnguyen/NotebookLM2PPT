@@ -22,7 +22,7 @@ from .utils.process_checker import is_process_running, PROCESS_NAME
 from .config_defaults import DEFAULT_TASK_SETTINGS, DEFAULT_AUTOMATION_SETTINGS, get_default_settings
 
 MINERU_URL = "https://mineru.net/"
-GITHUB_URL = "https://github.com/elliottzheng/NotebookLM2PPT"
+GITHUB_URL = "https://github.com/mrtinhnguyen/NotebookLM2PPT"
 PC_MANAGER_URL = "https://pcmanager.microsoft.com/"
 
 
@@ -33,7 +33,7 @@ BASE_WINDOWS_DPI = 85
 
 
 def icon_path():
-    """获取资源绝对路径，适用于PyInstaller打包后"""
+    """Lấy đường dẫn tài nguyên tuyệt đối, áp dụng cho PyInstaller sau khi đóng gói"""
     try:
         return os.path.join(sys._MEIPASS, "favicon.ico")
     except Exception:
@@ -84,7 +84,7 @@ def enable_windows_dpi_awareness(root=None):
                     gdi32 = ctypes.windll.gdi32
                     dpi = gdi32.GetDeviceCaps(hdc, 88)
                 scaling = float(dpi) / BASE_WINDOWS_DPI
-                print(f"系统 DPI: {dpi}, 缩放因子: {scaling}")
+                print(f"Hệ thống DPI: {dpi}, hệ số cân: {scaling}")
                 root.tk.call('tk', 'scaling', scaling)
             except Exception:
                 pass
@@ -109,10 +109,10 @@ class TextRedirector:
 class AppGUI:
     def __init__(self, root):
         self.root = root
-        self.lang = "zh_cn"  # Default
+        self.lang = "vi"  # Default
         self.top_left = (10, 10)
         
-        # 初始化拖拽队列和轮询机制（用于线程安全处理）
+        # Khởi tạo hàng đợi kéo thả và cơ chế bộ đếm (để xử lý an toàn luồng)
         self._drop_queue = queue.Queue()
         self._poll_drop_queue()
         
@@ -141,14 +141,14 @@ class AppGUI:
         sys.stdout = TextRedirector(self.log_area, "stdout")
         sys.stderr = TextRedirector(self.log_area, "stderr")
         
-        # 主界面不再支持拖拽功能
+        # Giao diện chính không còn hỗ trợ chức năng kéo thả
         # if windnd:
         #     windnd.hook_dropfiles(self.root, func=self.on_drop_files)
         
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def _poll_drop_queue(self):
-        """轮询拖拽队列，在主线程中处理拖拽事件"""
+        """Quản lý hàng đợi kéo thả, xử lý sự kiện kéo thả trong luồng chính"""
         try:
             while True:
                 try:
@@ -168,32 +168,32 @@ class AppGUI:
                 except queue.Empty:
                     break
         except Exception as e:
-            print(f"处理拖拽队列时出错: {e}")
+            print(f"Lỗi khi xử lý hàng đợi kéo thả: {e}")
         finally:
-            # 每100ms轮询一次
+            # Kiểm tra mỗi 100ms
             self.root.after(100, self._poll_drop_queue)
 
     def _setup_path_entry(self, entry):
-        """为路径输入框添加右键菜单、全选和自动滚动功能"""
+        """Thêm menu bối cảnh, chọn toàn bộ và chức năng cuộn tự động cho ô nhập đường dẫn"""
         self.add_context_menu(entry)
         entry.bind("<FocusIn>", lambda e: entry.selection_range(0, tk.END))
         entry.bind("<FocusOut>", lambda e: entry.xview_moveto(1.0))
-        # 初始显示末尾（文件名）
+        # Hiển thị đầu tiên (tên tệp)
         self.root.after(200, lambda: entry.xview_moveto(1.0))
 
     def set_var_and_scroll(self, var, entry, value):
-        """设置变量值并滚动 Entry 到末尾以显示文件名"""
+        """Cài đặt giá trị biến và cuộn Entry đến cuối để hiển thị tên tệp"""
         var.set(value)
-        # 使用 after 确保在 Tkinter 更新完成后滚动
+        # Sử dụng after để đảm bảo cuộn sau khi Tkinter cập nhật
         self.root.after(10, lambda: entry.xview_moveto(1.0))
 
     def _get_display_path(self, path):
-        """获取用于 Treeview 显示的路径（仅显示文件名）"""
+        """Lấy đường dẫn để hiển thị Treeview (chỉ hiển thị tên tệp)"""
         if not path:
             return ""
         return os.path.basename(path)
 
-    # 主界面不再支持拖拽功能，已移至批量配对功能中
+    # Giao diện chính không còn hỗ trợ chức năng kéo thả, đã chuyển sang tính năng ghép cặp hàng loạt
     # def on_drop_files(self, files):
     #     if files:
     #         decoded_files = []
@@ -229,7 +229,7 @@ class AppGUI:
         self.root.destroy()
 
     def center_window(self):
-        """将窗口居中显示"""
+        """Căn giữa cửa sổ để hiển thị"""
         width = 850
         height = 920
         x = (self.root.winfo_screenwidth() // 2) - (width // 2)
@@ -237,23 +237,23 @@ class AppGUI:
         self.root.geometry(f'{width}x{height}+{x}+{y}')
 
     def create_toplevel(self, title, width, height):
-        """创建带图标设置的 Toplevel 窗口"""
+        """Tạo cửa sổ Toplevel với cài đặt biểu tượng"""
         top = tk.Toplevel(self.root)
         top.title(title)
         top.iconbitmap(icon_path())
         self.center_toplevel(top, width, height)
-        # 设置窗口属性（不使用模态以避免与拖拽功能冲突）
+        # Đặt thuộc tính cửa sổ (không sử dụng chế độ modal để tránh xung đột với chức năng kéo thả)
         top.transient(self.root)
         return top
 
     def center_toplevel(self, window, width, height):
-        """将 Toplevel 窗口居中显示"""
+        """Căn giữa cửa sổ Toplevel để hiển thị"""
         x = (window.winfo_screenwidth() // 2) - (width // 2)
         y = (window.winfo_screenheight() // 2) - (height // 2)
         window.geometry(f'{width}x{height}+{x}+{y}')
 
     def change_language(self, new_lang):
-        """切换语言并重启 UI"""
+        """Chuyển đổi ngôn ngữ và khởi động lại giao diện người dùng"""
         if self.lang == new_lang:
             return
         
@@ -261,21 +261,21 @@ class AppGUI:
         set_language(self.lang)
         self.dump_config_to_disk()
         
-        # 更新主窗口标题
+        # Cập nhật tiêu đề cửa sổ tập thể
         self.root.title(get_text("root_title", version=__version__))
         
-        # 刷新主 UI
+        # QuẪ lý lại giao diện thlavní
         for widget in self.root.winfo_children():
             if isinstance(widget, ttk.Frame) or isinstance(widget, tk.Frame):
                 widget.destroy()
         
         self.setup_ui()
-        # 重新重定向 stdout/stderr 到新的 log_area
+        # Hướng dẫn lại stdout/stderr đến log_area mới
         sys.stdout = TextRedirector(self.log_area, "stdout")
         sys.stderr = TextRedirector(self.log_area, "stderr")
 
     def add_context_menu(self, widget):
-        """为输入框添加右键菜单（剪切、复制、粘贴、全选）"""
+        """Thêm menu bối cảnh cho ô nhập (cắt, sao chép, dán, chọn tất cả)"""
         menu = tk.Menu(widget, tearoff=0)
         menu.add_command(label=get_text("cut"), command=lambda: widget.event_generate("<<Cut>>"))
         menu.add_command(label=get_text("copy"), command=lambda: widget.event_generate("<<Copy>>"))
@@ -289,12 +289,12 @@ class AppGUI:
         widget.bind("<Button-3>", show_menu)
 
     def get_translated_method_names(self):
-        """获取翻译后的方法名列表"""
+        """Lấy danh sách tên phương thức đã dịch"""
         from .utils.image_inpainter import INPAINT_METHODS
         return [get_text(f"method_{m['id']}_name") for m in INPAINT_METHODS]
 
     def get_method_id_from_translated_name(self, translated_name):
-        """根据翻译后的方法名获取 ID"""
+        """Lấy ID từ tên phương thức đã dịch"""
         from .utils.image_inpainter import INPAINT_METHODS
         for m in INPAINT_METHODS:
             if get_text(f"method_{m['id']}_name") == translated_name:
@@ -302,11 +302,11 @@ class AppGUI:
         return "background_smooth"
 
     def get_translated_name_from_id(self, method_id):
-        """根据 ID 获取翻译后的方法名"""
+        """Lấy tên đã dịch từ ID"""
         return get_text(f"method_{method_id}_name")
 
     def on_language_combo_change(self, event):
-        """处理语言下拉框选择变更"""
+        """Xử lý thay đổi lựa chọn hộp chọn ngôn ngữ"""
         selected_name = self.lang_combo_var.get()
         for code in SUPPORTED_LANGUAGES.keys():
             if get_text(f"lang_{code}") == selected_name:
@@ -324,12 +324,12 @@ class AppGUI:
         self.queue_stop_flag = False
         self.is_queue_running = False
 
-        # Global Settings (全局设置)
+        # Global Settings (Cài đặt toàn cục)
         global_frame = ttk.LabelFrame(main_frame, text=get_text("global_settings_label"), padding="10")
         global_frame.pack(fill=tk.X, pady=5)
         global_frame.columnconfigure(1, weight=1)
 
-        # 语言选择（在全局设置中第一行）
+        # Lựa chọn ngôn ngữ (trên dòng đầu tiên ở cài đặt toàn cục)
         ttk.Label(global_frame, text=get_text("ui_language_label")).grid(row=0, column=0, sticky=tk.W, pady=5)
         
         lang_display_names = [get_text(f"lang_{code}") for code in SUPPORTED_LANGUAGES.keys()]
@@ -340,7 +340,7 @@ class AppGUI:
         lang_combo.grid(row=0, column=1, padx=5, pady=5, sticky="w")
         lang_combo.bind("<<ComboboxSelected>>", self.on_language_combo_change)
 
-        # 输出目录（全局默认）
+        # Thư mục đầu ra (mặc định toàn cục)
         ttk.Label(global_frame, text=get_text("output_dir_label")).grid(row=1, column=0, sticky=tk.W, pady=5)
         self.output_dir_var = getattr(self, 'output_dir_var', tk.StringVar(value="workspace"))
         self.output_entry = ttk.Entry(global_frame, textvariable=self.output_dir_var, width=60)
@@ -349,13 +349,13 @@ class AppGUI:
         ttk.Button(global_frame, text=get_text("browse_btn"), command=self.browse_output).grid(row=1, column=2, pady=5)
         ttk.Button(global_frame, text=get_text("open_btn"), command=self.open_output_dir).grid(row=1, column=3, pady=5, padx=5)
 
-        # Automation Settings (自动化相关设置)
+        # Automation Settings (Cài đặt tự động hóa liên quan)
         opt_frame = ttk.LabelFrame(main_frame, text=get_text("automation_settings_label"), padding="10")
         opt_frame.pack(fill=tk.X, pady=5)
         opt_frame.columnconfigure(1, weight=1)
         opt_frame.columnconfigure(3, weight=1)
 
-        # 第一行：等待时间 和 超时时间
+        # Dòng 1: Thời gian chờ và Thời gian quá
         ttk.Label(opt_frame, text=get_text("delay_label")).grid(row=0, column=0, sticky=tk.W)
         self.delay_var = getattr(self, 'delay_var', tk.IntVar(value=0))
         delay_entry = ttk.Entry(opt_frame, textvariable=self.delay_var, width=8)
@@ -370,7 +370,7 @@ class AppGUI:
         self.add_context_menu(timeout_entry)
         ttk.Label(opt_frame, text=get_text("timeout_hint"), foreground="gray").grid(row=0, column=5, sticky=tk.W, padx=5)
 
-        # 第二行：按钮偏移 和 自动校准
+        # Dòng 2: Độ lệch núp và Tự động hiệu chuẩn
         ttk.Label(opt_frame, text=get_text("button_offset_label")).grid(row=5, column=0, sticky=tk.W, pady=5)
         self.done_offset_var = getattr(self, 'done_offset_var', tk.StringVar(value=""))
         done_offset_entry = ttk.Entry(opt_frame, textvariable=self.done_offset_var, width=8)
@@ -382,7 +382,7 @@ class AppGUI:
         self.calibrate_var = getattr(self, 'calibrate_var', tk.BooleanVar(value=True))
         ttk.Checkbutton(opt_frame, text=get_text("calibrate_label"), variable=self.calibrate_var).grid(row=5, column=3, columnspan=3, sticky=tk.W, pady=5, padx=(20, 0))
 
-        # 提示信息
+        # Thông báo gợi ý
         ttk.Label(opt_frame, text=get_text("core_param_warning"), foreground="red").grid(row=6, column=0, columnspan=6, sticky=tk.W)
         ttk.Label(opt_frame, text=get_text("core_param_warning2"), foreground="red").grid(row=7, column=0, columnspan=6, sticky=tk.W)
         ttk.Label(opt_frame, text=get_text("core_param_warning3"), foreground="red").grid(row=8, column=0, columnspan=6, sticky=tk.W)
@@ -445,7 +445,7 @@ class AppGUI:
 
 
     def browse_output(self):
-        # 清理路径中的引号和空格
+        # Xóa dấu ngoặc và khoảng trắng trong đường dẫn
         current_dir = self.output_dir_var.get().strip().strip('"')
         initial_dir = current_dir if current_dir and os.path.exists(current_dir) else None
         
@@ -509,7 +509,7 @@ class AppGUI:
         except Exception as e:
             messagebox.showerror(
                 get_text("error_btn"),
-                f"检测电脑管家运行状态失败: {e}",
+                f"Không thể kiểm tra trạng thái Quản lý máy tính: {e}",
             )
             return False
         if not running:
@@ -536,7 +536,7 @@ class AppGUI:
 
 
     def dump_config_to_disk(self):
-        # 首先读取现有的配置，保留 hide_startup_dialog 等其他字段
+        # Trước tiên đọc cấu hình hiện có, giữ lại các trường khác như hide_startup_dialog
         try:
             if CONFIG_FILE.exists():
                 with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
@@ -546,14 +546,14 @@ class AppGUI:
         except Exception:
             config_data = {}
         
-        # 更新需要保存的字段
+        # Cập nhật các trường cần lưu
         config_data.update({
             "language": self.lang,
             "output_dir": self.output_dir_var.get(),
             "delay": self.delay_var.get(),
             "timeout": self.timeout_var.get(),
             "done_offset": self.done_offset_var.get(),
-            # 保存用户上次使用的任务设置（仅保存用户可能修改的值）
+            # Lưu cài đặt tác vụ mà người dùng sử dụng lần trước (chỉ lưu các giá trị mà người dùng có thể sửa đổi)
             "last_task_settings": getattr(self, 'last_task_settings', {})
         })
         try:
@@ -566,12 +566,12 @@ class AppGUI:
     def load_config_from_disk(self):
         try:
             if not CONFIG_FILE.exists():
-                self.last_task_settings = {}  # 初始化为空字典
+                self.last_task_settings = {}  # Khởi tạo thành từ điển trống
                 return
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                 config_data = json.load(f)
-                self.lang = config_data.get("language", "zh_cn")
-                # 加载用户上次使用的任务设置
+                self.lang = config_data.get("language", "vi")
+                # Tải cài đặt tác vụ mà người dùng sử dụng lần trước
                 self.last_task_settings = config_data.get("last_task_settings", {})
                 if hasattr(self, 'output_dir_var'):
                     self.output_dir_var.set(config_data.get("output_dir", "workspace"))
@@ -580,7 +580,7 @@ class AppGUI:
                     offset_value = config_data.get("done_offset", "")
                     self.update_offset_related_gui(offset_value)
                     
-                    # 确保加载配置后滚动到末尾以显示文件名
+                    # Đảm bảo cuộn đến cuối sau khi tải cấu hình để hiển thị tên tệp
                     if hasattr(self, 'output_entry'):
                         self.root.after(100, lambda: self.output_entry.xview_moveto(1.0))
         except Exception as e:
@@ -640,7 +640,7 @@ class AppGUI:
             try:
                 webbrowser.open_new_tab(GITHUB_URL)
             except Exception as e:
-                messagebox.showerror(get_text("error_btn"), f"无法打开网页: {e}")
+                messagebox.showerror(get_text("error_btn"), f"Không thể mở trang web: {e}")
         
         def on_ok():
             top.destroy()
@@ -667,7 +667,7 @@ class AppGUI:
         ttk.Button(btn_frame, text=get_text("ok_btn"), command=on_ok).pack(side=tk.RIGHT, padx=5)
         
         top.transient(self.root)
-        # 使用异步窗口（不使用模态），避免阻塞与拖拽冲突
+        # Sử dụng cửa sổ không đồng bộ (không sử dụng modal), tránh chặn và xung đột kéo thả
         
     def show_mineru_info(self):
         info = get_text("mineru_info_content")
@@ -683,7 +683,7 @@ class AppGUI:
             try:
                 webbrowser.open_new_tab(MINERU_URL)
             except Exception as e:
-                messagebox.showerror(get_text("error_btn"), f"无法打开网页: {e}")
+                messagebox.showerror(get_text("error_btn"), f"Không thể mở trang web: {e}")
 
         ttk.Button(btn_frame, text=get_text("open_mineru_website"), command=open_mineru_website).pack(side=tk.LEFT, padx=6)
         ttk.Button(btn_frame, text=get_text("close_btn"), command=top.destroy).pack(side=tk.LEFT, padx=6)
@@ -716,14 +716,14 @@ class AppGUI:
 
             print(get_text("start_processing", file=pdf_file))
 
-            # 解析页范围
+            # Phân tích phạm vi trang
             def parse_page_range(range_str):
                 if not range_str:
                     return None
                 pages = set()
-                # 将中文逗号替换为英文逗号
+                # Thay thế dấu phẩy tiếng Trung bằng dấu phẩy tiếng Anh
                 range_str = range_str.replace('，', ',')
-                # 将各种中文破折号替换为英文连字符
+                # Thay thế các loại dấu gạch ngang tiếng Trung bằng dấu gạch ngang tiếng Anh
                 range_str = range_str.replace('—', '-').replace('–', '-').replace('－', '-')
                 for part in [p.strip() for p in range_str.split(',') if p.strip()]:
                     if '-' in part:
@@ -741,7 +741,7 @@ class AppGUI:
                         pages.add(int(part))
                 return sorted(pages)
 
-            # 将页码列表转换为字符串格式
+            # Chuyển đổi danh sách s ố trang thành định dạng chuỗi
             def format_page_suffix(pages):
                 if not pages:
                     return ""
@@ -766,7 +766,7 @@ class AppGUI:
             except Exception as e:
                 raise ValueError(get_text("page_range_error"))
             
-            # 根据页码范围生成文件名后缀
+            # Tạo hậu tố tên tệp dựa trên phạm vi số trang
             page_suffix = format_page_suffix(pages_list)
             out_ppt_file = workspace_dir / f"{pdf_name}{page_suffix}.pptx"
             
@@ -824,7 +824,7 @@ class AppGUI:
                 png_names = combine_ppt(ppt_dir, out_ppt_file, png_names=png_names)
                 extra_message = ""
             if not self.image_only_var.get():
-                # 如果用户提供了 mineru JSON，则进行 refine_ppt 处理
+                # Nếu người dùng cung cấp JSON MinerU, hãy thực hiện xử lý refine_ppt
                 mineru_json = self.mineru_json_var.get().strip().strip('"')
                 if mineru_json:
                     if not os.path.exists(mineru_json):
@@ -854,24 +854,24 @@ class AppGUI:
             self.stop_btn.config(state=tk.DISABLED)
 
     def add_task_with_settings(self, pdf_path, json_path=None, settings=None):
-        """添加任务，使用指定的设置"""
+        """Thêm tác vụ bằng cách sử dụng các cài đặt được chỉ định"""
         if settings is None:
-            # 如果没有提供设置，使用用户上次的设置（如果有的话）
+            # Nếu không cung cấp cài đặt, hãy sử dụng cài đặt lần trước của người dùng (nếu có)
             settings = get_default_settings(
                 output_dir=self.output_dir_var.get().strip().strip('"'),
                 inpaint_method=self.get_translated_method_names()[0],
                 user_last_settings=getattr(self, 'last_task_settings', {})
             )
         else:
-            # 保存用户这次使用的设置（排除动态参数）
+            # Lưu cài đặt mà người dùng sử dụng lần này (loại trừ các tham số động)
             self.last_task_settings = {k: v for k, v in settings.items() 
                                        if k not in ['output_dir', 'page_range']}
-            self.dump_config_to_disk()  # 立即保存到配置文件
+            self.dump_config_to_disk()  # Lưu ngay lập tức vào tệp cấu hình
 
-        # 检查是否已存在相同 PDF 的任务
+        # Kiểm tra xem đã có tác vụ cho cùng một PDF không
         for task in self.task_queue:
             if task["pdf"] == pdf_path:
-                # 更新现有任务的 JSON 路径和状态，以及所有设置
+                # Cập nhật đường dẫn JSON của tác vụ hiện có, trạng thái và tất cả các cài đặt
                 task["json"] = json_path or ""
                 task["status"] = get_text("queue_status_pending")
                 task["settings"] = settings
@@ -899,17 +899,17 @@ class AppGUI:
         print(get_text("queue_task_added", file=pdf_path))
 
     def add_task(self, pdf_path, json_path=None):
-        """添加任务（使用默认设置）"""
+        """Thêm tác vụ (sử dụng cài đặt mặc định)"""
         settings = get_default_settings(
             output_dir=self.output_dir_var.get().strip().strip('"'),
             inpaint_method=self.get_translated_method_names()[0],
             user_last_settings=getattr(self, 'last_task_settings', {})
         )
 
-        # 检查是否已存在相同 PDF 的任务
+        # Kiểm tra xem đã có tác vụ cho cùng một PDF không
         for task in self.task_queue:
             if task["pdf"] == pdf_path:
-                # 更新现有任务的 JSON 路径和状态，以及所有设置
+                # Cập nhật đường dẫn JSON của tác vụ hiện có, trạng thái và tất cả các cài đặt
                 task["json"] = json_path or ""
                 task["status"] = get_text("queue_status_pending")
                 task["settings"] = settings
@@ -937,47 +937,47 @@ class AppGUI:
         print(get_text("queue_task_added", file=pdf_path))
 
     def add_task_dialog(self):
-        """弹出对话框配置新任务的所有参数"""
+        """Hiển thị hộp thoại để cấu hình tất cả các tham số cho tác vụ mới"""
         top = self.create_toplevel(get_text("add_task_title"), 700, 600)
         
-        # 主容器
+        # Khung chứa chính
         main_frame = ttk.Frame(top)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # 文件选择区域
+        # Vùng lựa chọn tệp
         file_frame = ttk.LabelFrame(main_frame, text=get_text("file_settings_label"), padding="10")
         file_frame.pack(fill=tk.X, pady=(0, 10))
         file_frame.columnconfigure(1, weight=1)
 
-        # PDF 文件
-        ttk.Label(file_frame, text="PDF 文件:").grid(row=0, column=0, sticky=tk.W, pady=8)
+        # Tệp PDF
+        ttk.Label(file_frame, text="Tệp PDF:").grid(row=0, column=0, sticky=tk.W, pady=8)
         pdf_var = tk.StringVar()
         pdf_entry = ttk.Entry(file_frame, textvariable=pdf_var)
         pdf_entry.grid(row=0, column=1, padx=5, pady=8, sticky="ew")
         def browse_pdf():
             f = filedialog.askopenfilename(parent=top, title=get_text("select_pdf_title"), filetypes=[("PDF files", "*.pdf")])
             if f: pdf_var.set(f)
-        ttk.Button(file_frame, text="浏览...", command=browse_pdf, width=8).grid(row=0, column=2, padx=5, pady=8)
+        ttk.Button(file_frame, text="Duyệt...", command=browse_pdf, width=8).grid(row=0, column=2, padx=5, pady=8)
 
-        # JSON 文件（可选）
-        ttk.Label(file_frame, text="JSON 文件:").grid(row=1, column=0, sticky=tk.W, pady=8)
+        # Tệp JSON (Tùy chọn)
+        ttk.Label(file_frame, text="Tệp JSON:").grid(row=1, column=0, sticky=tk.W, pady=8)
         json_var = tk.StringVar()
         json_entry = ttk.Entry(file_frame, textvariable=json_var)
         json_entry.grid(row=1, column=1, padx=5, pady=8, sticky="ew")
         def browse_json():
             f = filedialog.askopenfilename(parent=top, title=get_text("select_json_title"), filetypes=[("JSON files", "*.json")])
             if f: json_var.set(f)
-        ttk.Button(file_frame, text="浏览...", command=browse_json, width=8).grid(row=1, column=2, padx=5, pady=8)
-        ttk.Button(file_frame, text="说明", command=self.show_mineru_info, width=6).grid(row=1, column=3, padx=2, pady=8)
+        ttk.Button(file_frame, text="Duyệt...", command=browse_json, width=8).grid(row=1, column=2, padx=5, pady=8)
+        ttk.Button(file_frame, text="Thông tin", command=self.show_mineru_info, width=6).grid(row=1, column=3, padx=2, pady=8)
 
-        # 获取用户上次使用的设置作为对话框的初始值
+        # Lấy cài đặt lần cuối của người dùng làm giá trị khởi tạo cho hộp thoại
         last_settings = getattr(self, 'last_task_settings', {})
-        ttk.Button(file_frame, text="说明", command=self.show_mineru_info, width=6).grid(row=1, column=3, padx=2, pady=8)
+        ttk.Button(file_frame, text="Thông tin", command=self.show_mineru_info, width=6).grid(row=1, column=3, padx=2, pady=8)
 
-        # 为整个对话框窗口添加拖拽功能
+        # Thêm chức năng kéo thả cho cửa sổ hộp thoại
         if windnd:
             def on_dialog_drop(files):
-                """线程安全的拖拽处理函数 - 使用队列"""
+                """Hàm xử lý kéo thả an toàn luồng - Sử dụng hàng đợi"""
                 try:
                     self._drop_queue.put(('dialog', files, pdf_var, json_var))
                 except:
@@ -986,9 +986,9 @@ class AppGUI:
             try:
                 windnd.hook_dropfiles(top, func=on_dialog_drop)
             except Exception as e:
-                print(f"拖拽功能初始化失败: {e}")
+                print(f"Khởi tạo chức năng kéo thả thất bại: {e}")
 
-        # 任务参数区域 - 使用 Canvas 支持滚动
+            # Khu vực tham số tác vụ - Sử dụng Canvas để hỗ trợ cuộn
         param_container = ttk.Frame(main_frame)
         param_container.pack(fill=tk.BOTH, expand=True)
         
@@ -1005,31 +1005,31 @@ class AppGUI:
         canvas.bind('<Configure>', lambda e: canvas.itemconfig(canvas_window, width=e.width))
         canvas.configure(yscrollcommand=scrollbar.set)
 
-        # 参数框架
+        # Khung tham số
         param_frame = ttk.LabelFrame(scrollable_frame, text=get_text("task_params_label"), padding="10")
         param_frame.pack(fill=tk.X, expand=False)
         param_frame.columnconfigure(1, weight=0)
         param_frame.columnconfigure(3, weight=0)
 
-        # 第一行：DPI 和 显示比例
+        # Hàng thứ nhất: DPI và tỷ lệ hiển thị
         ttk.Label(param_frame, text="DPI:").grid(row=0, column=0, sticky=tk.W, pady=8)
         dpi_var = tk.IntVar(value=last_settings.get('dpi', DEFAULT_TASK_SETTINGS['dpi']))
         dpi_entry = ttk.Entry(param_frame, textvariable=dpi_var, width=8)
         dpi_entry.grid(row=0, column=1, sticky=tk.W, padx=5, pady=8)
         ttk.Label(param_frame, text="(150-300)", foreground="gray").grid(row=0, column=2, sticky=tk.W, padx=10)
 
-        ttk.Label(param_frame, text="显示比例:").grid(row=0, column=3, sticky=tk.W, padx=(20, 0))
+        ttk.Label(param_frame, text="Tỷ lệ hiển thị:").grid(row=0, column=3, sticky=tk.W, padx=(20, 0))
         ratio_var = tk.DoubleVar(value=last_settings.get('ratio', DEFAULT_TASK_SETTINGS['ratio']))
         ratio_entry = ttk.Entry(param_frame, textvariable=ratio_var, width=8)
         ratio_entry.grid(row=0, column=4, sticky=tk.W, padx=5, pady=8)
         ttk.Label(param_frame, text="(0.7-0.9)", foreground="gray").grid(row=0, column=5, sticky=tk.W, padx=5)
 
-        # 第二行：去除水印 和 修复方法
+        # Hàng thứ hai: Xóa hình mờ và phương pháp sửa chữa
         inpaint_var = tk.BooleanVar(value=last_settings.get('inpaint', DEFAULT_TASK_SETTINGS['inpaint']))
-        ttk.Checkbutton(param_frame, text="去除水印", variable=inpaint_var).grid(row=1, column=0, sticky=tk.W, pady=8)
+        ttk.Checkbutton(param_frame, text="Xóa hình mờ", variable=inpaint_var).grid(row=1, column=0, sticky=tk.W, pady=8)
 
-        ttk.Label(param_frame, text="修复方法:").grid(row=1, column=2, sticky=tk.W, padx=10)
-        # 使用上次的修复方法（如果有）
+        ttk.Label(param_frame, text="Phương pháp sửa chữa:").grid(row=1, column=2, sticky=tk.W, padx=10)
+        # Sử dụng phương pháp sửa chữa lần trước (nếu có)
         last_method_id = last_settings.get('inpaint_method', '')
         try:
             last_method_translated = self.get_translated_name_from_id(last_method_id) if last_method_id else self.get_translated_method_names()[0]
@@ -1039,30 +1039,30 @@ class AppGUI:
         inpaint_method_combo = ttk.Combobox(param_frame, textvariable=inpaint_method_var, width=20, state="readonly")
         inpaint_method_combo['values'] = self.get_translated_method_names()
         inpaint_method_combo.grid(row=1, column=3, columnspan=2, sticky=tk.W, padx=5, pady=8)
-        ttk.Button(param_frame, text="说明", command=self.show_inpaint_method_info, width=6).grid(row=1, column=5, padx=5, pady=8)
+        ttk.Button(param_frame, text="Thông tin", command=self.show_inpaint_method_info, width=6).grid(row=1, column=5, padx=5, pady=8)
 
-        # 第三行：仅图片模式 和 强制重新生成
+        # Hàng thứ ba: Chỉ chế độ hình ảnh và buộc tái tạo
         image_only_var = tk.BooleanVar(value=last_settings.get('image_only', DEFAULT_TASK_SETTINGS['image_only']))
-        ttk.Checkbutton(param_frame, text="仅图片模式", variable=image_only_var).grid(row=2, column=0, columnspan=3, sticky=tk.W, pady=8)
+        ttk.Checkbutton(param_frame, text="Chỉ chế độ hình ảnh", variable=image_only_var).grid(row=2, column=0, columnspan=3, sticky=tk.W, pady=8)
 
         force_regenerate_var = tk.BooleanVar(value=last_settings.get('force_regenerate', DEFAULT_TASK_SETTINGS['force_regenerate']))
-        ttk.Checkbutton(param_frame, text="强制重新生成", variable=force_regenerate_var).grid(row=2, column=3, columnspan=3, sticky=tk.W, pady=8)
+        ttk.Checkbutton(param_frame, text="Buộc tái tạo", variable=force_regenerate_var).grid(row=2, column=3, columnspan=3, sticky=tk.W, pady=8)
 
-        # 第四行：页码范围
-        ttk.Label(param_frame, text="页码范围:").grid(row=3, column=0, sticky=tk.W, pady=8)
-        page_range_var = tk.StringVar(value="")  # 页码范围不保存
+        # Hàng thứ tư: Phạm vi trang
+        ttk.Label(param_frame, text="Phạm vi trang:").grid(row=3, column=0, sticky=tk.W, pady=8)
+        page_range_var = tk.StringVar(value="")  # Phạm vi trang không được lưu
         page_range_entry = ttk.Entry(param_frame, textvariable=page_range_var, width=20)
         page_range_entry.grid(row=3, column=1, columnspan=2, sticky=tk.W, padx=5, pady=8)
-        ttk.Label(param_frame, text="例: 1-3,5", foreground="gray").grid(row=3, column=3, columnspan=2, sticky=tk.W, padx=10)
+        ttk.Label(param_frame, text="Ví dụ: 1-3,5", foreground="gray").grid(row=3, column=3, columnspan=2, sticky=tk.W, padx=10)
 
-        # 第五行：统一字体选项（仅当有 JSON 时显示）
+        # Hàng thứ năm: Tùy chọn unify font (chỉ hiển thị khi có JSON)
         font_frame = ttk.Frame(param_frame)
         unify_font_var = tk.BooleanVar(value=last_settings.get('unify_font', DEFAULT_TASK_SETTINGS['unify_font']))
         font_name_var = tk.StringVar(value=last_settings.get('font_name', DEFAULT_TASK_SETTINGS['font_name']))
         
-        unify_check = ttk.Checkbutton(font_frame, text="统一字体", variable=unify_font_var)
+        unify_check = ttk.Checkbutton(font_frame, text="Unify Font", variable=unify_font_var)
         unify_check.pack(side=tk.LEFT)
-        ttk.Label(font_frame, text="字体:").pack(side=tk.LEFT, padx=(10, 2))
+        ttk.Label(font_frame, text="Font:").pack(side=tk.LEFT, padx=(10, 2))
         font_entry = ttk.Entry(font_frame, textvariable=font_name_var, width=15)
         font_entry.pack(side=tk.LEFT, padx=5)
 
@@ -1078,7 +1078,7 @@ class AppGUI:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # 底部按钮
+        # Các nút ở dưới cùng
         btn_frame = ttk.Frame(top)
         btn_frame.pack(fill=tk.X, padx=10, pady=(0, 10))
 
@@ -1092,13 +1092,13 @@ class AppGUI:
             if json_path and not os.path.exists(json_path):
                 json_path = None
             
-            # 收集所有参数
+            # Thu thập tất cả tham số
             settings = {
                 "output_dir": self.output_dir_var.get(),
                 "dpi": dpi_var.get(),
                 "ratio": ratio_var.get(),
                 "inpaint": inpaint_var.get(),
-                "inpaint_method": self.get_method_id_from_translated_name(inpaint_method_var.get()),  # 保存方法 ID
+                "inpaint_method": self.get_method_id_from_translated_name(inpaint_method_var.get()),  # Lưu ID phương pháp
                 "image_only": image_only_var.get(),
                 "force_regenerate": force_regenerate_var.get(),
                 "unify_font": unify_font_var.get(),
@@ -1109,8 +1109,8 @@ class AppGUI:
             self.add_task_with_settings(pdf_path, json_path, settings)
             top.destroy()
 
-        ttk.Button(btn_frame, text="取消", command=top.destroy).pack(side=tk.RIGHT, padx=5)
-        ttk.Button(btn_frame, text="添加任务", command=add_task_confirmed).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(btn_frame, text="Hủy", command=top.destroy).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(btn_frame, text="Thêm tác vụ", command=add_task_confirmed).pack(side=tk.RIGHT, padx=5)
 
     def add_tasks_multi_pdfs(self):
         pdfs = filedialog.askopenfilenames(parent=self.root, title=get_text("select_pdf_title"), filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")])
@@ -1120,14 +1120,14 @@ class AppGUI:
             self.add_task(p, None)
 
     def add_tasks_batch_pair(self):
-        """批量添加任务并配对JSON的对话框"""
+        """Hộp thoại để thêm nhiều tác vụ và ghép nối JSON"""
         top = self.create_toplevel(get_text("batch_add_dialog_title"), 1050, 950)
         
-        # 底部按钮（先创建，固定在底部）
+        # Các nút ở dưới cùng(Tạo trước, cố định ở dưới cùng)
         bottom_frame = ttk.Frame(top)
         bottom_frame.pack(fill=tk.X, side=tk.BOTTOM, padx=10, pady=10)
         
-        # 创建可滚动的主容器（填充剩余空间）
+        # Tạo bộ chứa chính có thể cuộn (lấp đầy không gian còn lại)
         canvas = tk.Canvas(top, highlightthickness=0)
         scrollbar = ttk.Scrollbar(top, orient="vertical", command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
@@ -1139,7 +1139,7 @@ class AppGUI:
         
         canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         
-        # 自动调整canvas宽度
+        # Tự động điều chỉnh chiều rộng canvas
         def on_canvas_configure(event):
             canvas.itemconfig(canvas_window, width=event.width)
         
@@ -1149,15 +1149,15 @@ class AppGUI:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # 主容器内容
+        # Nội dung bộ chứa chính
         main_container = ttk.Frame(scrollable_frame, padding="10")
         main_container.pack(fill=tk.BOTH, expand=True)
         
-        # ============ 工作流指引区域 ============
+        # ============ Khu vực hướng dẫn quy trình ============
         guide_frame = ttk.Frame(main_container)
         guide_frame.pack(fill=tk.X, pady=(0, 10))
         
-        # 标题 + 说明
+        # Tiêu đề + Hướng dẫn
         title_frame = ttk.Frame(guide_frame)
         title_frame.pack(fill=tk.X)
         ttk.Label(title_frame, text=get_text("workflow_guide_title"), font=("TkDefaultFont", 10, "bold"), foreground="darkblue").pack(anchor=tk.W, pady=(0, 5))
@@ -1172,30 +1172,30 @@ class AppGUI:
         
         ttk.Separator(main_container, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=8)
         
-        # 文件选择区域
+        # Khu vực chọn tệp
         file_select_frame = ttk.LabelFrame(main_container, text=get_text("file_select_section"), padding="10")
         file_select_frame.pack(fill=tk.X, pady=(0, 10))
         
-        # PDF选择
+        # Chọn PDF
         pdf_btn_frame = ttk.Frame(file_select_frame)
         pdf_btn_frame.pack(fill=tk.X, pady=5)
         ttk.Button(pdf_btn_frame, text=get_text("select_pdf_btn"), command=lambda: self._batch_select_files(pdf_listbox, "pdf"), width=18).pack(side=tk.LEFT, padx=5)
         ttk.Label(pdf_btn_frame, text=get_text("pdf_hint"), foreground="gray").pack(side=tk.LEFT, padx=5)
         
-        # JSON选择
+        # Chọn JSON
         json_btn_frame = ttk.Frame(file_select_frame)
         json_btn_frame.pack(fill=tk.X, pady=5)
         ttk.Button(json_btn_frame, text=get_text("select_json_btn"), command=lambda: self._batch_select_files(json_listbox, "json"), width=18).pack(side=tk.LEFT, padx=5)
         ttk.Label(json_btn_frame, text=get_text("json_hint"), foreground="gray").pack(side=tk.LEFT, padx=5)
         
-        # 配对显示区域
+        # Khu vực hiển thị ghép nối
         pair_frame = ttk.LabelFrame(main_container, text=get_text("pair_section"), padding="10")
         pair_frame.pack(fill=tk.BOTH, pady=(0, 10))
-        pair_frame.configure(height=280)  # 限制文件配对区域高度
+        pair_frame.configure(height=280)  # Giới hạn chiều cao khu vực ghép nối tệp
         pair_frame.columnconfigure(0, weight=1)
         pair_frame.columnconfigure(2, weight=1)
         
-        # PDF列表
+        # Danh sách PDF
         pdf_list_frame = ttk.Frame(pair_frame)
         pdf_list_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
         ttk.Label(pdf_list_frame, text=get_text("pdf_files_label"), font=("TkDefaultFont", 9, "bold")).pack()
@@ -1205,7 +1205,7 @@ class AppGUI:
         pdf_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         pdf_scroll.config(command=pdf_listbox.yview)
         
-        # 中间控制按钮
+        # Các nút điều khiển ở giữa
         ctrl_frame = ttk.Frame(pair_frame)
         ctrl_frame.grid(row=0, column=1, padx=10)
         
@@ -1225,7 +1225,7 @@ class AppGUI:
         ttk.Button(ctrl_frame, text="↑", width=4, command=lambda: self._move_item_up(json_listbox)).pack(pady=2)
         ttk.Button(ctrl_frame, text="↓", width=4, command=lambda: self._move_item_down(json_listbox)).pack(pady=2)
         
-        # JSON列表
+        # Danh sách JSON
         json_list_frame = ttk.Frame(pair_frame)
         json_list_frame.grid(row=0, column=2, sticky="nsew", padx=(5, 0))
         ttk.Label(json_list_frame, text=get_text("json_files_label"), font=("TkDefaultFont", 9, "bold")).pack()
@@ -1237,7 +1237,7 @@ class AppGUI:
         
         pair_frame.rowconfigure(0, weight=1)
         
-        # 配对状态显示区域（简洁版）
+        # Khu vực hiển thị trạng thái ghép nối (phiên bản ngắn gọn)
         status_frame = ttk.Frame(main_container)
         status_frame.pack(fill=tk.X, pady=(0, 10))
         
@@ -1250,51 +1250,51 @@ class AppGUI:
         )
         status_label.pack(anchor=tk.W, padx=5, pady=5)
         
-        # 存储配对关系的字典: {pdf_path: json_path or None}
+        # Từ điển lưu trữ các mối quan hệ ghép nối: {pdf_path: json_path or None}
         pairing_dict = {}
         
-        # 辅助函数：同步两个Listbox的大小（智能处理占位符）
+        # Hàm trợ giúp: Đồng bộ hóa kích thước của hai Listbox (xử lý thông minh phần giữ chỗ)
         def sync_listbox_sizes():
-            # 收集所有真实文件
+            # Thu thập tất cả các tệp thực
             real_pdfs = []
             real_jsons = []
             
             for i in range(pdf_listbox.size()):
                 item = pdf_listbox.get(i)
-                if not item.startswith("[无"):
+                if not item.startswith("[Không"):
                     real_pdfs.append(item)
             
             for i in range(json_listbox.size()):
                 item = json_listbox.get(i)
-                if not item.startswith("[无"):
+                if not item.startswith("[Không"):
                     real_jsons.append(item)
             
-            # 清空两个列表
+            # Xóa cả hai danh sách
             pdf_listbox.delete(0, tk.END)
             json_listbox.delete(0, tk.END)
             
-            # 重新填充，确保长度一致
+            # Điền lại, đảm bảo chiều dài nhất quán
             max_count = max(len(real_pdfs), len(real_jsons))
             
             for i in range(max_count):
                 if i < len(real_pdfs):
                     pdf_listbox.insert(tk.END, real_pdfs[i])
                 else:
-                    pdf_listbox.insert(tk.END, "[无PDF]")
+                    pdf_listbox.insert(tk.END, "[Không có PDF]")
                 
                 if i < len(real_jsons):
                     json_listbox.insert(tk.END, real_jsons[i])
                 else:
-                    json_listbox.insert(tk.END, "[无JSON]")
+                    json_listbox.insert(tk.END, "[Không có JSON]")
             
-            # 更新配对字典：仅保留已存在的配对，新增PDF初始为未配对
+            # Cập nhật từ điển ghép nối: chỉ giữ các ghép nối hiện có, PDF mới được khởi tạo là chưa ghép nối
             new_pairing = {}
             for i in range(max_count):
                 pdf = pdf_listbox.get(i) if i < pdf_listbox.size() else None
                 
-                # 只处理真实的PDF文件
-                if pdf and not pdf.startswith("[无"):
-                    # 如果该PDF已在pairing_dict中，保留其原有配对；否则初始为None（未配对）
+                # Chỉ xử lý các tệp PDF thực
+                if pdf and not pdf.startswith("[Không"):
+                    # Nếu PDF đó đã có trong pairing_dict, hãy giữ ghép nối ban đầu của nó; nếu không, hãy khởi tạo thành None (chưa ghép nối)
                     if pdf in pairing_dict:
                         new_pairing[pdf] = pairing_dict[pdf]
                     else:
@@ -1303,7 +1303,7 @@ class AppGUI:
             pairing_dict.clear()
             pairing_dict.update(new_pairing)
         
-        # 辅助函数：更新配对状态显示
+        # Hàm trợ giúp: Cập nhật hiển thị trạng thái ghép nối
         def update_pair_display():
             if not pairing_dict:
                 status_label.config(
@@ -1314,22 +1314,22 @@ class AppGUI:
                 with_json = sum(1 for v in pairing_dict.values() if v)
                 without_json = len(pairing_dict) - with_json
                 
-                # 统计JSON文件数量（排除占位符）
+                # Đếm số lượng tệp JSON (loại trừ phần giữ chỗ)
                 json_count = 0
                 for i in range(json_listbox.size()):
                     item = json_listbox.get(i)
-                    if not item.startswith("[无"):
+                    if not item.startswith("[Không"):
                         json_count += 1
                 
                 if with_json == len(pairing_dict):
                     msg = get_text("status_all_paired", count=len(pairing_dict))
                     color = "darkgreen"
                 elif with_json == 0 and json_count > 0:
-                    # 有JSON但没有配对
+                    # Có JSON nhưng chưa ghép nối
                     msg = get_text("status_no_paired_but_has_json", pdf_count=len(pairing_dict), json_count=json_count)
                     color = "darkorange"
                 elif with_json == 0:
-                    # 没有JSON也没有配对
+                    # Không có JSON và chưa ghép nối
                     msg = get_text("status_no_paired", count=len(pairing_dict))
                     color = "darkorange"
                 else:
@@ -1338,18 +1338,18 @@ class AppGUI:
                 
                 status_label.config(text=msg, foreground=color)
         
-        # 选择文件的辅助函数
+        # Hàm trợ giúp chọn tệp
         def select_files_helper(listbox, file_type):
             if file_type == "pdf":
                 files = filedialog.askopenfilenames(
                     parent=top,
-                    title="选择PDF文件",
+                    title="Chọn tệp PDF",
                     filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")]
                 )
             else:
                 files = filedialog.askopenfilenames(
                     parent=top,
-                    title="选择JSON文件",
+                    title="Chọn tệp JSON",
                     filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
                 )
             
@@ -1362,13 +1362,13 @@ class AppGUI:
                 sync_listbox_sizes()
                 update_pair_display()
         
-        # 将辅助函数绑定到全局（为了lambda使用）
+        # Liên kết các hàm trợ giúp với toàn cầu (để sử dụng lambda)
         self._batch_select_files = select_files_helper
         
-        # 为PDF listbox添加拖拽功能
+        # Thêm chức năng kéo thả cho PDF listbox
         if windnd:
             def on_pdf_drop(files):
-                """线程安全的PDF拖拽处理 - 使用队列"""
+                """Xử lý kéo thả PDF an toàn luồng - Sử dụng hàng đợi"""
                 try:
                     self._drop_queue.put(('pdf', files, pdf_listbox, pairing_dict, sync_listbox_sizes, update_pair_display))
                 except:
@@ -1377,12 +1377,12 @@ class AppGUI:
             try:
                 windnd.hook_dropfiles(pdf_listbox, func=on_pdf_drop)
             except Exception as e:
-                print(f"PDF拖拽功能初始化失败: {e}")
+                print(f"PDFKhởi tạo chức năng kéo thả thất bại: {e}")
         
-        # 为JSON listbox添加拖拽功能
+        # Thêm chức năng kéo thả cho JSON listbox
         if windnd:
             def on_json_drop(files):
-                """线程安全的JSON拖拽处理 - 使用队列"""
+                """Xử lý kéo thả JSON an toàn luồng - Sử dụng hàng đợi"""
                 try:
                     self._drop_queue.put(('json', files, json_listbox, pairing_dict, sync_listbox_sizes, update_pair_display))
                 except:
@@ -1391,12 +1391,12 @@ class AppGUI:
             try:
                 windnd.hook_dropfiles(json_listbox, func=on_json_drop)
             except Exception as e:
-                print(f"JSON拖拽功能初始化失败: {e}")
+                print(f"JSONKhởi tạo chức năng kéo thả thất bại: {e}")
         
-        # 底部按钮区域 - 分为自动配对区和操作区
+        # Khu vực nút dưới - Chia thành vùng ghép nối tự động và vùng hoạt động
         ttk.Separator(main_container, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=8)
         
-        # 自动配对区域（突出显示）
+        # Khu vực ghép nối tự động (nổi bật)
         auto_pair_frame = ttk.LabelFrame(main_container, text=get_text("auto_pair_section"), padding="10", relief="solid", borderwidth=2)
         auto_pair_frame.pack(fill=tk.X, pady=(0, 10))
         
@@ -1429,23 +1429,23 @@ class AppGUI:
         ).pack(side=tk.LEFT, padx=5, pady=5)
         ttk.Label(auto_pair_btns2, text=get_text("order_pair_desc"), foreground="darkgreen").pack(side=tk.LEFT, padx=5)
         
-        # 底部操作按钮的内容（使用前面创建的 bottom_frame）
+        # Nội dung nút hoạt động ở dưới (sử dụng bottom_frame được tạo trước đó)
         def add_all_tasks():
             if not pairing_dict:
                 messagebox.showwarning(get_text("info_btn"), get_text("no_pdf_warning"), parent=top)
                 return
             
-            # 检查是否有JSON但未配对
+            # Kiểm tra xem có JSON nhưng chưa ghép nối
             with_json = sum(1 for v in pairing_dict.values() if v)
             
-            # 统计JSON文件数量（排除占位符）
+            # Đếm số lượng tệp JSON (loại trừ phần giữ chỗ)
             json_count = 0
             for i in range(json_listbox.size()):
                 item = json_listbox.get(i)
-                if not item.startswith("[无"):
+                if not item.startswith("[Không"):
                     json_count += 1
             
-            # 如果有JSON但未配对，提示用户必须先进行配对
+            # Nếu có JSON nhưng chưa ghép nối, nhắc nhở người dùng phải ghép nối trước
             if json_count > 0 and with_json == 0:
                 messagebox.showwarning(
                     get_text("info_btn"), 
@@ -1454,13 +1454,13 @@ class AppGUI:
                 )
                 return
             
-            # 弹出参数设置对话框
+            # Hiển thị hộp thoại thiết lập tham số
             self.show_batch_task_params_dialog(pairing_dict, top)
         
-        # 左侧：取消
+        # Bên trái: Hủy
         ttk.Button(bottom_frame, text="❌ " + get_text("cancel_btn"), command=top.destroy).pack(side=tk.LEFT, padx=5, pady=5)
         
-        # 右侧：添加任务
+        # Bên phải: Thêm tác vụ
         ttk.Button(
             bottom_frame, 
             text=get_text("add_all_tasks_btn"), 
@@ -1471,7 +1471,7 @@ class AppGUI:
         update_pair_display()
 
     def _handle_dialog_drop_files_impl(self, files, pdf_var, json_var):
-        """处理对话框拖拽文件的线程安全版本"""
+        """Phiên bản an toàn luồng cho xử lý kéo thả tệp trong hộp thoại"""
         try:
             if not files:
                 return
@@ -1488,17 +1488,17 @@ class AppGUI:
             
             if pdfs and not pdf_var.get():
                 pdf_var.set(pdfs[0])
-                print(f"已添加PDF文件: {pdfs[0]}")
+                print(f"Đã thêm tệp PDF: {pdfs[0]}")
             
             if jsons and not json_var.get():
                 json_var.set(jsons[0])
-                print(f"已添加JSON文件: {jsons[0]}")
+                print(f"Đã thêm tệp JSON: {jsons[0]}")
                 
         except Exception as e:
-            print(f"处理拖拽文件时出错: {e}")
+            print(f"Lỗi khi xử lý tệp kéo thả: {e}")
     
     def _handle_batch_pdf_drop(self, files, pdf_listbox, pairing_dict, sync_func, update_func):
-        """处理批量PDF拖拽的线程安全版本"""
+        """Phiên bản an toàn luồng cho xử lý kéo thả PDF hàng loạt"""
         try:
             if not files:
                 return
@@ -1520,15 +1520,15 @@ class AppGUI:
                 
                 sync_func()
                 update_func()
-                print(f"已添加 {len(pdfs)} 个PDF文件")
+                print(f"Đã thêm {len(pdfs)} tệp PDF")
             else:
-                print("请拖拽PDF文件")
+                print("Vui lòng kéo thả tệp PDF")
                 
         except Exception as e:
-            print(f"处理PDF拖拽时出错: {e}")
+            print(f"Lỗi khi xử lý kéo thả PDF: {e}")
     
     def _handle_batch_json_drop(self, files, json_listbox, pairing_dict, sync_func, update_func):
-        """处理批量JSON拖拽的线程安全版本"""
+        """Phiên bản an toàn luồng cho xử lý kéo thả JSON hàng loạt"""
         try:
             if not files:
                 return
@@ -1549,15 +1549,15 @@ class AppGUI:
                 
                 sync_func()
                 update_func()
-                print(f"已添加 {len(jsons)} 个JSON文件")
+                print(f"Đã thêm {len(jsons)} tệp JSON")
             else:
-                print("请拖拽JSON文件")
+                print("Vui lòng kéo thả tệp JSON")
                 
         except Exception as e:
-            print(f"处理JSON拖拽时出错: {e}")
+            print(f"Lỗi khi xử lý kéo thả JSON: {e}")
 
     def _move_item_up(self, listbox):
-        """向上移动选中项"""
+        """Di chuyển mục đã chọn lên trên"""
         selection = listbox.curselection()
         if not selection or selection[0] == 0:
             return
@@ -1568,7 +1568,7 @@ class AppGUI:
         listbox.selection_set(idx - 1)
 
     def _move_item_down(self, listbox):
-        """向下移动选中项"""
+        """Di chuyển mục đã chọn xuống dưới"""
         selection = listbox.curselection()
         if not selection or selection[0] == listbox.size() - 1:
             return
@@ -1579,17 +1579,17 @@ class AppGUI:
         listbox.selection_set(idx + 1)
 
     def show_batch_task_params_dialog(self, pairing_dict, parent_window):
-        """弹出对话框设置批量任务的共同参数"""
+        """Hiển thị hộp thoại cài đặt tham số chung cho tác vụ hàng loạt"""
         param_top = self.create_toplevel(get_text("batch_params_title"), 700, 600)
         
-        # 主容器
+        # Bộ chứa chính
         main_frame = ttk.Frame(param_top)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # 获取用户上次使用的设置作为批量任务的初始值
+        # Lấy cài đặt lần cuối của người dùng làm giá trị khởi tạo cho tác vụ hàng loạt
         last_settings = getattr(self, 'last_task_settings', {})
         
-        # 任务参数区域 - 使用 Canvas 支持滚动
+        # Khu vực tham số tác vụ - Sử dụng Canvas để hỗ trợ cuộn
         param_container = ttk.Frame(main_frame)
         param_container.pack(fill=tk.BOTH, expand=True)
         
@@ -1606,31 +1606,31 @@ class AppGUI:
         canvas.bind('<Configure>', lambda e: canvas.itemconfig(canvas_window, width=e.width))
         canvas.configure(yscrollcommand=scrollbar.set)
 
-        # 参数框架
+        # Khung tham số
         param_frame = ttk.LabelFrame(scrollable_frame, text=get_text("task_params_label"), padding="10")
         param_frame.pack(fill=tk.X, expand=False)
         param_frame.columnconfigure(1, weight=0)
         param_frame.columnconfigure(3, weight=0)
 
-        # 第一行：DPI 和 显示比例
+        # Hàng thứ nhất: DPI và tỷ lệ hiển thị
         ttk.Label(param_frame, text="DPI:").grid(row=0, column=0, sticky=tk.W, pady=8)
         dpi_var = tk.IntVar(value=last_settings.get('dpi', DEFAULT_TASK_SETTINGS['dpi']))
         dpi_entry = ttk.Entry(param_frame, textvariable=dpi_var, width=8)
         dpi_entry.grid(row=0, column=1, sticky=tk.W, padx=5, pady=8)
         ttk.Label(param_frame, text="(150-300)", foreground="gray").grid(row=0, column=2, sticky=tk.W, padx=10)
 
-        ttk.Label(param_frame, text="显示比例:").grid(row=0, column=3, sticky=tk.W, padx=(20, 0))
+        ttk.Label(param_frame, text="Tỷ lệ hiển thị:").grid(row=0, column=3, sticky=tk.W, padx=(20, 0))
         ratio_var = tk.DoubleVar(value=last_settings.get('ratio', DEFAULT_TASK_SETTINGS['ratio']))
         ratio_entry = ttk.Entry(param_frame, textvariable=ratio_var, width=8)
         ratio_entry.grid(row=0, column=4, sticky=tk.W, padx=5, pady=8)
         ttk.Label(param_frame, text="(0.7-0.9)", foreground="gray").grid(row=0, column=5, sticky=tk.W, padx=5)
 
-        # 第二行：去除水印 和 修复方法
+        # Hàng thứ hai: Xóa hình mờ và phương pháp sửa chữa
         inpaint_var = tk.BooleanVar(value=last_settings.get('inpaint', DEFAULT_TASK_SETTINGS['inpaint']))
-        ttk.Checkbutton(param_frame, text="去除水印", variable=inpaint_var).grid(row=1, column=0, sticky=tk.W, pady=8)
+        ttk.Checkbutton(param_frame, text="Xóa hình mờ", variable=inpaint_var).grid(row=1, column=0, sticky=tk.W, pady=8)
 
-        ttk.Label(param_frame, text="修复方法:").grid(row=1, column=2, sticky=tk.W, padx=10)
-        # 使用上次的修复方法
+        ttk.Label(param_frame, text="Phương pháp sửa chữa:").grid(row=1, column=2, sticky=tk.W, padx=10)
+        # Sử dụng phương pháp sửa chữa lần trước
         last_method_id = last_settings.get('inpaint_method', '')
         try:
             last_method_translated = self.get_translated_name_from_id(last_method_id) if last_method_id else self.get_translated_method_names()[0]
@@ -1640,30 +1640,30 @@ class AppGUI:
         inpaint_method_combo = ttk.Combobox(param_frame, textvariable=inpaint_method_var, width=20, state="readonly")
         inpaint_method_combo['values'] = self.get_translated_method_names()
         inpaint_method_combo.grid(row=1, column=3, columnspan=2, sticky=tk.W, padx=5, pady=8)
-        ttk.Button(param_frame, text="说明", command=self.show_inpaint_method_info, width=6).grid(row=1, column=5, padx=5, pady=8)
+        ttk.Button(param_frame, text="Thông tin", command=self.show_inpaint_method_info, width=6).grid(row=1, column=5, padx=5, pady=8)
 
-        # 第三行：仅图片模式 和 强制重新生成
+        # Hàng thứ ba: Chỉ chế độ hình ảnh và buộc tái tạo
         image_only_var = tk.BooleanVar(value=last_settings.get('image_only', DEFAULT_TASK_SETTINGS['image_only']))
-        ttk.Checkbutton(param_frame, text="仅图片模式", variable=image_only_var).grid(row=2, column=0, columnspan=3, sticky=tk.W, pady=8)
+        ttk.Checkbutton(param_frame, text="Chỉ chế độ hình ảnh", variable=image_only_var).grid(row=2, column=0, columnspan=3, sticky=tk.W, pady=8)
 
         force_regenerate_var = tk.BooleanVar(value=last_settings.get('force_regenerate', DEFAULT_TASK_SETTINGS['force_regenerate']))
-        ttk.Checkbutton(param_frame, text="强制重新生成", variable=force_regenerate_var).grid(row=2, column=3, columnspan=3, sticky=tk.W, pady=8)
+        ttk.Checkbutton(param_frame, text="Buộc tái tạo", variable=force_regenerate_var).grid(row=2, column=3, columnspan=3, sticky=tk.W, pady=8)
 
-        # 第四行：页码范围
-        ttk.Label(param_frame, text="页码范围:").grid(row=3, column=0, sticky=tk.W, pady=8)
-        page_range_var = tk.StringVar(value="")  # 批量任务不保存页码范围
+        # Hàng thứ tư: Phạm vi trang
+        ttk.Label(param_frame, text="Phạm vi trang:").grid(row=3, column=0, sticky=tk.W, pady=8)
+        page_range_var = tk.StringVar(value="")  # Phạm vi trang không được lưu cho tác vụ hàng loạt
         page_range_entry = ttk.Entry(param_frame, textvariable=page_range_var, width=20)
         page_range_entry.grid(row=3, column=1, columnspan=2, sticky=tk.W, padx=5, pady=8)
-        ttk.Label(param_frame, text="例: 1-3,5", foreground="gray").grid(row=3, column=3, columnspan=2, sticky=tk.W, padx=10)
+        ttk.Label(param_frame, text="Ví dụ: 1-3,5", foreground="gray").grid(row=3, column=3, columnspan=2, sticky=tk.W, padx=10)
 
-        # 第五行：统一字体选项
+        # Hàng thứ năm: Tùy chọn thống nhất phông chữ
         font_frame = ttk.Frame(param_frame)
         unify_font_var = tk.BooleanVar(value=last_settings.get('unify_font', DEFAULT_TASK_SETTINGS['unify_font']))
         font_name_var = tk.StringVar(value=last_settings.get('font_name', DEFAULT_TASK_SETTINGS['font_name']))
         
-        unify_check = ttk.Checkbutton(font_frame, text="统一字体", variable=unify_font_var)
+        unify_check = ttk.Checkbutton(font_frame, text="Unify Font", variable=unify_font_var)
         unify_check.pack(side=tk.LEFT)
-        ttk.Label(font_frame, text="字体:").pack(side=tk.LEFT, padx=(10, 2))
+        ttk.Label(font_frame, text="Font:").pack(side=tk.LEFT, padx=(10, 2))
         font_entry = ttk.Entry(font_frame, textvariable=font_name_var, width=15)
         font_entry.pack(side=tk.LEFT, padx=5)
         font_frame.grid(row=4, column=0, columnspan=6, sticky=tk.W, pady=8, padx=0)
@@ -1671,18 +1671,18 @@ class AppGUI:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # 底部按钮
+        # Các nút ở dưới cùng
         btn_frame = ttk.Frame(param_top)
         btn_frame.pack(fill=tk.X, padx=10, pady=(0, 10))
 
         def confirm_and_add():
-            # 收集所有参数
+            # Thu thập tất cả tham số
             settings = {
                 "output_dir": self.output_dir_var.get(),
                 "dpi": dpi_var.get(),
                 "ratio": ratio_var.get(),
                 "inpaint": inpaint_var.get(),
-                "inpaint_method": self.get_method_id_from_translated_name(inpaint_method_var.get()),  # 保存方法 ID
+                "inpaint_method": self.get_method_id_from_translated_name(inpaint_method_var.get()),  # Lưu ID phương pháp
                 "image_only": image_only_var.get(),
                 "force_regenerate": force_regenerate_var.get(),
                 "unify_font": unify_font_var.get(),
@@ -1690,72 +1690,72 @@ class AppGUI:
                 "page_range": page_range_var.get().strip()
             }
             
-            # 统计配对情况
+            # Thống kê tình trạng ghép cặp
             with_json = sum(1 for v in pairing_dict.values() if v)
             without_json = len(pairing_dict) - with_json
             
-            # 批量添加任务（忽略占位符）
+            # Thêm tác vụ hàng loạt (bỏ qua phần giữ chỗ)
             for pdf, json_path in pairing_dict.items():
-                if not pdf.startswith("[无"):
+                if not pdf.startswith("[Không"):
                     self.add_task_with_settings(pdf, json_path, settings)
             
-            # 显示添加结果
+            # Hiển thị kết quả thêm
             if with_json == len(pairing_dict):
-                msg = f"已添加 {len(pairing_dict)} 个任务（全部配对JSON）"
+                msg = f"Đã thêm {len(pairing_dict)} tác vụ (tất cả đã ghép cặp JSON)"
             elif with_json == 0:
-                msg = f"已添加 {len(pairing_dict)} 个任务（均无JSON）"
+                msg = f"Đã thêm {len(pairing_dict)} tác vụ (không có JSON)"
             else:
-                msg = f"已添加 {len(pairing_dict)} 个任务\n• {with_json} 个配对了JSON\n• {without_json} 个无JSON"
+                msg = f"Đã thêm {len(pairing_dict)} tác vụ\n• {with_json} đã ghép cặp JSON\n• {without_json} không có JSON"
             
-            messagebox.showinfo("成功", msg, parent=param_top)
+            messagebox.showinfo("Thành công", msg, parent=param_top)
             param_top.destroy()
             parent_window.destroy()
 
-        ttk.Button(btn_frame, text="取消", command=param_top.destroy).pack(side=tk.RIGHT, padx=5)
-        ttk.Button(btn_frame, text="确认并添加任务", command=confirm_and_add).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(btn_frame, text="Hủy", command=param_top.destroy).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(btn_frame, text="Xác nhận và thêm tác vụ", command=confirm_and_add).pack(side=tk.RIGHT, padx=5)
 
     def _pair_files(self, pdf_listbox, json_listbox, pair_display):
-        """将选中的PDF和JSON配对"""
+        """Ghép nối PDF và JSON đã chọn"""
         pdf_sel = pdf_listbox.curselection()
         json_sel = json_listbox.curselection()
         
         if not pdf_sel:
-            messagebox.showwarning("提示", "请先选择一个PDF文件")
+            messagebox.showwarning("Thông báo", "Vui lòng chọn một tệp PDF trước")
             return
         
         pdf_path = pdf_listbox.get(pdf_sel[0])
         json_path = json_listbox.get(json_sel[0]) if json_sel else None
         
-        # 更新配对字典（通过闭包访问）
-        # 需要从外部访问pairing_dict，这里需要修改实现方式
-        # 暂时使用listbox的itemconfig来标记
+        # Cập nhật từ điển ghép cặp (truy cập qua closure)
+        # Cần truy cập `pairing_dict` từ bên ngoài, nên điều chỉnh cách triển khai
+        # Tạm thời sử dụng `itemconfig` của listbox để đánh dấu
         pass
 
     def _clear_pairing(self, pdf_listbox, json_listbox, pair_display):
-        """清除选中PDF的配对"""
+        """Xóa ghép cặp của PDF đã chọn"""
         pdf_sel = pdf_listbox.curselection()
         if not pdf_sel:
             return
-        # 实现清除逻辑
+        # Thực hiện logic xóa ghép cặp
         pass
 
     def _auto_pair_by_order(self, pdf_listbox, json_listbox, pairing_dict, update_callback):
-        """按顺序自动配对"""
-        # 收集真实文件
+        """Ghép tự động theo thứ tự"""
+        # Thu thập các file thực
         real_pdfs = []
         real_jsons = []
         
         for i in range(pdf_listbox.size()):
             pdf = pdf_listbox.get(i)
-            if not pdf.startswith("[无"):
+            if not pdf.startswith("[Không"):
                 real_pdfs.append(pdf)
         
         for i in range(json_listbox.size()):
             json_path = json_listbox.get(i)
-            if not json_path.startswith("[无"):
+            if not json_path.startswith("[Không"):
                 real_jsons.append(json_path)
         
-        # 按顺序配对
+        # Ghép theo thứ tự
         pairing_dict.clear()
         paired_count = 0
         
@@ -1765,26 +1765,26 @@ class AppGUI:
             if json_path:
                 paired_count += 1
         
-        # 重新排列两个列表以直观显示配对结果
+        # Sắp xếp lại hai danh sách để hiển thị kết quả ghép cặp rõ ràng
         pdf_listbox.delete(0, tk.END)
         json_listbox.delete(0, tk.END)
         
-        # 按配对顺序添加文件
+        # Thêm file theo thứ tự ghép cặp
         max_count = max(len(real_pdfs), len(real_jsons))
         for i in range(max_count):
             if i < len(real_pdfs):
                 pdf_listbox.insert(tk.END, real_pdfs[i])
             else:
-                pdf_listbox.insert(tk.END, "[无PDF]")
+                pdf_listbox.insert(tk.END, "[Không có PDF]")
             
             if i < len(real_jsons):
                 json_listbox.insert(tk.END, real_jsons[i])
             else:
-                json_listbox.insert(tk.END, "[无JSON]")
+                json_listbox.insert(tk.END, "[Không có JSON]")
         
         update_callback()
         
-        # 显示详细的配对结果
+        # Hiển thị kết quả ghép chi tiết
         pdf_real_count = len(real_pdfs)
         if paired_count == pdf_real_count and pdf_real_count > 0:
             msg = get_text("order_pair_complete_all", count=pdf_real_count)
@@ -1797,33 +1797,33 @@ class AppGUI:
         messagebox.showinfo(get_text("order_pair_title"), msg, parent=pdf_listbox.master.master.master)
 
     def _auto_pair_by_name(self, pdf_listbox, json_listbox, pairing_dict, update_callback):
-        """按文件名自动配对（stem匹配）"""
-        # 同步列表大小（填充占位符）
+        """Ghép tự động theo tên file (khớp stem)"""
+        # Đồng bộ kích thước danh sách (chèn placeholder)
         pdf_count = pdf_listbox.size()
         json_count = json_listbox.size()
         
         if pdf_count > json_count:
             for i in range(json_count, pdf_count):
-                json_listbox.insert(tk.END, "[无JSON]")
+                json_listbox.insert(tk.END, "[Không có JSON]")
         elif json_count > pdf_count:
             for i in range(pdf_count, json_count):
-                pdf_listbox.insert(tk.END, "[无PDF]")
+                pdf_listbox.insert(tk.END, "[Không có PDF]")
         
         pairing_dict.clear()
-        
-        # 创建JSON文件名到路径的映射
+
+        # Tạo ánh xạ từ tên tệp JSON sang đường dẫn
         json_map = {}
         for i in range(json_listbox.size()):
             json_path = json_listbox.get(i)
-            if not json_path.startswith("[无"):
+            if not json_path.startswith("[Không"):
                 stem = Path(json_path).stem
                 json_map[stem] = json_path
         
-        # 为每个PDF查找匹配的JSON
+        # Tìm JSON khớp cho mỗi PDF
         matched = 0
         for i in range(pdf_listbox.size()):
             pdf = pdf_listbox.get(i)
-            if not pdf.startswith("[无"):
+            if not pdf.startswith("[Không"):
                 pdf_stem = Path(pdf).stem
                 json_path = json_map.get(pdf_stem)
                 pairing_dict[pdf] = json_path
@@ -1831,38 +1831,38 @@ class AppGUI:
                     matched += 1
         
         update_callback()
-        messagebox.showinfo("配对完成", f"已匹配 {matched}/{len(pairing_dict)} 个文件", parent=pdf_listbox.master.master.master)
+        messagebox.showinfo("Hoàn tất ghép", f"Đã ghép {matched}/{len(pairing_dict)} file", parent=pdf_listbox.master.master.master)
 
     def _auto_pair_by_similarity(self, pdf_listbox, json_listbox, pairing_dict, update_callback):
-        """基于文件名相似度的智能配对"""
-        # 同步列表大小（填充占位符）
+        """Ghép thông minh dựa trên độ tương đồng tên tệp"""
+        # Đồng bộ kích thước danh sách (chèn placeholder)
         pdf_count = pdf_listbox.size()
         json_count = json_listbox.size()
         
         if pdf_count > json_count:
             for i in range(json_count, pdf_count):
-                json_listbox.insert(tk.END, "[无JSON]")
+                json_listbox.insert(tk.END, "[Không có JSON]")
         elif json_count > pdf_count:
             for i in range(pdf_count, json_count):
-                pdf_listbox.insert(tk.END, "[无PDF]")
+                pdf_listbox.insert(tk.END, "[Không có PDF]")
         
         pairing_dict.clear()
-        
-        # 收集所有真实的PDF和JSON文件
+
+        # Thu thập tất cả PDF và JSON thực
         real_pdfs = []
         real_jsons = []
         
         for i in range(pdf_listbox.size()):
             pdf = pdf_listbox.get(i)
-            if not pdf.startswith("[无"):
+            if not pdf.startswith("[Không"):
                 real_pdfs.append(pdf)
         
         for i in range(json_listbox.size()):
             json_path = json_listbox.get(i)
-            if not json_path.startswith("[无"):
+            if not json_path.startswith("[Không"):
                 real_jsons.append(json_path)
         
-        # 使用相似度算法进行配对
+        # Ghép bằng thuật toán tương đồng
         matched = 0
         used_jsons = set()
         
@@ -1871,21 +1871,21 @@ class AppGUI:
             best_match = None
             best_score = 0
             
-            # 为每个PDF找到最相似的JSON
+            # Tìm JSON tương đồng nhất cho mỗi PDF
             for json_path in real_jsons:
                 if json_path in used_jsons:
                     continue
                 
                 json_stem = Path(json_path).stem.lower()
                 
-                # 计算相似度
+                # Tính toán độ tương đồng
                 similarity = difflib.SequenceMatcher(None, pdf_stem, json_stem).ratio()
-                
-                if similarity > best_score and similarity > 0.3:  # 设置最低相似度阈值
+
+                if similarity > best_score and similarity > 0.3:  # Thiết lập ngưỡng tương đồng tối thiểu
                     best_score = similarity
                     best_match = json_path
             
-            # 配对结果
+            # Kết quả ghép đôi
             if best_match:
                 pairing_dict[pdf] = best_match
                 used_jsons.add(best_match)
@@ -1893,31 +1893,31 @@ class AppGUI:
             else:
                 pairing_dict[pdf] = None
         
-        # 重新排列两个列表以直观显示配对结果
+        # Sắp xếp lại hai danh sách để hiển thị kết quả ghép đôi
         pdf_listbox.delete(0, tk.END)
         json_listbox.delete(0, tk.END)
         
-        # 先添加已配对的文件
+        # Thêm các tệp đã ghép đôi trước
         for pdf, json_path in pairing_dict.items():
-            if json_path:  # 有配对的JSON
+            if json_path:  # Có JSON đã ghép đôi
                 pdf_listbox.insert(tk.END, pdf)
                 json_listbox.insert(tk.END, json_path)
         
-        # 再添加未配对的PDF
+        # Sau đó thêm PDF chưa ghép đôi
         for pdf, json_path in pairing_dict.items():
-            if not json_path:  # 没有配对的JSON
+            if not json_path:  # Không có JSON ghép đôi
                 pdf_listbox.insert(tk.END, pdf)
-                json_listbox.insert(tk.END, "[无JSON]")
+                json_listbox.insert(tk.END, "[Không có JSON]")
         
-        # 添加未使用的JSON文件（如果有）
+        # Thêm các tệp JSON chưa sử dụng (nếu có)
         unused_jsons = [j for j in real_jsons if j not in used_jsons]
         for json_path in unused_jsons:
-            pdf_listbox.insert(tk.END, "[无PDF]")
+            pdf_listbox.insert(tk.END, "[Không có PDF]")
             json_listbox.insert(tk.END, json_path)
         
         update_callback()
         
-        # 显示配对结果统计
+        # Hiển thị thống kê kết quả ghép đôi
         total_pdfs = len(real_pdfs)
         if matched == total_pdfs and total_pdfs > 0:
             msg = get_text("smart_pair_complete_all", count=total_pdfs)
@@ -1963,14 +1963,14 @@ class AppGUI:
         self.show_task_details(task)
 
     def show_task_details(self, task):
-        # 减小默认高度到 650，宽度保持 700，适配更多屏幕
+        # Giảm chiều cao mặc định xuống 650, giữ chiều rộng 700 để phù hợp nhiều màn hình hơn
         top = self.create_toplevel(get_text("task_details_title"), 700, 650)
         
-        # 创建主容器框架
+        # Tạo khung chứa chính
         content_frame = ttk.Frame(top)
         content_frame.pack(fill=tk.BOTH, expand=True)
         
-        # 使用 Canvas 和 Scrollbar 支持滚动
+        # Sử dụng Canvas và Scrollbar để hỗ trợ cuộn
         canvas = tk.Canvas(content_frame, highlightthickness=0)
         scrollbar = ttk.Scrollbar(content_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
@@ -1984,7 +1984,7 @@ class AppGUI:
 
         canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         
-        # 让内部框架宽度随 Canvas 变化，防止内容被遮挡
+        # Cho khung nội thất thay đổi theo Canvas để tránh che khuất nội dung
         canvas.bind('<Configure>', lambda e: canvas.itemconfig(canvas_window, width=e.width))
         
         canvas.configure(yscrollcommand=scrollbar.set)
@@ -1992,19 +1992,19 @@ class AppGUI:
         info_frame = ttk.LabelFrame(scrollable_frame, text=get_text("queue_label"), padding="10")
         info_frame.pack(fill=tk.X, expand=False, padx=10, pady=5)
         
-        # 存储可编辑的变量
+        # Lưu trữ các biến có thể chỉnh sửa
         edit_vars = {}
 
-        # Helper to create rows (只读)
+        # Helper để tạo hàng (chỉ đọc)
         def add_readonly_row(parent, label_key, value, row, is_path=False):
-            # 增加标签宽度到 120，移除换行限制，使布局更舒展
+            # Tăng chiều rộng nhãn lên 120, bỏ giới hạn xuống dòng để bố cục thoáng hơn
             ttk.Label(parent, text=get_text(label_key), font=("", 9, "bold"), width=20).grid(row=row, column=0, sticky="nw", pady=5)
             val_frame = ttk.Frame(parent)
             val_frame.grid(row=row, column=1, sticky="ew", padx=10, pady=5)
             
             display_value = str(value) if value is not None else get_text("none")
             
-            # 使用较高的 height 确保长路径显示，width 设置为 10 并配合 expand 填充
+            # Dùng height lớn hơn để hiển thị đường dẫn dài, width đặt 10 và dùng expand để lấp đầy
             txt = tk.Text(val_frame, height=3 if is_path else 1, width=10, wrap=tk.WORD, borderwidth=0, bg=top.cget("bg"), font=("", 9))
             txt.insert("1.0", display_value)
             txt.configure(state="disabled")
@@ -2020,11 +2020,11 @@ class AppGUI:
 
         info_frame.columnconfigure(1, weight=1)
         
-        # 判断任务是否可编辑（只有未开始或出错的任务可以修改）
+        # Kiểm tra nhiệm vụ có thể chỉnh sửa hay không (chỉ nhiệm vụ chưa bắt đầu hoặc gặp lỗi mới có thể)
         is_editable = task["status"] not in [get_text("queue_status_done"), get_text("queue_status_running")]
         
-        # 统一锁定状态下的颜色：使用 Entry 的 readonly 状态，并设置 readonlybackground 为窗口背景色，确保文字清晰
-        # 即使是禁用状态，也要保证文字颜色是黑色或深灰
+        # Thống nhất màu khi khóa: dùng Entry readonly và đặt readonlybackground bằng màu nền cửa sổ để chữ rõ ràng
+        # Dù ở trạng thái vô hiệu hóa, vẫn đảm bảo màu chữ là đen hoặc xám đậm
         style = ttk.Style()
         style.configure("ReadOnly.TEntry", fieldbackground=top.cget("bg"), foreground="black")
         style.configure("ReadOnly.TCombobox", fieldbackground=top.cget("bg"), foreground="black")
@@ -2036,7 +2036,7 @@ class AppGUI:
         add_readonly_row(info_frame, "queue_col_status", task["status"], 1)
         add_readonly_row(info_frame, "queue_col_pdf", task["pdf"], 2, is_path=True)
         
-        # JSON 路径支持编辑
+        # Cho phép chỉnh sửa đường dẫn JSON
         ttk.Label(info_frame, text=get_text("queue_col_json"), font=("", 9, "bold"), width=20).grid(row=3, column=0, sticky="nw", pady=5)
         json_frame = ttk.Frame(info_frame)
         json_frame.grid(row=3, column=1, sticky="ew", padx=10, pady=5)
@@ -2047,31 +2047,31 @@ class AppGUI:
             if f: json_var.set(f)
         ttk.Button(json_frame, text=get_text("browse_btn"), command=browse_json, width=6, state=widget_state).pack(side=tk.LEFT, padx=5)
 
-        # 显示输出文件（根据是否有优化版本，显示一个或两个输出文件）
+        # Hiển thị file đầu ra (hiển thị một hoặc hai file tùy có phiên bản tối ưu hay không)
         unoptimized_output = task.get("output_unoptimized", "")
         optimized_output = task.get("output_optimized", "")
         
         if optimized_output:
-            # 显示优化版本
+            # Hiển thị phiên bản đã tối ưu
             add_readonly_row(info_frame, "queue_col_output_optimized", optimized_output, 4, is_path=True)
-            # 显示未优化版本
+            # Hiển thị phiên bản chưa tối ưu
             add_readonly_row(info_frame, "queue_col_output_unoptimized", unoptimized_output, 5, is_path=True)
         else:
-            # 只显示单个输出文件
+            # Chỉ hiển thị một file đầu ra
             add_readonly_row(info_frame, "queue_col_output", unoptimized_output or task.get("output", ""), 4, is_path=True)
 
-        # 设置项区域 - 可编辑
+        # Khu vực cài đặt - có thể chỉnh sửa
         settings = task.get("settings", {})
-        # 即使没有settings，也要初始化一个空字典以便编辑（理论上新建任务都有）
+        # Ngay cả khi không có settings, khởi tạo dict rỗng để có thể chỉnh sửa (về lý thuyết task mới luôn có)
         if settings is None:
             settings = {}
         
-        # 为旧任务提供默认值
+        # Cung cấp giá trị mặc định cho các task cũ
         default_settings = get_default_settings(
             output_dir=self.output_dir_var.get() if hasattr(self, 'output_dir_var') else "workspace",
             inpaint_method="background_smooth"
         )
-        # 合并默认值和实际值
+        # Gộp giá trị mặc định và giá trị thực tế
         for key, default_val in default_settings.items():
             if key not in settings or settings[key] is None:
                 settings[key] = default_val
@@ -2080,7 +2080,7 @@ class AppGUI:
         set_frame.pack(fill=tk.X, expand=False, padx=10, pady=5)
         set_frame.columnconfigure(1, weight=1)
         
-        # 定义每个设置项的类型和对应的键
+        # Định nghĩa loại và khóa cho mỗi mục cài đặt
         # type: entry, int_entry, bool, combo
         s_items = [
             ("output_dir_label", "output_dir", "dir_entry"),
@@ -2095,12 +2095,12 @@ class AppGUI:
             ("page_range_label", "page_range", "entry"),
         ]
         
-        # 存储可能需要隐藏的组件
+        # Lưu các widget có thể cần ẩn
         unify_font_widgets = []
         font_name_widgets = []
         
         for i, (lbl_key, set_key, widget_type) in enumerate(s_items):
-            # 为标签添加宽度以保证对齐
+            # Thêm chiều rộng cho label để đảm bảo căn chỉnh
             lbl = ttk.Label(set_frame, text=get_text(lbl_key), font=("", 9, "bold"), width=20)
             lbl.grid(row=i, column=0, sticky="nw", pady=5)
             
@@ -2110,7 +2110,7 @@ class AppGUI:
             if widget_type == "bool":
                 var = tk.BooleanVar(value=bool(curr_val))
                 edit_vars[set_key] = var
-                # Checkbutton 在禁用时很难看清，如果是锁定状态，我们用 Label 显示“是/否”
+                # Checkbutton khó nhìn khi bị disable; nếu ở trạng thái khoá, dùng Label hiển thị 'Có/Không'
                 if not is_editable:
                     val_text = get_text("yes") if var.get() else get_text("no")
                     widget = ttk.Label(set_frame, text=val_text)
@@ -2120,9 +2120,9 @@ class AppGUI:
                     widget.grid(row=i, column=1, sticky="w", padx=10)
                 
             elif widget_type == "combo_method":
-                # 处理方法名的显示，如果是 ID 则转换为翻译名称
+                # Xử lý hiển thị tên phương pháp, nếu là ID thì chuyển thành tên đã dịch
                 if curr_val is not None:
-                    # 如果是 method_id (如 'background_smooth')，转换为翻译名称
+                    # Nếu là method_id (ví dụ 'background_smooth'), chuyển thành tên đã dịch
                     if curr_val in ["background_smooth", "edge_mean_smooth", "background", "onion", "griddata", "skimage"]:
                         display_val = self.get_translated_name_from_id(curr_val)
                     else:
@@ -2132,7 +2132,7 @@ class AppGUI:
                 var = tk.StringVar(value=display_val)
                 edit_vars[set_key] = var
                 if not is_editable:
-                    # 锁定状态用只读 Label 显示，确保文字清晰
+                    # Trạng thái khoá hiển thị bằng Label chỉ đọc để đảm bảo chữ rõ ràng
                     widget = ttk.Label(set_frame, text=display_val)
                     widget.grid(row=i, column=1, sticky="w", padx=10)
                 else:
@@ -2143,7 +2143,7 @@ class AppGUI:
                 var = tk.StringVar(value=str(curr_val) if curr_val is not None else "")
                 edit_vars[set_key] = var
                 if not is_editable:
-                    # 不可编辑状态下用 Label 显示
+                    # Ở trạng thái không thể chỉnh sửa, hiển thị bằng Label
                     widget = ttk.Label(set_frame, text=var.get())
                     widget.grid(row=i, column=1, sticky="w", padx=10)
                 else:
@@ -2159,7 +2159,7 @@ class AppGUI:
                 var = tk.StringVar(value=str(curr_val) if curr_val is not None else "")
                 edit_vars[set_key] = var
                 if not is_editable:
-                    # 不可编辑状态下用 Label 显示
+                    # Ở trạng thái không thể chỉnh sửa, hiển thị bằng Label
                     widget = ttk.Label(set_frame, text=var.get())
                     widget.grid(row=i, column=1, sticky="w", padx=10)
                 else:
@@ -2191,18 +2191,18 @@ class AppGUI:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # 底部按钮区域
+        # Các nút ở đáy
         btn_frame = ttk.Frame(top, padding="10")
         btn_frame.pack(fill=tk.X, side=tk.BOTTOM)
         
         def save_changes():
-            # 更新 task["settings"]
+            # Cập nhật task["settings"]
             new_settings = {}
             for k, v in edit_vars.items():
                 val = v.get()
-                # 类型转换处理
-                # 注意：这里为了简单起见，大部分存为原始类型，读取时 run_conversion_for_task 会再处理
-                # 但为了保持一致性，尽量还原类型
+                # Xử lý chuyển đổi kiểu
+                # Lưu ý: để đơn giản, phần lớn lưu dưới dạng nguyên thủy; khi đọc, `run_conversion_for_task` sẽ xử lý lại
+                # Nhưng để giữ nhất quán, cố gắng khôi phục kiểu
                 orig_type_item = next((x for x in s_items if x[1] == k), None)
                 if orig_type_item:
                     w_type = orig_type_item[2]
@@ -2224,16 +2224,16 @@ class AppGUI:
                     new_settings[k] = val
             
             task["settings"] = new_settings
-            # 更新 JSON 路径
+            # Cập nhật đường dẫn JSON
             task["json"] = json_var.get().strip().strip('"')
-            # 更新 Treeview 显示
+            # Cập nhật hiển thị Treeview
             self.update_task_row(task)
             
             print(f"Task {task['id']} updated.")
             top.destroy()
 
         ttk.Button(btn_frame, text=get_text("close_btn"), command=top.destroy).pack(side=tk.RIGHT, padx=5)
-        # 只有未开始的任务允许修改设置
+        # Chỉ task chưa bắt đầu mới được phép sửa cài đặt
         if is_editable:
             ttk.Button(btn_frame, text=get_text("save_btn"), command=save_changes).pack(side=tk.RIGHT, padx=5)
 
@@ -2254,7 +2254,7 @@ class AppGUI:
             messagebox.showinfo(get_text("info_btn"), get_text("queue_empty_msg"))
             return
 
-        # 检查是否有任务需要自动化（非仅图片模式）
+        # Kiểm tra xem có task cần tự động hoá (không phải chỉ chế độ ảnh)
         has_automation_task = any(not task.get("settings", {}).get("image_only", False) for task in self.task_queue)
         if has_automation_task:
             if not self.ensure_pc_manager_running():
@@ -2314,7 +2314,7 @@ class AppGUI:
             mineru_json = task["json"]
             settings = task.get("settings", {})
             
-            # 从任务设置中提取参数，如果缺失则使用默认值
+            # Lấy tham số từ cài đặt task, nếu thiếu thì dùng giá trị mặc định
             output_dir = settings.get("output_dir", self.output_dir_var.get() if hasattr(self, 'output_dir_var') else "workspace")
             dpi = settings.get("dpi", 150)
             ratio_val = settings.get("ratio", 0.8)
@@ -2326,7 +2326,7 @@ class AppGUI:
             font_name = settings.get("font_name", "Calibri")
             page_range = settings.get("page_range", "")
             
-            # 全局设置（不随任务存储，始终使用界面当前值）
+            # Cài đặt toàn cục (không lưu theo task, luôn dùng giá trị hiện tại trên giao diện)
             delay = self.delay_var.get() if hasattr(self, 'delay_var') else 0
             timeout = self.timeout_var.get() if hasattr(self, 'timeout_var') else 50
             done_offset_str = self.done_offset_var.get().strip() if hasattr(self, 'done_offset_var') else ""
@@ -2401,7 +2401,7 @@ class AppGUI:
             page_suffix = format_page_suffix(pages_list)
             out_ppt_file = workspace_dir / f"{pdf_name}{page_suffix}.pptx"
             
-            # 如果 inpaint_method 已经是 ID 格式，直接使用；否则转换
+            # Nếu inpaint_method đã là ID, dùng trực tiếp; nếu không, chuyển sang ID
             if inpaint_method in ["background_smooth", "edge_mean_smooth", "background", "onion", "griddata", "skimage"]:
                 method_id = inpaint_method
             else:
@@ -2468,7 +2468,7 @@ def launch_gui():
         pass
 
     root = tk.Tk()
-    # 设置窗口图标
+    # Thiết lập biểu tượng cửa sổ
     root.iconbitmap(icon_path())
     # After root exists, apply scaling using the helper (this will call tk scaling)
     try:

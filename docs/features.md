@@ -1,86 +1,86 @@
 ---
-title: 功能介绍
+title: Giới thiệu tính năng
 ---
 
-# 📋 功能介绍
+# Giới thiệu tính năng
 
-NotebookLM2PPT 提供了一系列强大的功能，帮助用户将 PDF 转换为高质量的可编辑 PowerPoint 演示文稿。以下是核心功能说明：
+NotebookLM2PPT cung cấp một loạt tính năng mạnh mẽ, giúp người dùng chuyển đổi PDF thành bản trình chiếu PowerPoint có thể chỉnh sửa chất lượng cao. Dưới đây là mô tả các tính năng cốt lõi:
 
-## 🤖 全自动化流程
+## Quy trình tự động hóa hoàn toàn
 
-- **智能圈选集成**：集成微软电脑管家"智能圈选"功能，自动完成截图和转换
-- **无人值守操作**：自动定位并点击"转换为PPT"按钮，无需手动干预
-- **智能校准**：支持按钮位置校准，确保在不同系统上的准确性
-- **错误处理**：内置错误处理机制，确保转换过程的稳定性
+- **Tích hợp Smart Select**: Tích hợp chức năng "Smart Select" của Microsoft PC Manager, tự động hoàn thành chụp màn hình và chuyển đổi
+- **Vận hành không cần giám sát**: Tự động định vị và nhấp nút "Chuyển đổi sang PPT", không cần can thiệp thủ công
+- **Hiệu chuẩn thông minh**: Hỗ trợ hiệu chuẩn vị trí nút, đảm bảo độ chính xác trên các hệ thống khác nhau
+- **Xử lý lỗi**: Cơ chế xử lý lỗi tích hợp, đảm bảo tính ổn định của quá trình chuyển đổi
 
-## 🧠 MinerU 深度优化
+## Tối ưu hóa chuyên sâu MinerU
 
-- **智能文本框筛选**：自动识别并保留相关文本框，删除冗余内容
-- **字体统一处理**：自动将所有文本框字体统一为"微软雅黑"，提升专业性
-- **高质量图片替换**：从 MinerU JSON 提取原始高清图片，替换截图图片
-- **智能背景处理**：根据内容特征智能处理背景，实现最佳视觉效果
+- **Lọc hộp văn bản thông minh**: Tự động nhận diện và giữ lại các hộp văn bản liên quan, xóa nội dung thừa
+- **Xử lý thống nhất phông chữ**: Tự động thống nhất phông chữ tất cả hộp văn bản thành "Microsoft YaHei", nâng cao tính chuyên nghiệp
+- **Thay thế hình ảnh chất lượng cao**: Trích xuất hình ảnh gốc chất lượng cao từ MinerU JSON, thay thế hình ảnh chụp màn hình
+- **Xử lý nền thông minh**: Xử lý nền thông minh dựa trên đặc điểm nội dung, đạt hiệu quả hình ảnh tốt nhất
 
-## ✨ 智能去水印
+## Xóa watermark thông minh
 
-- **专属算法**：内置针对 NotebookLM 的智能水印去除算法
-- **多种修复方法**：提供 6 种不同的图像修复方法，适应不同场景
-- **无缝修复**：保持图像质量的同时实现水印的无缝去除
-- **自适应处理**：根据背景复杂度自动选择最佳修复策略
+- **Thuật toán chuyên dụng**: Tích hợp thuật toán xóa watermark thông minh dành riêng cho NotebookLM
+- **Nhiều phương pháp sửa chữa**: Cung cấp 6 phương pháp sửa chữa hình ảnh khác nhau, thích ứng với các tình huống khác nhau
+- **Sửa chữa liền mạch**: Giữ chất lượng hình ảnh đồng thời xóa watermark liền mạch
+- **Xử lý tự thích ứng**: Tự động chọn chiến lược sửa chữa tốt nhất dựa trên độ phức tạp của nền
 
-## 🚀 高效转换
+## Chuyển đổi hiệu quả
 
-- **高质量转换**：支持自定义 DPI 参数（默认 200），确保图片质量
-- **批量处理**：自动处理多页 PDF，创建完整的演示文稿
-- **无缝合并**：自动检测并合并临时 PPT 文件，无需手动拼接
-- **仅图片模式**：提供快速转换选项，直接将图片插入 PPT
+- **Chuyển đổi chất lượng cao**: Hỗ trợ tùy chỉnh tham số DPI (mặc định 200), đảm bảo chất lượng hình ảnh
+- **Xử lý hàng loạt**: Tự động xử lý PDF nhiều trang, tạo bản trình chiếu hoàn chỉnh
+- **Hợp nhất liền mạch**: Tự động phát hiện và hợp nhất tệp PPT tạm thời, không cần ghép nối thủ công
+- **Chế độ chỉ hình ảnh**: Cung cấp tùy chọn chuyển đổi nhanh, trực tiếp chèn hình ảnh vào PPT
 
-## ⚙️ 高度可定制
+## Tùy chỉnh cao
 
-- **丰富的配置选项**：
-  - DPI：控制 PDF 转 PNG 分辨率
-  - 显示比例：控制图片显示大小
-  - 延迟：控制操作间隔
-  - 超时：控制等待时间
-  - 按钮偏移：控制智能圈选按钮位置
-- **配置持久化**：自动保存用户配置，下次启动时自动加载
-- **界面优化**：所有窗口默认居中显示，提供直观的操作体验
+- **Nhiều tùy chọn cấu hình**:
+  - DPI: Điều khiển độ phân giải PDF sang PNG
+  - Tỷ lệ hiển thị: Điều khiển kích thước hiển thị hình ảnh
+  - Độ trễ: Điều khiển khoảng cách giữa các thao tác
+  - Thời gian chờ: Điều khiển thời gian chờ đợi
+  - Offset nút: Điều khiển vị trí nút Smart Select
+- **Lưu trữ cấu hình**: Tự động lưu cấu hình người dùng, tự động tải khi khởi động lần sau
+- **Tối ưu giao diện**: Tất cả cửa sổ mặc định hiển thị ở giữa, cung cấp trải nghiệm thao tác trực quan
 
-## 📱 便捷操作
+## Thao tác tiện lợi
 
-- **全局快捷键**：支持 ESC 键全局中断功能
-- **一键停止**：提供"一键强行停止"功能，遇到问题时快速中断
-- **实时反馈**：转换过程中提供实时状态反馈
-- **友好界面**：直观的图形界面，易于使用
+- **Phím tắt toàn cục**: Hỗ trợ chức năng ngắt toàn cục bằng phím ESC
+- **Dừng một chạm**: Cung cấp chức năng "Dừng cưỡng bức một chạm", nhanh chóng ngắt khi gặp vấn đề
+- **Phản hồi thời gian thực**: Cung cấp phản hồi trạng thái thời gian thực trong quá trình chuyển đổi
+- **Giao diện thân thiện**: Giao diện đồ họa trực quan, dễ sử dụng
 
-## 📊 效果评估
+## Đánh giá hiệu quả
 
-为了客观评估转换质量，我们建立了配套的基准测试项目 [PDF2PPT-Benchmark](https://github.com/elliottzheng/PDF2PPT-Benchmark)。
+Để đánh giá khách quan chất lượng chuyển đổi, chúng tôi đã xây dựng dự án benchmark đi kèm [PDF2PPT-Benchmark](https://github.com/elliottzheng/PDF2PPT-Benchmark).
 
-通过在 72 页真实文档数据集上对比 **WPS PDF转PPT**、**微软智能圈选原生转换** 以及 **NotebookLM2PPT (MinerU优化)**，结果显示：
+Thông qua so sánh trên bộ dữ liệu 72 trang tài liệu thực tế giữa **WPS PDF sang PPT**, **Chuyển đổi gốc Smart Select của Microsoft** và **NotebookLM2PPT (tối ưu hóa MinerU)**, kết quả cho thấy:
 
-| 方法 | PSNR (↑) | SSIM (↑) | LPIPS (↓) | 说明 |
+| Phương pháp | PSNR (↑) | SSIM (↑) | LPIPS (↓) | Mô tả |
 | :--- | :--- | :--- | :--- | :--- |
-| **MinerU优化** | **36.48** | **0.86** | **0.191** | **综合效果最佳，还原度最高** |
-| WPS | 35.47 | 0.85 | 0.193 | 传统办公软件基线 |
-| 智能圈选 | 35.92 | 0.84 | 0.215 | 截图识别原生效果 |
+| **Tối ưu hóa MinerU** | **36.48** | **0.86** | **0.191** | **Hiệu quả tổng hợp tốt nhất, độ hoàn nguyên cao nhất** |
+| WPS | 35.47 | 0.85 | 0.193 | Baseline phần mềm văn phòng truyền thống |
+| Smart Select | 35.92 | 0.84 | 0.215 | Hiệu quả gốc nhận dạng chụp màn hình |
 
-> **结论**：结合 MinerU 后处理的转换方案在图像保真度（PSNR/SSIM）和视觉感知质量（LPIPS）上均优于传统商业软件和原生截图方案。
+> **Kết luận**: Phương án chuyển đổi kết hợp hậu xử lý MinerU vượt trội hơn phần mềm thương mại truyền thống và phương án chụp màn hình gốc về cả độ trung thực hình ảnh (PSNR/SSIM) và chất lượng cảm nhận thị giác (LPIPS).
 
-## 🎯 适用场景
+## Tình huống áp dụng
 
-- **NotebookLM 演示文稿**：将 AI 生成的不可编辑 PDF 转换为可编辑 PPT
-- **商务文档处理**：快速将商务 PDF 转换为专业演示文稿
-- **学术报告转换**：将学术论文转化为清晰的演示格式
-- **培训材料制作**：将培训文档转换为交互式演示文稿
-- **批量文档处理**：处理大量 PDF 文档，确保格式一致性
+- **Bản trình chiếu NotebookLM**: Chuyển đổi PDF không thể chỉnh sửa do AI tạo thành PPT có thể chỉnh sửa
+- **Xử lý tài liệu kinh doanh**: Nhanh chóng chuyển đổi PDF kinh doanh thành bản trình chiếu chuyên nghiệp
+- **Chuyển đổi báo cáo học thuật**: Chuyển đổi bài báo học thuật thành định dạng trình chiếu rõ ràng
+- **Tạo tài liệu đào tạo**: Chuyển đổi tài liệu đào tạo thành bản trình chiếu tương tác
+- **Xử lý tài liệu hàng loạt**: Xử lý số lượng lớn tài liệu PDF, đảm bảo tính nhất quán định dạng
 
-## 💡 核心优势
+## Ưu thế cốt lõi
 
-- **打破限制**：将静态 PDF 转化为可二次创作的 PPT
-- **智能优化**：通过 MinerU 技术提升转换质量
-- **全自动化**：无需手动操作，一键完成转换
-- **通用性强**：适用于各种 PDF 转 PPT 场景
-- **高质量输出**：确保转换结果保持原始文档的视觉效果
-- **极致轻量**：深度优化，启动快速，占用资源少
+- **Phá vỡ giới hạn**: Chuyển đổi PDF tĩnh thành PPT có thể sáng tạo lại
+- **Tối ưu hóa thông minh**: Nâng cao chất lượng chuyển đổi thông qua công nghệ MinerU
+- **Tự động hóa hoàn toàn**: Không cần thao tác thủ công, hoàn thành chuyển đổi bằng một cú nhấp
+- **Tính đa dụng cao**: Áp dụng cho nhiều tình huống chuyển đổi PDF sang PPT
+- **Đầu ra chất lượng cao**: Đảm bảo kết quả chuyển đổi giữ nguyên hiệu quả hình ảnh của tài liệu gốc
+- **Cực kỳ nhẹ**: Tối ưu hóa sâu, khởi động nhanh, chiếm ít tài nguyên
 
-NotebookLM2PPT 不仅是一个转换工具，更是一个提升工作效率的解决方案，帮助用户节省大量手动排版和编辑的时间。
+NotebookLM2PPT không chỉ là một công cụ chuyển đổi, mà còn là giải pháp nâng cao hiệu suất công việc, giúp người dùng tiết kiệm nhiều thời gian bố cục và chỉnh sửa thủ công.

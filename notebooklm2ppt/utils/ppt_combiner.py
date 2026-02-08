@@ -1,5 +1,5 @@
-# 使用 Spire.Presentation 合并PPT文件，保留原始设计
-# 安装: pip install spire.presentation
+# Sử dụng Spire.Presentation để hợp nhất các tệp PPT, giữ nguyên thiết kế gốc
+# Cài đặt: pip install spire.presentation
 
 import os
 from pathlib import Path
@@ -12,23 +12,23 @@ from PIL import Image
 
 def combine_ppt_files_with_spire(source_folder, output_file, png_names=None):
     """
-    使用 Spire.Presentation 合并PPT文件，每个PPT只保留第一页，并保留原始设计
-    
+    Dùng Spire.Presentation để hợp nhất các file PPT, mỗi PPT chỉ giữ trang đầu và giữ nguyên thiết kế gốc.
+
     Args:
-        source_folder: 源PPT文件所在的文件夹路径
-        output_file: 输出的合并PPT文件路径
+        source_folder: Thư mục chứa các file PPT nguồn
+        output_file: Đường dẫn file PPT hợp nhất đầu ra
     """
-    # 获取所有pptx文件并按字典序排序
+    # Lấy tất cả các file .pptx và sắp xếp theo thứ tự từ điển
     
     ppt_files = sorted([f for f in os.listdir(source_folder) if f.endswith('.pptx')])
 
     ppt_names = [png_name.replace(".png", ".pptx") for png_name in png_names] if png_names else None
     
     if not ppt_files:
-        print("未找到任何PPT文件")
+        print("Không tìm thấy file PPT nào")
         return
     
-    print(f"找到 {len(ppt_files)} 个PPT文件:")
+    print(f"Tìm thấy {len(ppt_files)} file PPT:")
     valid_ppt_files = []
     for idx, file in enumerate(ppt_files, 1):
         print(f"  {idx}. {file}")
@@ -36,46 +36,46 @@ def combine_ppt_files_with_spire(source_folder, output_file, png_names=None):
             valid_ppt_files.append(file)
     if ppt_names:
         ppt_files = valid_ppt_files
-        print(f"\n根据提供的PNG名称过滤后，剩余 {len(ppt_files)} 个PPT文件:")
+        print(f"\nSau khi lọc theo tên PNG được cung cấp, còn {len(ppt_files)} file PPT:")
     
-    # 创建主演示文稿对象，使用第一个PPT作为基础
+    # Tạo đối tượng trình chiếu chính, dùng PPT đầu tiên làm cơ sở
     first_ppt_path = os.path.join(source_folder, ppt_files[0])
     main_pres = Presentation()
     main_pres.LoadFromFile(first_ppt_path)
     
-    # 删除第一个PPT的多余页面，只保留第一页
+    # Xóa các slide thừa trong PPT đầu tiên, chỉ giữ slide đầu
     while main_pres.Slides.Count > 1:
         main_pres.Slides.RemoveAt(1)
     
-    print(f"  已添加: {ppt_files[0]} (第1页)")
+    print(f"  Đã thêm: {ppt_files[0]} (trang 1)")
     
-    # 遍历剩余的PPT文件
+    # Duyệt các file PPT còn lại
     for ppt_file in ppt_files[1:]:
         file_path = os.path.join(source_folder, ppt_file)
         
-        # 加载当前PPT文件
+        # Tải PPT hiện tại
         temp_pres = Presentation()
         temp_pres.LoadFromFile(file_path)
         
         if temp_pres.Slides.Count > 0:
-            # 使用 AppendBySlide 方法追加第一页，保留原始设计
+            # Dùng AppendBySlide để thêm trang đầu, giữ nguyên thiết kế
             main_pres.Slides.AppendBySlide(temp_pres.Slides[0])
-            print(f"  已添加: {ppt_file} (第1页)")
+            print(f"  Đã thêm: {ppt_file} (trang 1)")
         else:
-            print(f"  跳过: {ppt_file} (无幻灯片)")
+            print(f"  Bỏ qua: {ppt_file} (không có slide)")
         
-        # 释放临时演示文稿资源
+        # Giải phóng tài nguyên trình chiếu tạm thời
         temp_pres.Dispose()
     
-    # 保存合并后的PPT
+    # Lưu PPT đã hợp nhất
     main_pres.SaveToFile(output_file, FileFormat.Pptx2016)
-    print(f"\n合并完成！输出文件: {output_file}")
-    print(f"总共合并了 {main_pres.Slides.Count} 页幻灯片")
+    print(f"\nĐã hợp nhất! Tệp đầu ra: {output_file}")
+    print(f"Tổng cộng đã hợp nhất {main_pres.Slides.Count} slide")
     
-    # 释放资源
+    # Giải phóng tài nguyên
     main_pres.Dispose()
 
-    valid_png_names = [ppt_name.replace(".pptx", ".png") for ppt_name in ppt_files] # 返回真正存在的png names
+    valid_png_names = [ppt_name.replace(".pptx", ".png") for ppt_name in ppt_files] # Trả về tên PNG thực tế tồn tại
 
     return valid_png_names
 
@@ -83,15 +83,15 @@ def combine_ppt_files_with_spire(source_folder, output_file, png_names=None):
 
 def clean_ppt(in_ppt_file, out_ppt_file):
     """
-    使用 python-pptx 删除PPT中的多余形状
-    
+    Dùng python-pptx để xóa các shape thừa trong PPT
+
     Args:
-        ppt_file: 需要清理的PPT文件路径
+        ppt_file: Đường dẫn file PPT cần dọn dẹp
     """
     ppt = PptxPresentation(in_ppt_file)
     for slide in ppt.slides:
         for shape in list(slide.shapes):
-            # 如果shape name 叫做"New shape",删除它
+            # Nếu tên shape là "New shape" thì xóa nó
             if shape.name == "New shape":
                 sp = slide.shapes._spTree.remove(shape._element)
 
@@ -99,16 +99,16 @@ def clean_ppt(in_ppt_file, out_ppt_file):
     
 
 def combine_ppt(source_folder, out_ppt_file, png_names = None):
-    # 确保是字符串路径，因为后面用到了 .replace
+    # Đảm bảo là chuỗi đường dẫn vì sau này dùng .replace
     source_folder = str(source_folder)
     out_ppt_file = str(out_ppt_file)
     
-    # 方法1: 保留原始设计（推荐）
+    # Phương pháp 1: Giữ nguyên thiết kế gốc (khuyến nghị)
     output_file1 = out_ppt_file.replace(".pptx", "_combined_original_design.pptx")
     valid_png_names = combine_ppt_files_with_spire(source_folder, output_file1, png_names=png_names)
 
     clean_ppt(output_file1, out_ppt_file)
-    print(f"\n已生成合并的PPT文件: {out_ppt_file}")
+    print(f"\nĐã tạo file PPT hợp nhất: {out_ppt_file}")
     os.remove(output_file1)
     
     return valid_png_names
@@ -116,15 +116,15 @@ def combine_ppt(source_folder, out_ppt_file, png_names = None):
 
 def create_ppt_from_images(png_dir, output_file, png_names=None):
     """
-    直接将PNG图片插入到PPTX中，不使用智能圈选
-    
+    Chèn trực tiếp ảnh PNG vào PPTX, không sử dụng nhận vùng thông minh
+
     Args:
-        png_dir: PNG图片所在目录
-        output_file: 输出PPT文件路径
-        png_names: PNG文件名列表（可选，如果提供则只处理这些文件）
-    
+        png_dir: Thư mục chứa ảnh PNG
+        output_file: Đường dẫn file PPT đầu ra
+        png_names: Danh sách tên file PNG (tuỳ chọn; nếu có thì chỉ xử lý những file này)
+
     Returns:
-        实际使用的PNG文件名列表
+        Danh sách tên PNG thực tế đã sử dụng
     """
     png_dir = Path(png_dir)
     output_file = str(output_file)
@@ -135,10 +135,10 @@ def create_ppt_from_images(png_dir, output_file, png_names=None):
         png_files = sorted(png_dir.glob("*.png"))
     
     if not png_files:
-        print("未找到任何PNG图片")
+        print("Không tìm thấy PNG nào")
         return []
     
-    print(f"找到 {len(png_files)} 张PNG图片")
+    print(f"Tìm thấy {len(png_files)} ảnh PNG")
     
     prs = PptxPresentation()
     
@@ -148,12 +148,12 @@ def create_ppt_from_images(png_dir, output_file, png_names=None):
     prs.slide_width = Pt(img_width_px)
     prs.slide_height = Pt(img_height_px)
     
-    print(f"PPT尺寸设置为: {img_width_px} x {img_height_px} 像素")
+    print(f"Kích thước PPT đặt là: {img_width_px} x {img_height_px} px")
     
     blank_layout = prs.slide_layouts[6]
     
     for idx, png_file in enumerate(png_files, 1):
-        print(f"  [{idx}/{len(png_files)}] 处理: {png_file.name}")
+        print(f"  [{idx}/{len(png_files)}] Xử lý: {png_file.name}")
         
         slide = prs.slides.add_slide(blank_layout)
         
@@ -163,7 +163,7 @@ def create_ppt_from_images(png_dir, output_file, png_names=None):
         slide.shapes.add_picture(str(png_file), 0, 0, Pt(img_width), Pt(img_height))
     
     prs.save(output_file)
-    print(f"\n已生成PPT文件: {output_file}")
-    print(f"总共添加了 {len(prs.slides)} 页幻灯片")
+    print(f"\nĐã tạo file PPT: {output_file}")
+    print(f"Tổng cộng đã thêm {len(prs.slides)} slide")
     
     return [f.name for f in png_files]

@@ -13,6 +13,6 @@ git add .
 git config user.name "GitHub Actions"
 git config user.email "actions@github.com"
 git commit -m "docs: deploy"
-git remote add origin https://github.com/elliottzheng/NotebookLM2PPT.git 2>nul || git remote set-url origin https://github.com/elliottzheng/NotebookLM2PPT.git
+git remote add origin https://github.com/mrtinhnguyen/NotebookLM2PPT.git 2>nul || git remote set-url origin https://github.com/elliottzheng/NotebookLM2PPT.git
 git push -f origin main:gh-pages
 cd ..

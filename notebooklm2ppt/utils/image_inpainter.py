@@ -10,33 +10,33 @@ from .inpaint_methods import inpaint_manual, inpaint_numpy_onion, inpaint_scipy_
 INPAINT_METHODS = [
     {
         'id': 'background_smooth',
-        'name': '智能平滑（推荐）',  # 去掉“背景色”，强调智能
-        'description': '综合效果最佳，适合大多数去除文字、水印的场景'
+        'name': 'Làm mịn thông minh (Khuyến nghị)',  # Bỏ "màu nền", nhấn mạnh thông minh
+        'description': 'Hiệu quả tổng thể tốt nhất, thích hợp cho hầu hết các trường hợp xóa văn bản và hình mờ'
     },
     {
         'id': 'edge_mean_smooth',
-        'name': '边缘均值填充',
-        'description': '取周围像素平均色填充，适合纯色或简单背景'
+        'name': 'Điền trung bình cạnh',
+        'description': 'Điền trung bình màu sắc của các pixel xung quanh, phù hợp với nền đơn sắc hoặc đơn giản'
     },
     {
         'id': 'background',
-        'name': '极速纯色填充',
-        'description': '直接填充单一背景色，仅适合极简底色，速度最快'
+        'name': 'Điền màu đơn sắc cực nhanh',
+        'description': 'Điền trực tiếp một màu nền duy nhất, chỉ phù hợp với nền siêu đơn giản, tốc độ nhanh nhất'
     },
     {
         'id': 'onion',
-        'name': '逐层内缩修补', # 解释“洋葱皮”的原理
-        'description': '由外向内逐层修补，适合细长划痕或线条修复'
+        'name': 'Sửa chữa từng lớp từ bên ngoài vào trong', # Giải thích nguyên tắc "vỏ hành"
+        'description': 'Sửa chữa từng lớp từ bên ngoài vào trong, thích hợp cho các vết cước dài hoặc sửa chữa dòng'
     },
     {
         'id': 'griddata',
-        'name': '渐变过渡插值', # 解释“网格插值”的效果
-        'description': '计算平滑的曲面过渡，适合带有渐变的背景'
+        'name': 'Nội suy quá trình chuyển tiếp gradient', # Giải thích hiệu quả "nội suy lưới"
+        'description': 'Tính toán quá trình chuyển tiếp bề mặt mịn, phù hợp với nền có gradient'
     },
     {
         'id': 'skimage',
-        'name': '双调和光影修补', # 给 Biharmonic 一个听起来高级的名字
-        'description': '计算量大，速度较慢，但能更好保持光影连续性'
+        'name': 'Sửa chữa Biharmonic quang ảnh', # Cho tên cao cấp cho Biharmonic
+        'description': 'Lượng tính toán lớn, tốc độ chậm, nhưng giữ tính liên tục quang ảnh tốt hơn'
     },
 ]
 
@@ -45,19 +45,19 @@ METHOD_NAME_TO_ID = {m['name']: m['id'] for m in INPAINT_METHODS}
 
 
 def get_method_names():
-    """获取所有方法的中文名列表，用于GUI下拉框"""
+    """Lấy danh sách tên phương pháp Việt Nam, sử dụng cho hộp thả xuống GUI"""
     return [m['name'] for m in INPAINT_METHODS]
 
 
 def get_method_id(method_name_or_id):
-    """将方法名或ID转换为标准ID"""
+    """Chuyển đổi tên phương pháp hoặc ID thành ID chuẩn"""
     if method_name_or_id in METHOD_ID_TO_NAME:
         return method_name_or_id
     return METHOD_NAME_TO_ID.get(method_name_or_id, 'background_smooth')
 
 
 def get_method_name_from_id(method_id):
-    """将ID转换为中文名"""
+    """Chuyển đổi ID thành tên Việt"""
     return METHOD_ID_TO_NAME.get(method_id, get_method_names()[0])
 
 
@@ -76,7 +76,7 @@ def inpaint_image(image_path, output_path, inpaint_method='skimage'):
     image_width, image_height = image_defect.shape[1], image_defect.shape[0]
     ratio = image_width / old_width
 
-    assert abs(ratio - (image_height / old_height)) < 0.01, "图片比例不对，无法修复"
+    assert abs(ratio - (image_height / old_height)) < 0.01, "Tỷ lệ hình ảnh không đúng, không thể sửa chữa"
 
     r1 = math.floor(r1 * ratio)
     r2 = math.ceil(r2 * ratio)
@@ -94,18 +94,18 @@ def inpaint_image(image_path, output_path, inpaint_method='skimage'):
 
     edge_diversity, fill_color = compute_edge_diversity_numpy(image_defect, c1, r1, c2, r2)
 
-    if edge_diversity < 0.1 or inpaint_method == 'background': # 直接填充完事，速度最快
-        print("直接填充",edge_diversity, fill_color)
+    if edge_diversity < 0.1 or inpaint_method == 'background': # Điền trực tiếp xong, tốc độ nhanh nhất
+        print("Điền trực tiếp",edge_diversity, fill_color)
         image_defect[r1:r2, c1:c2] = fill_color
         image_result = image_defect
-    elif inpaint_method == 'skimage': # 速度最慢, 效果也一般
+    elif inpaint_method == 'skimage': # Tốc độ chậm nhất, hiệu quả cũng trung bình
         image_result = inpaint.inpaint_biharmonic(image_defect, mask, channel_axis=-1)
         image_result = (image_result*255).astype("uint8")
-    elif inpaint_method == 'onion':  # 效果一般，效果还行
+    elif inpaint_method == 'onion':  # Hiệu quả trung bình, hiệu quả cũng ổn
         image_result = inpaint_numpy_onion(image_defect, mask)
-    elif inpaint_method == 'griddata': # 跟onion差不多
+    elif inpaint_method == 'griddata': # Tương tự như onion
         image_result = inpaint_scipy_griddata(image_defect, mask)
-    elif inpaint_method == 'background_smooth': # 速度第二快，也平滑
+    elif inpaint_method == 'background_smooth': # Tốc độ thứ hai nhanh, cũng trơn
         image_result = inpaint_manual(image_defect, mask, fill_color, max_iter=100)
     elif inpaint_method == 'edge_mean_smooth':
         fill_color = compute_edge_average_color(image_defect, c1, r1, c2, r2)

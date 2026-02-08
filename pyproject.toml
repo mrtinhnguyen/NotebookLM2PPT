@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "notebooklm2ppt"
-version = "0.7.2"
-description = "将 PDF 转换为可编辑 PowerPoint 演示文稿的工具"
+version = "1.1.2"
+description = "Công cụ chuyển đổi PDF thành bản trình chiếu PowerPoint có thể chỉnh sửa"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
-    {name = "Elliott Zheng", email = "elliott.zheng@foxmail.com"},
+    {name = "Tinh Nguyen", email = "tonyxbase@gmail.com"},
 ]
 dependencies = [
     "PyMuPDF",
@@ -26,9 +26,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/elliottzheng/NotebookLM2PPT"
-Repository = "https://github.com/elliottzheng/NotebookLM2PPT.git"
-Issues = "https://github.com/elliottzheng/NotebookLM2PPT/issues"
+Homepage = "https://github.com/mrtinhnguyen/NotebookLM2PPT"
+Repository = "https://github.com/mrtinhnguyen/NotebookLM2PPT.git"
+Issues = "https://github.com/mrtinhnguyen/NotebookLM2PPT/issues"
 
 [project.scripts]
 notebooklm2ppt = "notebooklm2ppt.cli:main"

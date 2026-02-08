@@ -1,4 +1,4 @@
-"""主程序：将 PDF 转换为 PNG 图片，然后逐张调用截图工具进行处理"""
+"""Chương trình chính: Chuyển đổi PDF sang ảnh PNG, sau đó xử lý từng ảnh bằng công cụ chụp màn hình."""
 
 from notebooklm2ppt.cli import main
 

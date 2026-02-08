@@ -1,47 +1,47 @@
 ---
-title: MinerU 优化
+title: Tối ưu hóa MinerU
 ---
 
-# MinerU 深度优化
+# Tối ưu hóa chuyên sâu MinerU
 
-本文档详细说明 NotebookLM2PPT 中 MinerU 深度优化功能的技术实现细节，适合技术人员参考。
+Tài liệu này mô tả chi tiết các chi tiết triển khai kỹ thuật của chức năng tối ưu hóa chuyên sâu MinerU trong NotebookLM2PPT, phù hợp cho nhân viên kỹ thuật tham khảo.
 
-## 🧠 核心原理
+## Nguyên lý cốt lõi
 
-MinerU 优化功能通过解析 MinerU 生成的 JSON 文件，提取页面结构信息，对基础转换生成的 PPT 进行深度优化，提升排版质量、图片清晰度和文本准确性。
+Chức năng tối ưu hóa MinerU phân tích tệp JSON do MinerU tạo ra, trích xuất thông tin cấu trúc trang, thực hiện tối ưu hóa chuyên sâu trên PPT được tạo từ chuyển đổi cơ bản, nâng cao chất lượng bố cục, độ rõ nét hình ảnh và độ chính xác văn bản.
 
-## 🔧 核心模块
+## Mô-đun cốt lõi
 
-**文件**: `notebooklm2ppt/utils/ppt_refiner.py`
+**Tệp**: `notebooklm2ppt/utils/ppt_refiner.py`
 
-**主要函数**:
+**Hàm chính**:
 
 ```python
 def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out_ppt_file, unify_font=None, font_name=None)
 ```
 
-**参数说明**:
-- `tmp_image_dir`: 临时图片目录
-- `json_file`: MinerU 生成的 JSON 文件路径
-- `ppt_file`: 基础转换生成的 PPT 文件路径
-- `png_dir`: PDF 转换生成的 PNG 图片目录
-- `png_files`: PNG 文件列表
-- `final_out_ppt_file`: 最终输出的优化后 PPT 文件路径
-- `unify_font`: 是否统一字体（可选，默认为配置文件中的设置）
-- `font_name`: 统一使用的字体名称（可选，默认为"微软雅黑"）
+**Mô tả tham số**:
+- `tmp_image_dir`: Thư mục hình ảnh tạm thời
+- `json_file`: Đường dẫn tệp JSON do MinerU tạo
+- `ppt_file`: Đường dẫn tệp PPT từ chuyển đổi cơ bản
+- `png_dir`: Thư mục hình ảnh PNG từ chuyển đổi PDF
+- `png_files`: Danh sách tệp PNG
+- `final_out_ppt_file`: Đường dẫn tệp PPT đã tối ưu hóa đầu ra cuối cùng
+- `unify_font`: Có thống nhất phông chữ không (tùy chọn, mặc định theo cài đặt tệp cấu hình)
+- `font_name`: Tên phông chữ thống nhất sử dụng (tùy chọn, mặc định là "Microsoft YaHei")
 
-## 📊 优化流程
+## Quy trình tối ưu hóa
 
-### 1. 智能文本框筛选
+### 1. Lọc hộp văn bản thông minh
 
-**问题**: 基础转换可能会识别出无关的文本框
+**Vấn đề**: Chuyển đổi cơ bản có thể nhận diện ra các hộp văn bản không liên quan
 
-**解决方案**: 使用 IOU（交并比）算法评估文本框与 PDF 内容块的重叠程度
+**Giải pháp**: Sử dụng thuật toán IOU (Intersection over Union) để đánh giá mức độ trùng lặp giữa hộp văn bản và khối nội dung PDF
 
-**实现**:
+**Triển khai**:
 ```python
 def compute_iou(boxA, boxB):
-    # 计算两个矩形的交集面积
+    # Tính diện tích giao nhau của hai hình chữ nhật
     xA = max(boxA[0], boxB[0])
     yA = max(boxA[1], boxB[1])
     xB = min(boxA[2], boxB[2])
@@ -58,84 +58,84 @@ def compute_iou(boxA, boxB):
     return iou
 ```
 
-**筛选逻辑**:
-- 计算每个文本框与 PDF 内容块的 IOU
-- 保留 IOU > 0.01 的文本框（相关性强）
-- 删除 IOU ≤ 0.01 的文本框（可能是无关元素）
+**Logic lọc**:
+- Tính IOU của mỗi hộp văn bản với khối nội dung PDF
+- Giữ lại hộp văn bản có IOU > 0.01 (liên quan mạnh)
+- Xóa hộp văn bản có IOU ≤ 0.01 (có thể là phần tử không liên quan)
 
-### 2. 字体统一处理
+### 2. Xử lý thống nhất phông chữ
 
-**问题**: 基础转换生成的 PPT 中，文本框字体可能各不相同
+**Vấn đề**: Trong PPT từ chuyển đổi cơ bản, phông chữ của các hộp văn bản có thể khác nhau
 
-**解决方案**: 统一所有文本框字体为"微软雅黑"
+**Giải pháp**: Thống nhất phông chữ tất cả hộp văn bản thành "Microsoft YaHei"
 
-**实现**:
+**Triển khai**:
 ```python
-# 创建微软雅黑字体对象
-newFont = TextFont("微软雅黑")
+# Tạo đối tượng phông chữ Microsoft YaHei
+newFont = TextFont("Microsoft YaHei")
 
-# 遍历文本框中的所有文本范围
+# Duyệt qua tất cả phạm vi văn bản trong hộp văn bản
 for textRange in paragraph.TextRanges:
     textRange.LatinFont = newFont
 ```
 
-### 3. 高质量图片替换
+### 3. Thay thế hình ảnh chất lượng cao
 
-**问题**: 基础转换过程中图片可能被压缩或质量降低
+**Vấn đề**: Hình ảnh trong quá trình chuyển đổi cơ bản có thể bị nén hoặc giảm chất lượng
 
-**解决方案**: 从 PDF 渲染的高清 PNG 中裁剪出原始图片区域并替换
+**Giải pháp**: Cắt vùng hình ảnh gốc từ PNG chất lượng cao được render từ PDF và thay thế
 
-**实现**:
+**Triển khai**:
 ```python
-# 裁剪并保存临时图片
+# Cắt và lưu hình ảnh tạm thời
 image_crop = image_cv[top_bg:bottom_bg, left_bg:right_bg]
 Image.fromarray(image_crop).save(tmp_image_path)
 
-# 替换 PPT 中的图片
+# Thay thế hình ảnh trong PPT
 rect1 = RectangleF.FromLTRB(left, top + delta_y, right, bottom + delta_y)
 image = slide.Shapes.AppendEmbedImageByPath(ShapeType.Rectangle, tmp_image_path, rect1)
 image.Line.FillType = FillFormatType.none
-image.ZOrderPosition = 0  # 设置图片在最底层
+image.ZOrderPosition = 0  # Đặt hình ảnh ở lớp dưới cùng
 ```
 
-### 4. 智能背景处理
+### 4. Xử lý nền thông minh
 
-**问题**: 需要平衡纯色区域填充和复杂背景保留
+**Vấn đề**: Cần cân bằng giữa lấp đầy vùng đơn sắc và giữ lại nền phức tạp
 
-**解决方案**: 基于边缘颜色一致性（多样性）和旧背景可用性的智能判断
+**Giải pháp**: Phán đoán thông minh dựa trên tính nhất quán màu cạnh (đa dạng) và khả dụng của nền cũ
 
-**实现**:
+**Triển khai**:
 ```python
 from notebooklm2ppt.utils.edge_diversity import compute_edge_diversity_numpy
 
 diversity, fill_color = compute_edge_diversity_numpy(image_cv, left, top, right, bottom, tolerance=15)
 
 if old_bg_cv is None or diversity < 0.5:
-    # 边缘颜色较一致（接近纯色）或无旧背景，直接填充主色
+    # Màu cạnh tương đối nhất quán (gần đơn sắc) hoặc không có nền cũ, lấp đầy bằng màu chủ đạo
     image_cv[top:bottom, left:right] = fill_color
 else:
-    # 边缘颜色变化较大（复杂背景），保留原背景
+    # Màu cạnh thay đổi nhiều (nền phức tạp), giữ lại nền gốc
     image_cv[top:bottom, left:right] = old_bg_cv[top:bottom, left:right]
 ```
 
-其中：
-- `diversity` ∈ [0, 1]，数值越小表示边缘颜色越接近单一纯色
-- `fill_color` 为根据边缘主色计算得到的填充颜色
+Trong đó:
+- `diversity` thuộc [0, 1], giá trị càng nhỏ thì màu cạnh càng gần đơn sắc
+- `fill_color` là màu lấp đầy được tính từ màu chủ đạo của cạnh
 
-## 📈 完整工作流程
+## Quy trình làm việc hoàn chỉnh
 
-### 1. 数据准备
+### 1. Chuẩn bị dữ liệu
 
 ```python
-# 1. 加载 MinerU JSON
+# 1. Tải MinerU JSON
 data = load_json(json_file)
 pdf_info = data['pdf_info']
 
-# 2. 根据页码筛选信息
+# 2. Lọc thông tin theo số trang
 indices = get_indices_from_png_names(png_files)
 pdf_info = [pdf_info[i] for i in indices]
 
-# 3. 计算缩放比例
+# 3. Tính tỷ lệ thu phóng
 pdf_w, _ = pdf_info[0]['page_size']
 presentation = Presentation()
 presentation.LoadFromFile(ppt_file)
@@ -143,83 +143,83 @@ ppt_H, ppt_W = presentation.SlideSize.Size.Height, presentation.SlideSize.Size.W
 ppt_scale = ppt_W / pdf_w
 ```
 
-### 2. 逐页处理
+### 2. Xử lý từng trang
 
 ```python
 for page_index, slide in enumerate(presentation.Slides):
-    # 1. 智能文本框筛选和字体统一
-    # 2. 高质量图片替换
-    # 3. 智能背景处理
+    # 1. Lọc hộp văn bản thông minh và thống nhất phông chữ
+    # 2. Thay thế hình ảnh chất lượng cao
+    # 3. Xử lý nền thông minh
 ```
 
-### 3. 保存结果
+### 3. Lưu kết quả
 
 ```python
 presentation.SaveToFile(final_out_ppt_file, FileFormat.Pptx2019)
-print(f"优化完成! 输出文件: {final_out_ppt_file}")
+print(f"Tối ưu hóa hoàn tất! Tệp đầu ra: {final_out_ppt_file}")
 
-# 清理 PPT
+# Dọn dẹp PPT
 clean_ppt(final_out_ppt_file, final_out_ppt_file)
 ```
 
-## 🔍 关键算法
+## Thuật toán quan trọng
 
-### IOU（交并比）算法
+### Thuật toán IOU (Intersection over Union)
 
-**应用**: 文本框筛选
-**原理**: 计算两个矩形区域的重叠程度
-**阈值**: 0.01（经过实验验证的合理阈值）
+**Ứng dụng**: Lọc hộp văn bản
+**Nguyên lý**: Tính mức độ trùng lặp của hai vùng hình chữ nhật
+**Ngưỡng**: 0.01 (ngưỡng hợp lý đã được xác minh qua thực nghiệm)
 
-### 边缘多样性检测算法
+### Thuật toán phát hiện đa dạng cạnh
 
-**应用**: 背景处理
-**原理**: 统计文本块四条边缘像素的主色占比，主色占比越高，多样性越低
-**输出**:
-- `diversity = 1 - main_ratio`，`main_ratio` 为主色占比
-- `fill_color` 为主色对应的平均 RGB 颜色
-**阈值**: 0.5（`diversity < 0.5` 时认为接近纯色区域，可用主色填充）
+**Ứng dụng**: Xử lý nền
+**Nguyên lý**: Thống kê tỷ lệ màu chủ đạo của pixel cạnh bốn cạnh khối văn bản, tỷ lệ màu chủ đạo càng cao, đa dạng càng thấp
+**Đầu ra**:
+- `diversity = 1 - main_ratio`, `main_ratio` là tỷ lệ màu chủ đạo
+- `fill_color` là màu RGB trung bình tương ứng với màu chủ đạo
+**Ngưỡng**: 0.5 (khi `diversity < 0.5` được coi là vùng gần đơn sắc, có thể lấp đầy bằng màu chủ đạo)
 
-## ⚙️ 技术参数
+## Tham số kỹ thuật
 
-| 参数 | 默认值 | 作用 | 影响 |
-|------|--------|------|------|
-| **IOU 阈值** | 0.01 | 文本框筛选 | 影响文本框保留数量 |
-| **边缘多样性阈值** | 0.5 | 背景处理 | 越小越容易判定为纯色区域 |
-| **边缘颜色容差** | 15 | 边缘颜色量化 | 容差越大越不敏感，主色更稳定 |
-| **图片缓存** | 启用 | 性能优化 | 减少重复裁剪操作 |
+| Tham số | Giá trị mặc định | Tác dụng | Ảnh hưởng |
+|---------|-------------------|----------|-----------|
+| **Ngưỡng IOU** | 0.01 | Lọc hộp văn bản | Ảnh hưởng số lượng hộp văn bản được giữ lại |
+| **Ngưỡng đa dạng cạnh** | 0.5 | Xử lý nền | Càng nhỏ càng dễ xác định là vùng đơn sắc |
+| **Dung sai màu cạnh** | 15 | Lượng tử hóa màu cạnh | Dung sai càng lớn càng ít nhạy, màu chủ đạo ổn định hơn |
+| **Bộ nhớ đệm hình ảnh** | Bật | Tối ưu hiệu suất | Giảm thao tác cắt lặp lại |
 
-## 🚀 性能优化
+## Tối ưu hiệu suất
 
-1. **局部裁剪**: 直接从高清页面渲染图中裁剪图片区域，保证了图片与背景的高度一致性。
-2. **逐页处理**: 以页为单位顺序处理，逻辑清晰，便于调试和扩展并行化。
-3. **内存管理**: 利用 Python 垃圾回收逐页释放临时数组，避免内存占用过高。
+1. **Cắt cục bộ**: Cắt trực tiếp vùng hình ảnh từ hình render trang chất lượng cao, đảm bảo tính nhất quán cao giữa hình ảnh và nền.
+2. **Xử lý theo trang**: Xử lý tuần tự theo đơn vị trang, logic rõ ràng, thuận tiện cho debug và mở rộng song song hóa.
+3. **Quản lý bộ nhớ**: Sử dụng garbage collection Python giải phóng mảng tạm theo trang, tránh chiếm dụng bộ nhớ quá cao.
 
-## 🐛 故障排查
+## Xử lý sự cố
 
-### 常见问题
+### Vấn đề thường gặp
 
-| 问题 | 可能原因 | 解决方案 |
-|------|----------|----------|
-| **图片裁剪位置偏移** | 缩放比例计算不准确或 PDF 布局复杂 | 检查 `ppt_scale` 和 `image_scale` 计算逻辑 |
-| **文本框筛选不准确** | IOU 阈值不合适或 JSON 解析质量差 | 调整 IOU 阈值，检查 JSON 质量 |
-| **背景处理效果不理想** | 阈值设置不合适 | 调整边缘多样性阈值或边缘颜色容差 |
-| **优化速度慢** | 文档较大或页面图片分辨率极高 | 适当降低 PNG 渲染分辨率 |
+| Vấn đề | Nguyên nhân có thể | Giải pháp |
+|--------|---------------------|-----------|
+| **Vị trí cắt hình ảnh bị lệch** | Tính toán tỷ lệ thu phóng không chính xác hoặc bố cục PDF phức tạp | Kiểm tra logic tính toán `ppt_scale` và `image_scale` |
+| **Lọc hộp văn bản không chính xác** | Ngưỡng IOU không phù hợp hoặc chất lượng phân tích JSON kém | Điều chỉnh ngưỡng IOU, kiểm tra chất lượng JSON |
+| **Hiệu quả xử lý nền không tốt** | Cài đặt ngưỡng không phù hợp | Điều chỉnh ngưỡng đa dạng cạnh hoặc dung sai màu cạnh |
+| **Tốc độ tối ưu chậm** | Tài liệu lớn hoặc độ phân giải hình ảnh trang cực cao | Giảm độ phân giải render PNG phù hợp |
 
-### 调试建议
+### Gợi ý debug
 
-1. **启用调试模式**: 设置环境变量 `NOTEBOOKLM2PPT_DEBUG=1`
-2. **检查 JSON 文件**: 确认 JSON 文件格式正确，包含完整的页面信息
-3. **调整阈值**: 根据实际情况调整算法阈值（IOU、多样性、容差）
+1. **Bật chế độ debug**: Đặt biến môi trường `NOTEBOOKLM2PPT_DEBUG=1`
+2. **Kiểm tra tệp JSON**: Xác nhận định dạng tệp JSON chính xác, chứa đầy đủ thông tin trang
+3. **Điều chỉnh ngưỡng**: Điều chỉnh ngưỡng thuật toán (IOU, đa dạng, dung sai) theo tình hình thực tế
 
-## 📚 技术依赖
+## Phụ thuộc kỹ thuật
 
-- **Spire.Presentation**: 用于 PPT 操作和修改
-- **NumPy**: 用于数值计算、图像数组操作和边缘颜色统计
-- **Requests**: 用于下载 MinerU 图片
-- **Pillow**: 用于图像读写与缩放（背景图和页面截图）
+- **Spire.Presentation**: Dùng cho thao tác và chỉnh sửa PPT
+- **NumPy**: Dùng cho tính toán số, thao tác mảng hình ảnh và thống kê màu cạnh
+- **Requests**: Dùng cho tải hình ảnh MinerU
+- **Pillow**: Dùng cho đọc ghi và thu phóng hình ảnh (hình nền và ảnh chụp trang)
 
-## 🔗 相关文档
+## Tài liệu liên quan
 
-- [工作原理](implementation)：了解整体工作流程
-- [快速开始](quickstart)：了解如何使用 MinerU 优化
-- [功能介绍](features)：了解 MinerU 优化的核心功能
+- [Nguyên lý hoạt động](implementation): Tìm hiểu quy trình làm việc tổng thể
+- [Bắt đầu nhanh](quickstart): Tìm hiểu cách sử dụng tối ưu hóa MinerU
+- [Giới thiệu tính năng](features): Tìm hiểu các tính năng cốt lõi của tối ưu hóa MinerU

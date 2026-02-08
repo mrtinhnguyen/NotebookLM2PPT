@@ -1,4 +1,4 @@
-"""工具函数模块"""
+"""Module chức năng tiện ích"""
 
 from .image_viewer import show_image_fullscreen
 from .image_inpainter import inpaint_image

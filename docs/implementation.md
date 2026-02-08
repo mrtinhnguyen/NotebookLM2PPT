@@ -1,157 +1,157 @@
 ---
-title: 工作原理
+title: Nguyên lý hoạt động
 ---
 
-# 工作原理
+# Nguyên lý hoạt động
 
-本文档详细说明 NotebookLM2PPT 的技术实现细节和工作原理，适合技术人员参考。
+Tài liệu này mô tả chi tiết các chi tiết triển khai kỹ thuật và nguyên lý hoạt động của NotebookLM2PPT, phù hợp cho nhân viên kỹ thuật tham khảo.
 
-## 🛠️ 核心工作流程
+## Quy trình làm việc cốt lõi
 
-NotebookLM2PPT 通过模拟人工操作，实现了一套高效的 PDF 到 PPT 转换流程：
+NotebookLM2PPT mô phỏng thao tác thủ công để thực hiện quy trình chuyển đổi PDF sang PPT hiệu quả:
 
 ```mermaid
 graph TD
-    A[PDF 文件] --> B[PDF 转 PNG 图片]
-    B --> C{是否启用去水印?}
-    C -- 是 --> D[智能去除 NotebookLM 水印]
-    C -- 否 --> E[保留原始图像]
-    D --> F[全屏显示图片]
+    A[Tệp PDF] --> B[PDF chuyển sang ảnh PNG]
+    B --> C{Có bật xóa watermark?}
+    C -- Có --> D[Xóa thông minh watermark NotebookLM]
+    C -- Không --> E[Giữ nguyên hình ảnh gốc]
+    D --> F[Hiển thị hình ảnh toàn màn hình]
     E --> F
-    F --> G[调用微软电脑管家智能圈选]
-    G --> H[自动点击'转换为PPT']
-    H --> I[从下载目录提取生成的 PPT]
-    I --> J{是否提供 MinerU JSON?}
-    J -- 是 --> K[MinerU 深度优化]
-    J -- 否 --> L[合并所有单页 PPT]
+    F --> G[Gọi Smart Select của Microsoft PC Manager]
+    G --> H[Tự động nhấp 'Chuyển đổi sang PPT']
+    H --> I[Trích xuất PPT đã tạo từ thư mục tải xuống]
+    I --> J{Có cung cấp MinerU JSON?}
+    J -- Có --> K[Tối ưu hóa chuyên sâu MinerU]
+    J -- Không --> L[Hợp nhất tất cả PPT đơn trang]
     K --> L
-    L --> M[生成最终 PowerPoint 文件]
-    
+    L --> M[Tạo tệp PowerPoint cuối cùng]
+
     style K fill:#90EE90
 ```
 
-## 📁 项目结构
+## Cấu trúc dự án
 
 ```text
 NotebookLM2PPT/
-├── main.py                          # 程序主入口
-├── requirements.txt                 # 依赖清单
-├── notebooklm2ppt/                  # 核心包
-│   ├── __init__.py                  # 包初始化文件
-│   ├── pdf2png.py                   # PDF 转 PNG 模块
-│   ├── ppt_combiner.py              # PPT 合并模块
-│   └── utils/                       # 工具模块
-│       ├── __init__.py              # 包初始化文件
-│       ├── screenshot_automation.py # 截图自动化模块
-│       ├── image_viewer.py          # 图像查看器模块
-│       ├── image_inpainter.py       # 图像修复模块
-│       └── ppt_refiner.py           # MinerU 优化模块
-├── examples/                        # 示例 PDF 存放处
-└── workspace/                       # 运行时的临时文件与输出结果
+├── main.py                          # Điểm vào chính của chương trình
+├── requirements.txt                 # Danh sách phụ thuộc
+├── notebooklm2ppt/                  # Gói cốt lõi
+│   ├── __init__.py                  # Tệp khởi tạo gói
+│   ├── pdf2png.py                   # Mô-đun PDF sang PNG
+│   ├── ppt_combiner.py              # Mô-đun hợp nhất PPT
+│   └── utils/                       # Mô-đun tiện ích
+│       ├── __init__.py              # Tệp khởi tạo gói
+│       ├── screenshot_automation.py # Mô-đun tự động hóa chụp màn hình
+│       ├── image_viewer.py          # Mô-đun xem hình ảnh
+│       ├── image_inpainter.py       # Mô-đun sửa chữa hình ảnh
+│       └── ppt_refiner.py           # Mô-đun tối ưu hóa MinerU
+├── examples/                        # Nơi lưu trữ PDF mẫu
+└── workspace/                       # Tệp tạm thời và kết quả đầu ra khi chạy
 ```
 
-## 🔧 核心模块详解
+## Chi tiết các mô-đun cốt lõi
 
-### PDF 转 PNG 模块
+### Mô-đun PDF sang PNG
 
-**文件**: `notebooklm2ppt/pdf2png.py`
+**Tệp**: `notebooklm2ppt/pdf2png.py`
 
-- **功能**: 将 PDF 文件转换为高分辨率 PNG 图片
-- **实现**: 使用 `pdf2image` 库
-- **关键特性**:
-  - 支持自定义 DPI 参数（默认 200）
-  - 批量处理多页 PDF
-  - 自动创建输出目录
-- **技术细节**:
-  - 利用 PDF 渲染引擎确保文本和图像的准确还原
-  - 支持设置不同的 DPI 值以平衡质量和速度
-  - 自动处理页面大小和方向
+- **Chức năng**: Chuyển đổi tệp PDF thành hình ảnh PNG độ phân giải cao
+- **Triển khai**: Sử dụng thư viện `pdf2image`
+- **Đặc điểm chính**:
+  - Hỗ trợ tham số DPI tùy chỉnh (mặc định 200)
+  - Xử lý hàng loạt PDF nhiều trang
+  - Tự động tạo thư mục đầu ra
+- **Chi tiết kỹ thuật**:
+  - Sử dụng engine render PDF để đảm bảo hoàn nguyên chính xác văn bản và hình ảnh
+  - Hỗ trợ đặt giá trị DPI khác nhau để cân bằng chất lượng và tốc độ
+  - Tự động xử lý kích thước và hướng trang
 
-### 图像修复模块
+### Mô-đun sửa chữa hình ảnh
 
-**文件**: `notebooklm2ppt/utils/image_inpainter.py`
+**Tệp**: `notebooklm2ppt/utils/image_inpainter.py`
 
-- **功能**: 自动识别并去除 NotebookLM 水印
-- **实现**: 多种图像修复算法
-- **关键特性**:
-  - 自动检测水印位置
-  - 支持 6 种不同的修复算法
-  - 保持图像质量的同时去除水印
-- **技术细节**:
-  - 识别水印区域的边界像素
-  - 从边界向内逐步填充
-  - 使用适当的算法计算填充值
+- **Chức năng**: Tự động nhận diện và xóa watermark NotebookLM
+- **Triển khai**: Nhiều thuật toán sửa chữa hình ảnh
+- **Đặc điểm chính**:
+  - Tự động phát hiện vị trí watermark
+  - Hỗ trợ 6 thuật toán sửa chữa khác nhau
+  - Giữ chất lượng hình ảnh đồng thời xóa watermark
+- **Chi tiết kỹ thuật**:
+  - Nhận diện pixel cạnh của vùng watermark
+  - Lấp đầy dần dần từ cạnh vào trong
+  - Sử dụng thuật toán phù hợp để tính giá trị lấp đầy
 
-### 截图自动化模块
+### Mô-đun tự động hóa chụp màn hình
 
-**文件**: `notebooklm2ppt/utils/screenshot_automation.py`
+**Tệp**: `notebooklm2ppt/utils/screenshot_automation.py`
 
-- **功能**: 模拟用户操作，实现自动化转换流程
-- **实现**: 使用鼠标和键盘模拟库
-- **关键特性**:
-  - 模拟键盘快捷键（Ctrl + Shift + A）
-  - 自动定位并点击"转换为PPT"按钮
-  - 支持按钮位置校准
-- **技术细节**:
-  - 智能识别按钮位置
-  - 记录按钮相对于屏幕底部的垂直偏移量
-  - 内置错误处理机制
+- **Chức năng**: Mô phỏng thao tác người dùng, thực hiện quy trình chuyển đổi tự động
+- **Triển khai**: Sử dụng thư viện mô phỏng chuột và bàn phím
+- **Đặc điểm chính**:
+  - Mô phỏng phím tắt (Ctrl + Shift + A)
+  - Tự động định vị và nhấp nút "Chuyển đổi sang PPT"
+  - Hỗ trợ hiệu chuẩn vị trí nút
+- **Chi tiết kỹ thuật**:
+  - Nhận diện thông minh vị trí nút
+  - Ghi lại offset dọc của nút so với đáy màn hình
+  - Cơ chế xử lý lỗi tích hợp
 
-### 图像查看器模块
+### Mô-đun xem hình ảnh
 
-**文件**: `notebooklm2ppt/utils/image_viewer.py`
+**Tệp**: `notebooklm2ppt/utils/image_viewer.py`
 
-- **功能**: 全屏显示转换后的图片
-- **实现**: 使用 Tkinter
-- **关键特性**:
-  - 全屏显示图片
-  - 支持自定义显示比例
-  - ESC 键全局支持
-- **技术细节**:
-  - 自动适应屏幕尺寸
-  - 支持不同屏幕分辨率
+- **Chức năng**: Hiển thị toàn màn hình hình ảnh đã chuyển đổi
+- **Triển khai**: Sử dụng Tkinter
+- **Đặc điểm chính**:
+  - Hiển thị hình ảnh toàn màn hình
+  - Hỗ trợ tỷ lệ hiển thị tùy chỉnh
+  - Hỗ trợ phím ESC toàn cục
+- **Chi tiết kỹ thuật**:
+  - Tự động thích ứng kích thước màn hình
+  - Hỗ trợ các độ phân giải màn hình khác nhau
 
-### PPT 合并模块
+### Mô-đun hợp nhất PPT
 
-**文件**: `notebooklm2ppt/ppt_combiner.py`
+**Tệp**: `notebooklm2ppt/ppt_combiner.py`
 
-- **功能**: 将单页 PPT 合并为完整的演示文稿
-- **实现**: 使用 PowerPoint 自动化 API
-- **关键特性**:
-  - 自动检测下载目录中的临时 PPT 文件
-  - 按顺序合并幻灯片
-  - 保持原始格式和布局
-- **技术细节**:
-  - 监控下载目录，实时检测新生成的 PPT 文件
-  - 使用 PowerPoint 自动化 API 实现幻灯片合并
+- **Chức năng**: Hợp nhất các PPT đơn trang thành bản trình chiếu hoàn chỉnh
+- **Triển khai**: Sử dụng PowerPoint Automation API
+- **Đặc điểm chính**:
+  - Tự động phát hiện tệp PPT tạm thời trong thư mục tải xuống
+  - Hợp nhất slide theo thứ tự
+  - Giữ nguyên định dạng và bố cục gốc
+- **Chi tiết kỹ thuật**:
+  - Giám sát thư mục tải xuống, phát hiện thời gian thực tệp PPT mới tạo
+  - Sử dụng PowerPoint Automation API thực hiện hợp nhất slide
 
-### MinerU 优化模块
+### Mô-đun tối ưu hóa MinerU
 
-**文件**: `notebooklm2ppt/utils/ppt_refiner.py`
+**Tệp**: `notebooklm2ppt/utils/ppt_refiner.py`
 
-- **功能**: 利用 MinerU 解析结果对 PPT 进行深度优化
-- **实现**: 解析 MinerU JSON 并应用优化算法
-- **关键特性**:
-  - 智能文本框筛选
-  - 字体统一处理
-  - 高质量图片替换
-  - 智能背景处理
-- **技术细节**:
-  - 基于 IOU 算法筛选相关文本框
-  - 统一字体为"微软雅黑"
-  - 从 JSON 中提取高清图片并替换
-  - 基于边缘多样性和颜色差异的智能背景处理
+- **Chức năng**: Sử dụng kết quả phân tích MinerU để tối ưu hóa chuyên sâu PPT
+- **Triển khai**: Phân tích MinerU JSON và áp dụng thuật toán tối ưu hóa
+- **Đặc điểm chính**:
+  - Lọc hộp văn bản thông minh
+  - Xử lý thống nhất phông chữ
+  - Thay thế hình ảnh chất lượng cao
+  - Xử lý nền thông minh
+- **Chi tiết kỹ thuật**:
+  - Lọc hộp văn bản liên quan dựa trên thuật toán IOU
+  - Thống nhất phông chữ thành "Microsoft YaHei"
+  - Trích xuất hình ảnh chất lượng cao từ JSON và thay thế
+  - Xử lý nền thông minh dựa trên đa dạng cạnh và chênh lệch màu sắc
 
-## 🔍 核心算法
+## Thuật toán cốt lõi
 
-### IOU（交并比）算法
+### Thuật toán IOU (Intersection over Union)
 
-**应用场景**: MinerU 优化中的文本框筛选
+**Tình huống ứng dụng**: Lọc hộp văn bản trong tối ưu hóa MinerU
 
-**原理**:
+**Nguyên lý**:
 ```python
 def compute_iou(boxA, boxB):
-    # 计算两个矩形的交集面积
+    # Tính diện tích giao nhau của hai hình chữ nhật
     xA = max(boxA[0], boxB[0])
     yA = max(boxA[1], boxB[1])
     xB = min(boxA[2], boxB[2])
@@ -169,38 +169,38 @@ def compute_iou(boxA, boxB):
     return iou
 ```
 
-**使用方式**:
-- 计算 MinerU 识别的文本框与 PDF 内容块的 IOU
-- 保留 IOU 值较高的文本框（相关性强）
-- 删除 IOU 值较低的文本框（可能是无关元素）
+**Cách sử dụng**:
+- Tính IOU giữa hộp văn bản do MinerU nhận diện và khối nội dung PDF
+- Giữ lại hộp văn bản có giá trị IOU cao (liên quan mạnh)
+- Xóa hộp văn bản có giá trị IOU thấp (có thể là phần tử không liên quan)
 
-### 图像修复算法
+### Thuật toán sửa chữa hình ảnh
 
-**应用场景**: 去除 NotebookLM 水印
+**Tình huống ứng dụng**: Xóa watermark NotebookLM
 
-**算法列表**:
-1. **智能平滑**：综合效果最佳，适合大多数场景
-2. **边缘均值填充**：取周围像素平均色填充
-3. **极速纯色填充**：直接填充单一背景色
-4. **逐层内缩修补**：由外向内逐层修补
-5. **渐变过渡插值**：计算平滑的曲面过渡
-6. **双调和光影修补**：保持光影连续性
+**Danh sách thuật toán**:
+1. **Làm mịn thông minh**: Hiệu quả tổng hợp tốt nhất, phù hợp hầu hết tình huống
+2. **Lấp đầy trung bình cạnh**: Lấy màu trung bình pixel xung quanh để lấp đầy
+3. **Lấp đầy đơn sắc siêu tốc**: Trực tiếp lấp đầy bằng màu nền đơn
+4. **Sửa chữa co dần từng lớp**: Sửa chữa dần dần từ ngoài vào trong
+5. **Nội suy chuyển tiếp gradient**: Tính toán chuyển tiếp bề mặt mượt mà
+6. **Sửa chữa ánh sáng song điều hòa**: Giữ tính liên tục của ánh sáng
 
-### 边缘多样性检测算法
+### Thuật toán phát hiện đa dạng cạnh
 
-**应用场景**: MinerU 优化中的智能背景处理
+**Tình huống ứng dụng**: Xử lý nền thông minh trong tối ưu hóa MinerU
 
-**原理**:
-- 计算文本块边缘的颜色多样性
-- 计算文本块四个角的颜色差异
-- 根据计算结果判断是纯色区域还是复杂背景
-- 纯色区域填充平均颜色，复杂背景保留原背景
+**Nguyên lý**:
+- Tính đa dạng màu sắc cạnh của khối văn bản
+- Tính chênh lệch màu sắc bốn góc của khối văn bản
+- Dựa trên kết quả tính toán để phán đoán là vùng đơn sắc hay nền phức tạp
+- Vùng đơn sắc lấp đầy bằng màu trung bình, nền phức tạp giữ lại nền gốc
 
-## 🚀 性能优化
+## Tối ưu hiệu suất
 
-### 并行处理
+### Xử lý song song
 
-程序支持并行处理多个 PDF 页面，显著提升转换速度：
+Chương trình hỗ trợ xử lý song song nhiều trang PDF, tăng đáng kể tốc độ chuyển đổi:
 
 ```python
 from concurrent.futures import ThreadPoolExecutor
@@ -211,61 +211,61 @@ def process_pages(pages):
     return results
 ```
 
-### 缓存机制
+### Cơ chế cache
 
-为了避免重复计算，程序实现了缓存机制：
+Để tránh tính toán lặp lại, chương trình triển khai cơ chế cache:
 
-- PDF 转 PNG 结果缓存
-- 水印检测结果缓存
-- MinerU JSON 解析结果缓存
-- 图片下载缓存
+- Cache kết quả PDF sang PNG
+- Cache kết quả phát hiện watermark
+- Cache kết quả phân tích MinerU JSON
+- Cache tải xuống hình ảnh
 
-### 内存管理
+### Quản lý bộ nhớ
 
-对于大型 PDF 文件，程序采用分块处理策略：
+Đối với tệp PDF lớn, chương trình áp dụng chiến lược xử lý theo khối:
 
-- 每次只处理一定数量的页面
-- 及时释放不再使用的资源
-- 避免内存溢出
+- Mỗi lần chỉ xử lý một số lượng trang nhất định
+- Giải phóng kịp thời tài nguyên không còn sử dụng
+- Tránh tràn bộ nhớ
 
-### 依赖优化
+### Tối ưu phụ thuộc
 
-在 v0.6.0 版本中，程序进行了深度依赖优化：
+Trong phiên bản v0.6.0, chương trình đã thực hiện tối ưu phụ thuộc chuyên sâu:
 
-- **移除 Scikit-learn**：将原有的 DBSCAN 边缘多样性检测替换为高性能的 Numpy 原生实现
-- **移除 OpenCV**：全屏图像显示引擎全面迁移至 Tkinter
-- **体积效益**：编译后的 .exe 或二进制文件大小大大减小，冷启动速度与内存占用大幅优化
+- **Loại bỏ Scikit-learn**: Thay thế phát hiện đa dạng cạnh DBSCAN ban đầu bằng triển khai Numpy hiệu suất cao
+- **Loại bỏ OpenCV**: Engine hiển thị hình ảnh toàn màn hình chuyển hoàn toàn sang Tkinter
+- **Lợi ích về kích thước**: Kích thước tệp .exe hoặc binary sau biên dịch giảm đáng kể, tốc độ khởi động lạnh và chiếm dụng bộ nhớ được tối ưu lớn
 
-## ⚙️ 关键技术参数
+## Tham số kỹ thuật quan trọng
 
-| 参数 | 默认值 | 作用 | 影响 |
-|------|--------|------|------|
-| **button_offset** | 0 | 智能圈选按钮偏移量 | 决定程序能否准确定位按钮 |
-| **dpi** | 200 | PDF 转 PNG 分辨率 | 影响图片质量和转换速度 |
-| **display_scale** | 0.8 | 图片显示比例 | 影响圈选效果和转换成功率 |
-| **delay** | 2 秒 | 操作延迟 | 影响操作稳定性和转换速度 |
-| **timeout** | 60 秒 | 超时时间 | 影响转换稳定性和效率 |
+| Tham số | Giá trị mặc định | Tác dụng | Ảnh hưởng |
+|---------|-------------------|----------|-----------|
+| **button_offset** | 0 | Offset nút Smart Select | Quyết định chương trình có thể định vị nút chính xác không |
+| **dpi** | 200 | Độ phân giải PDF sang PNG | Ảnh hưởng chất lượng hình ảnh và tốc độ chuyển đổi |
+| **display_scale** | 0.8 | Tỷ lệ hiển thị hình ảnh | Ảnh hưởng hiệu quả chọn vùng và tỷ lệ chuyển đổi thành công |
+| **delay** | 2 giây | Độ trễ thao tác | Ảnh hưởng tính ổn định thao tác và tốc độ chuyển đổi |
+| **timeout** | 60 giây | Thời gian chờ | Ảnh hưởng tính ổn định và hiệu quả chuyển đổi |
 
-## 📊 性能基准
+## Benchmark hiệu suất
 
-### 转换速度
+### Tốc độ chuyển đổi
 
-| PDF 页数 | 基础转换 | MinerU 优化 |
-|---------|---------|------------|
-| 10 页   | ~2 分钟 | ~3 分钟 |
-| 20 页   | ~4 分钟 | ~6 分钟 |
-| 50 页   | ~10 分钟| ~15 分钟|
+| Số trang PDF | Chuyển đổi cơ bản | Tối ưu hóa MinerU |
+|-------------|--------------------|--------------------|
+| 10 trang    | ~2 phút            | ~3 phút            |
+| 20 trang    | ~4 phút            | ~6 phút            |
+| 50 trang    | ~10 phút           | ~15 phút           |
 
-### 资源占用
+### Sử dụng tài nguyên
 
-| 资源类型 | 基础转换 | MinerU 优化 |
-|---------|---------|------------|
-| CPU     | 30-50%  | 40-60%    |
-| 内存    | 500MB   | 1GB       |
-| 磁盘    | 100MB   | 500MB     |
+| Loại tài nguyên | Chuyển đổi cơ bản | Tối ưu hóa MinerU |
+|-----------------|--------------------|--------------------|
+| CPU             | 30-50%             | 40-60%             |
+| Bộ nhớ          | 500MB              | 1GB                |
+| Ổ đĩa           | 100MB              | 500MB              |
 
-## 🔗 相关文档
+## Tài liệu liên quan
 
-- [MinerU 优化](mineru)：详细了解 MinerU 深度优化的技术实现
-- [功能介绍](features)：了解工具的核心功能
-- [快速开始](quickstart)：快速上手使用指南
+- [Tối ưu hóa MinerU](mineru): Tìm hiểu chi tiết triển khai kỹ thuật tối ưu hóa chuyên sâu MinerU
+- [Giới thiệu tính năng](features): Tìm hiểu các tính năng cốt lõi của công cụ
+- [Bắt đầu nhanh](quickstart): Hướng dẫn bắt đầu nhanh

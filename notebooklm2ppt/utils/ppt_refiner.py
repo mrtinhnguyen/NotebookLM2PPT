@@ -94,7 +94,7 @@ def get_indices_from_png_names(png_names):
 
 
 def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out_ppt_file, unify_font=None, font_name=None):
-    # 使用默认配置中的值
+    # Sử dụng giá trị từ cấu hình mặc định
     if unify_font is None:
         unify_font = DEFAULT_TASK_SETTINGS["unify_font"]
     if font_name is None:
@@ -105,7 +105,7 @@ def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out
     data = load_json(json_file)
     pdf_info = data['pdf_info']
 
-    pdf_info = [pdf_info[i] for i in indices] # 只保留需要的页码信息
+    pdf_info = [pdf_info[i] for i in indices] # Chỉ giữ lại thông tin trang cần thiết
 
     pdf_w, _ = pdf_info[0]['page_size']
     
@@ -120,15 +120,15 @@ def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out
     assert len(png_files) == len(pdf_info) == len(presentation.Slides)
     
     for page_index, slide in enumerate(presentation.Slides):
-        print(f"优化 第 {page_index+1}/{len(png_files)} 页...")
+        print(f"Đang tối ưu trang {page_index+1}/{len(png_files)}...")
         scaled_para_blocks = get_scaled_para_blocks(ppt_scale,pdf_info, page_index)
-        # 删除不相关文本框, 统一字体
+        # Xóa các textbox không liên quan, thống nhất font chữ
         for i in range(slide.Shapes.Count - 1, -1, -1):
             # Check if those shapes are images
             shape = slide.Shapes[i]
             print("---")
             if "IAutoShape" not in str(type(shape)):
-                slide.Shapes.RemoveAt(i) # 删除非文本框形状
+                slide.Shapes.RemoveAt(i) # Xóa shape không phải textbox
                 continue
             # Get the first paragraph of the shape
             paragraph = shape.TextFrame.Paragraphs[0]        
@@ -153,14 +153,14 @@ def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out
             assert left+width <= ppt_W +10
             assert top+height <= ppt_H +10
 
-            # Create a font
+            # Tạo đối tượng font
             if unify_font:
                 newFont = TextFont(font_name)
 
                 # Loop through the text ranges in the paragraph
                 for textRange in paragraph.TextRanges:
-                    textRange.LatinFont = newFont # 更换字体
-        # 替换背景    
+                    textRange.LatinFont = newFont # Thay đổi font
+        # Thay thế nền
         background = slide.SlideBackground
         old_bg_file = "old_bg.png"
         try:
@@ -170,7 +170,7 @@ def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out
         except:
             print("No existing background image found in slide ", page_index)
             old_bg_cv = None
-        # 替换背景    
+        # Thay thế nền
         background.Type = BackgroundType.Custom
 
         # Set the fill mode of the slide's background as a picture fill
@@ -182,14 +182,14 @@ def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out
         image_h, image_w, _ = image_cv.shape
 
         if old_bg_cv is not None:
-            # 使用PIL进行resize
+            # Dùng PIL để resize
             old_bg_pil = Image.fromarray(old_bg_cv)
             old_bg_pil = old_bg_pil.resize((image_w, image_h), Image.BICUBIC)
             old_bg_cv = np.array(old_bg_pil)
 
         image_scale = image_w / pdf_w
 
-        # 转换系数
+        # Hệ số chuyển đổi
         ppt_to_bg_factor = image_scale / ppt_scale
 
         def to_bg(x):
@@ -200,20 +200,22 @@ def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out
                 bbox = block_to_fill['bbox']
                 l, t, r, b = map(round, bbox)
                 diversity, fill_color = compute_edge_diversity_numpy(image_cv, l, t, r, b, tolerance=20)
-                # 如果是图片块，或者原背景图为空，或者边缘多样性低，认为是纯色区域，则可以直接填充
+                # Nếu là khối ảnh, hoặc không có ảnh nền cũ, hoặc độ đa dạng cạnh thấp
+                # thì coi là vùng đơn sắc và có thể lấp trực tiếp
                 if is_image or old_bg_cv is None or diversity < 0.5:
                     image_cv[t-1:b-1, l+1:r+1] = fill_color
                     action = 'fill'
-                else: # 边缘多样性高，保留原背景
-                    image_cv[t-1:b-1, l+1:r+1] = old_bg_cv[t-1:b-1, l+1:r+1] # 保留原背景的前提是要有原背景图
+                else: # Độ đa dạng cạnh cao, bảo toàn hình nền gốc.
+                    # Độ đa dạng cạnh cao, giữ lại nền cũ (nếu có)
+                    image_cv[t-1:b-1, l+1:r+1] = old_bg_cv[t-1:b-1, l+1:r+1]
                     action = 'keep'
                 print("div=", diversity, action, fill_color, " block_to_fill=", block_to_fill)
 
-        # 对于所有文本块进行填充
+        # Điền đầy đủ thông tin vào tất cả các ô văn bản.
         text_blocks = get_scaled_para_blocks(image_scale, pdf_info, page_index, cond='no_image')
         fill_blocks(text_blocks, is_image=False)
 
-        # 替换图片    
+        # Thay thế hình ảnh
         image_blocks = get_scaled_para_blocks(ppt_scale,pdf_info, page_index,'only_image')
         for image_block in image_blocks:
             for line in image_block['lines']:
@@ -232,13 +234,13 @@ def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out
                     image_crop = image_cv[top_bg:bottom_bg, left_bg:right_bg]
                     Image.fromarray(image_crop).save(tmp_image_path)
 
-                    delta_y = 2 # 下移两个像素
+                    delta_y = 2 # dịch xuống 2 pixel
 
                     rect1 = RectangleF.FromLTRB(left, top + delta_y, right, bottom + delta_y)
                     image = slide.Shapes.AppendEmbedImageByPath(ShapeType.Rectangle, tmp_image_path, rect1)
                     image.Line.FillType = FillFormatType.none
-                    image.ZOrderPosition = 0  # 设置图片在最底层
-        # 擦除图片块的背景
+                    image.ZOrderPosition = 0  # đặt ảnh ở dưới cùng
+        # Xóa nền của khối ảnh
         image_blocks = get_scaled_para_blocks(image_scale, pdf_info, page_index, cond='only_image')
         fill_blocks(image_blocks, is_image=True)
 
@@ -253,7 +255,7 @@ def refine_ppt(tmp_image_dir, json_file, ppt_file, png_dir, png_files, final_out
         
     presentation.SaveToFile(final_out_ppt_file, FileFormat.Pptx2019)
 
-    print(f"优化完成! 输出文件: {final_out_ppt_file}")
+    print(f"Tối ưu hoàn tất! Tệp đầu ra: {final_out_ppt_file}")
     clean_ppt(final_out_ppt_file,final_out_ppt_file)
 
 

@@ -6,47 +6,47 @@ export default defineConfig({
   srcDir: "docs",
   head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
   title: "NotebookLM2PPT",
-  description: "将 PDF 转换为可编辑 PowerPoint 的自动化工具",
+  description: "Công cụ tự động chuyển PDF thành PowerPoint có thể chỉnh sửa",
   themeConfig: {
     
     // https://vitepress.dev/reference/default-theme-config
-    nav: [
-      { text: '首页', link: '/' },
-      { text: '用户指南', items: [
-        { text: '功能介绍', link: '/features' },
-        { text: '快速开始', link: '/quickstart' },
-        { text: '使用教程', link: '/tutorial' },
-        { text: '样例对比', link: '/compare' }
+      nav: [
+      { text: 'Trang Chủ', link: '/' },
+      { text: 'Hướng Dẫn Người Dùng', items: [
+        { text: 'Giới Thiệu Tính Năng', link: '/features' },
+        { text: 'Bắt Đầu Nhanh', link: '/quickstart' },
+        { text: 'Hướng Dẫn Sử Dụng', link: '/tutorial' },
+        { text: 'So Sánh Ví Dụ', link: '/compare' }
       ]},
-      { text: '技术文档', items: [
-        { text: '工作原理', link: '/implementation' },
-        { text: 'MinerU 优化', link: '/mineru' },
+      { text: 'Tài Liệu Kỹ Thuật', items: [
+        { text: 'Nguyên Lý Hoạt Động', link: '/implementation' },
+        { text: 'Tối Ưu MinerU', link: '/mineru' },
       ]},
-      { text: '更新日志', link: '/changelog' }
+      { text: 'Nhật Ký Cập Nhật', link: '/changelog' }
     ],
 
     sidebar: [
       {
-        text: '用户指南',
+        text: 'Hướng Dẫn Người Dùng',
         items: [
-          { text: '首页', link: '/' },
-          { text: '功能介绍', link: '/features' },
-          { text: '快速开始', link: '/quickstart' },
-          { text: '使用教程', link: '/tutorial' },
-          { text: '样例对比', link: '/compare' }
+          { text: 'Trang Chủ', link: '/' },
+          { text: 'Giới Thiệu Tính Năng', link: '/features' },
+          { text: 'Bắt Đầu Nhanh', link: '/quickstart' },
+          { text: 'Hướng Dẫn Sử Dụng', link: '/tutorial' },
+          { text: 'So Sánh Ví Dụ', link: '/compare' }
         ]
       },
       {
-        text: '技术文档',
+        text: 'Tài Liệu Kỹ Thuật',
         items: [
-          { text: '工作原理', link: '/implementation' },
-          { text: 'MinerU 优化', link: '/mineru' },
+          { text: 'Nguyên Lý Hoạt Động', link: '/implementation' },
+          { text: 'Tối Ưu MinerU', link: '/mineru' },
         ]
       },
       {
-        text: '其他',
+        text: 'Khác',
         items: [
-          { text: '更新日志', link: '/changelog' }
+          { text: 'Nhật Ký Cập Nhật', link: '/changelog' }
         ]
       }
     ],
@@ -58,7 +58,7 @@ export default defineConfig({
     logo: '/logo_tiny.png',
     
     footer: {
-      message: '基于 MIT 许可证开源',
+      message: 'Mở nguồn theo giấy phép MIT',
       copyright: 'Copyright © 2026-Present NotebookLM2PPT'
     },
 
@@ -67,7 +67,7 @@ export default defineConfig({
     },
 
     lastUpdated: {
-      text: '最后更新',
+      text: 'Cập nhật lần cuối',
       formatOptions: {
         dateStyle: 'short',
         timeStyle: 'medium'

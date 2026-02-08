@@ -1,12 +1,12 @@
-from .zh_cn import TRANSLATIONS as zh_cn
 from .en import TRANSLATIONS as en
+from .vi import TRANSLATIONS as vi
 
 SUPPORTED_LANGUAGES = {
-    "zh_cn": zh_cn,
-    "en": en
+    "en": en,
+    "vi": vi
 }
 
-DEFAULT_LANGUAGE = "zh_cn"
+DEFAULT_LANGUAGE = "vi"
 _current_lang = DEFAULT_LANGUAGE
 
 def set_language(lang):

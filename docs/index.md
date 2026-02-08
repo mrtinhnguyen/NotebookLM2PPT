@@ -3,17 +3,17 @@ layout: home
 
 hero:
   name: "NotebookLM2PPT"
-  text: "让 NotebookLM 的演示文稿真正为你所用"
-  tagline: 从PDF到全可编辑PPT的智能转换工具
+  text: "Biến bản trình chiếu NotebookLM thực sự hữu dụng cho bạn"
+  tagline: Công cụ chuyển đổi thông minh từ PDF sang PPT có thể chỉnh sửa hoàn toàn
   actions:
     - theme: brand
-      text: 快速开始
+      text: Bắt đầu nhanh
       link: /quickstart
     - theme: alt
-      text: 下载软件
+      text: Tải phần mềm
       link: https://github.com/elliottzheng/NotebookLM2PPT/releases
     - theme: alt
-      text: 查看 GitHub
+      text: Xem GitHub
       link: https://github.com/elliottzheng/NotebookLM2PPT
   image:
     src: /logo_tiny.png
@@ -21,46 +21,46 @@ hero:
 
 features:
   - icon: 🤖
-    title: 全自动化PDF转PPT
-    details: 自动化微软电脑管家"智能圈选"完成截图、转换PPT和合并的全流程
+    title: Tự động hóa hoàn toàn PDF sang PPT
+    details: Tự động hóa Smart Select của Microsoft PC Manager để hoàn thành toàn bộ quy trình chụp màn hình, chuyển đổi PPT và hợp nhất
   - icon: 🧠
-    title: MinerU 深度优化
-    details: 智能文本框筛选、字体统一、高质量图片替换、智能背景处理，显著提升可编辑PPT质量
+    title: Tối ưu hóa chuyên sâu MinerU
+    details: Lọc hộp văn bản thông minh, thống nhất phông chữ, thay thế hình ảnh chất lượng cao, xử lý nền thông minh, nâng cao đáng kể chất lượng PPT có thể chỉnh sửa
   - icon: ✨
-    title: 智能去水印
-    details: 内置 NotebookLM 专属去水印算法，还你清爽背景
+    title: Xóa watermark thông minh
+    details: Tích hợp thuật toán xóa watermark chuyên dụng cho NotebookLM, trả lại nền sạch cho bạn
 ---
 
-## 🎯 核心价值
+## Giá trị cốt lõi
 
-- **打破限制**：将 NotebookLM 生成的精美但不可编辑的 PDF 转化为可二次创作的 PPT
-- **智能优化**：通过 MinerU 技术深度优化 PPT 质量，提升排版和视觉效果
-- **全自动化**：无需手动操作，一键完成从 PDF 到 PPT 的完整转换
-- **通用性强**：适用于任何需要将 PDF 转换为可编辑 PPT 的场景
-- **高质量输出**：确保转换后的 PPT 保持原始文档的视觉效果和内容完整性
+- **Phá vỡ giới hạn**: Chuyển đổi PDF đẹp nhưng không thể chỉnh sửa do NotebookLM tạo thành PPT có thể sáng tạo lại
+- **Tối ưu hóa thông minh**: Tối ưu hóa chuyên sâu chất lượng PPT thông qua công nghệ MinerU, nâng cao bố cục và hiệu quả hình ảnh
+- **Tự động hóa hoàn toàn**: Không cần thao tác thủ công, hoàn thành chuyển đổi hoàn chỉnh từ PDF sang PPT bằng một cú nhấp
+- **Tính đa dụng cao**: Áp dụng cho bất kỳ tình huống nào cần chuyển đổi PDF thành PPT có thể chỉnh sửa
+- **Đầu ra chất lượng cao**: Đảm bảo PPT sau chuyển đổi giữ nguyên hiệu quả hình ảnh và tính toàn vẹn nội dung của tài liệu gốc
 
-## 🌟 效果展示
+## Trình diễn hiệu quả
 
-| 基础转换PPT（仅使用智能圈选） | **MinerU 优化后PPT** |
+| PPT chuyển đổi cơ bản (chỉ sử dụng Smart Select) | **PPT sau tối ưu hóa MinerU** |
 |  :--- | :--- |
 | ![Basic](/page_0004_1_converted.jpg) | ![MinerU](/page_0004_2_converted.jpg) |
 | ![Basic](/page_0003_1_converted.jpg) | ![MinerU](/page_0003_2_converted.jpg) |
 
-[查看详细对比样例](compare)
+[Xem chi tiết mẫu so sánh](compare)
 
-## 📋 适用场景
+## Tình huống áp dụng
 
-- **NotebookLM 演示文稿**：将 AI 生成的内容转化为可编辑的演示文稿
-- **商务文档处理**：快速将商务 PDF 转换为可编辑的 PPT
-- **学术报告转换**：将学术论文转化为演示格式
-- **培训材料制作**：将培训文档转换为交互式演示文稿
-- **批量文档处理**：处理大量 PDF 文档，确保格式一致性
+- **Bản trình chiếu NotebookLM**: Chuyển đổi nội dung do AI tạo thành bản trình chiếu có thể chỉnh sửa
+- **Xử lý tài liệu kinh doanh**: Nhanh chóng chuyển đổi PDF kinh doanh thành PPT có thể chỉnh sửa
+- **Chuyển đổi báo cáo học thuật**: Chuyển đổi bài báo học thuật thành định dạng trình chiếu
+- **Tạo tài liệu đào tạo**: Chuyển đổi tài liệu đào tạo thành bản trình chiếu tương tác
+- **Xử lý tài liệu hàng loạt**: Xử lý số lượng lớn tài liệu PDF, đảm bảo tính nhất quán định dạng
 
-## 🚀 开始使用
+## Bắt đầu sử dụng
 
-1. **安装**：下载预编译版本或通过 pip 安装
-2. **配置**：设置微软电脑管家智能圈选功能
-3. **转换**：选择 PDF 文件，点击开始转换
-4. **优化**：（可选）使用 MinerU JSON 进行深度优化
+1. **Cài đặt**: Tải phiên bản biên dịch sẵn hoặc cài đặt qua pip
+2. **Cấu hình**: Thiết lập chức năng Smart Select của Microsoft PC Manager
+3. **Chuyển đổi**: Chọn tệp PDF, nhấp bắt đầu chuyển đổi
+4. **Tối ưu hóa**: (Tùy chọn) Sử dụng MinerU JSON để tối ưu hóa chuyên sâu
 
-查看 [快速开始](quickstart) 指南了解详细步骤
+Xem hướng dẫn [Bắt đầu nhanh](quickstart) để biết các bước chi tiết

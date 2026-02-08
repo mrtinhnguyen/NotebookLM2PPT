@@ -1,8 +1,8 @@
-# 编译指南
-- 下载源码
-- 创建一个环境，只安装本项目依赖和pyinstaller
-- 参考配置upx配置upx，用于压缩exe文件
-- 编译
+# Hướng dẫn biên dịch
+- Tải mã nguồn
+- Tạo một môi trường, chỉ cài đặt các phụ thuộc của dự án này và pyinstaller
+- Tham khảo cấu hình upx để cấu hình upx, được dùng để nén tập tin exe
+- Biên dịch
 ```
 pyinstaller --clean -F -w -n notebooklm2ppt --optimize=2 --collect-all spire.presentation main.py 
 pyinstaller -D -w -n notebooklm2ppt --optimize=2 main.py

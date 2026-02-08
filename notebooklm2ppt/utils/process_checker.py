@@ -19,10 +19,10 @@ def is_process_running(name: str) -> bool:
 def main() -> None:
     running = is_process_running(PROCESS_NAME)
     if running:
-        print(f"{PROCESS_NAME} 正在运行")
+        print(f"{PROCESS_NAME} đang chạy")
         sys.exit(0)
     else:
-        print(f"{PROCESS_NAME} 未在运行")
+        print(f"{PROCESS_NAME} không chạy")
         sys.exit(1)
 
 

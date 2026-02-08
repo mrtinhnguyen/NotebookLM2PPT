@@ -1,13 +1,13 @@
 """
-统一的默认配置常量定义
+Định nghĩa các hằng số cấu hình mặc định thống nhất
 """
 
-# 任务处理的出厂默认设置（仅在第一次使用时使用）
+# Cài đặt mặc định nhà máy xử lý tác vụ (chỉ sử dụng lần đầu tiên)
 DEFAULT_TASK_SETTINGS = {
     "dpi": 150,
     "ratio": 0.8,
     "inpaint": True,
-    "inpaint_method": "background_smooth",  # 需要根据具体方法调整
+    "inpaint_method": "background_smooth",  # Cần điều chỉnh dựa trên phương pháp cụ thể
     "image_only": False,
     "force_regenerate": False,
     "unify_font": True,
@@ -15,44 +15,44 @@ DEFAULT_TASK_SETTINGS = {
     "page_range": ""
 }
 
-# 自动化相关设置的出厂默认值
+# Giá trị mặc định nhà máy cho các cài đặt liên quan đến tự động hóa
 DEFAULT_AUTOMATION_SETTINGS = {
-    "delay": 0,  # 等待时间（秒）
-    "timeout": 50,  # 超时时间（秒）
-    "done_offset": "",  # 按钮偏移
-    "calibrate": True  # 自动校准
+    "delay": 0,  # Thời gian chờ (giây)
+    "timeout": 50,  # Thời gian chờ (giây)
+    "done_offset": "",  # Độ lệch nút
+    "calibrate": True  # Tự động hiệu chuẩn
 }
 
-# GUI 相关的默认值
+# Giá trị mặc định liên quan đến GUI
 DEFAULT_GUI_VALUES = {
     "output_dir": "workspace",
-    "language": "zh_cn"
+    "language": "vi"
 }
 
-# 获取合并后的完整默认设置（考虑用户上次的设置）
+# Lấy cài đặt mặc định hoàn chỉnh sau khi hợp nhất (xem xét cài đặt lần trước của người dùng)
 def get_default_settings(output_dir="workspace", inpaint_method="background_smooth", user_last_settings=None):
     """
-    获取完整的任务默认设置，优先使用用户上次的设置
+    Lấy cài đặt mặc định tác vụ hoàn chỉnh, ưu tiên sử dụng cài đặt của người dùng lần trước
     
     Args:
-        output_dir: 输出目录
-        inpaint_method: 修复方法（会在运行时从翻译方法中获取第一个）
-        user_last_settings: 用户上次使用的设置（从 config.json 读取）
+        output_dir: Thư mục đầu ra
+        inpaint_method: Phương pháp sửa chữa (sẽ lấy cái đầu tiên từ phương pháp dịch tại thời gian chạy)
+        user_last_settings: Cài đặt được sử dụng lần trước của người dùng (đọc từ config.json)
     
     Returns:
-        dict: 完整的设置字典
+        dict: Từ điển cài đặt hoàn chỉnh
     """
-    # 先使用出厂默认值
+    # Trước tiên sử dụng giá trị mặc định nhà máy
     settings = DEFAULT_TASK_SETTINGS.copy()
     
-    # 如果有用户上次的设置，覆盖默认值
+    # Nếu có cài đặt lần trước của người dùng, hãy ghi đè giá trị mặc định
     if user_last_settings:
         settings.update(user_last_settings)
     
-    # 始终使用当前的输出目录
+    # Luôn sử dụng thư mục đầu ra hiện tại
     settings["output_dir"] = output_dir
     
-    # 只有当用户上次没有保存修复方法时，才使用传入的默认方法
+    # Chỉ sử dụng phương pháp mặc định được truyền vào khi người dùng lần trước không lưu phương pháp sửa chữa
     if not user_last_settings or 'inpaint_method' not in user_last_settings:
         settings["inpaint_method"] = inpaint_method
     
