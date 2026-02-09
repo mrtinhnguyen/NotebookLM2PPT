@@ -4,7 +4,7 @@
 > Công cụ chuyển đổi thông minh từ PDF sang PowerPoint có thể chỉnh sửa hoàn toàn
 
 
-[Phiên bản mới nhất ![](https://img.shields.io/github/release/mrtinhnguyen/NotebookLM2PPT.svg)] | [Tài liệu](https://elliottzheng.github.io/NotebookLM2PPT) | [Tải về](https://github.com/elliottzheng/NotebookLM2PPT/releases)
+[Phiên bản mới nhất ![](https://img.shields.io/github/release/mrtinhnguyen/NotebookLM2PPT.svg)] | [Tài liệu](https://mrtinhnguyen.github.io/NotebookLM2PPT) | [Tải về](https://github.com/mrtinhnguyen/NotebookLM2PPT/releases)
 
 ---
 
@@ -20,19 +20,6 @@
 
 ---
 
-## 🌟 Minh hoạ kết quả
-
-Bên trái là chuyển đổi cơ bản (chụp màn hình + nhận dạng), bên phải là **sau khi tối ưu bằng MinerU** (tái bố cục + ảnh HD):
-
-| **PPT chuyển đổi cơ bản** | **PPT được tối ưu hóa bằng MinerU** |
-| :--- | :--- |
-| ![Basic](docs/public/page_0004_1_converted.jpg) | ![MinerU](docs/public/page_0004_2_converted.jpg) |
-| ![Basic](docs/public/page_0003_1_converted.jpg) | ![MinerU](docs/public/page_0003_2_converted.jpg) |
-
-> 💡 **Ấn tượng với kết quả?** Xem [so sánh chi tiết](https://mrtinhnguyen.github.io/NotebookLM2PPT/compare.html) và [dữ liệu hiệu suất](https://mrtinhnguyen.github.io/NotebookLM2PPT/features.html)。
-
----
-
 ## 🚀 Bắt đầu nhanh
 
 Xem hướng dẫn chi tiết tại [Hướng dẫn bắt đầu nhanh](https://mrtinhnguyen.github.io/NotebookLM2PPT/quickstart.html).
@@ -44,10 +31,10 @@ Xem hướng dẫn chi tiết tại [Hướng dẫn bắt đầu nhanh](https://
 
 ### 2. Cài đặt
 - **Khuyến nghị**: Tải tệp `.exe` từ trang [Releases](https://github.com/mrtinhnguyen/NotebookLM2PPT/releases) và chạy.
-- **Dành cho nhà phát triển**: `pip install notebooklm2ppt -U`
+- **Dành cho nhà phát triển**: `pip install nnotebooklm2ppt-tonyxbase -U`
 
 ### 3. Các bước sử dụng
-1. **Khởi chạy ứng dụng**: chạy file exe hoặc gõ `notebooklm2ppt` trong dòng lệnh.
+1. **Khởi chạy ứng dụng**: chạy file exe hoặc gõ `notebooklm2ppt-tonyxbase` trong dòng lệnh.
 2. **Chọn tệp**: chọn PDF cần chuyển đổi.
 3. **Hiệu chuẩn vị trí**: **lần đầu sử dụng hãy bật 'Calibrate button position'** và làm theo hướng dẫn để click nút "Convert to PPT" trên màn hình.
 4. **Bắt đầu chuyển đổi**: chương trình sẽ tự điều khiển chuột để hoàn thành thao tác。

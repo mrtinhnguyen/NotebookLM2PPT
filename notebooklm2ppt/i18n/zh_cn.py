@@ -3,7 +3,7 @@ TRANSLATIONS = {
     "startup_dialog_title": "欢迎使用",
     "startup_info": (
         "本软件是免费开源的 PDF 转 PPT 工具\n\n"
-        "开发者：Elliott Zheng\n\n"
+        "开发者：Tinh Nguyen\n\n"
         "⚠️ 重要提示：本软件依赖【微软电脑管家】的“智能圈选”功能。\n"
         "请确保您已安装并启动微软电脑管家，且智能圈选功能可以通过ctrl+shift+a激活，否则无法出现智能圈选工具栏！\n\n"
         "如果您感觉本软件对您有所帮助，请在项目GitHub上给个star或是介绍给您的朋友，谢谢。\n\n"

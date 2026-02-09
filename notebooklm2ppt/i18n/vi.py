@@ -3,7 +3,7 @@ TRANSLATIONS = {
     "startup_dialog_title": "Chào mừng",
     "startup_info": (
         "Đây là một công cụ chuyển đổi PDF sang PPT miễn phí và mã nguồn mở.\n\n"
-        "Nhà phát triển: Elliott Zheng\n\n"
+        "Nhà phát triển: Tình Nguyễn\n\n"
         "⚠️ QUAN TRỌNG: Phần mềm này phụ thuộc vào tính năng 'Smart Select' của [Microsoft PC Manager].\n"
         "Vui lòng đảm bảo rằng bạn đã cài đặt và khởi động Microsoft PC Manager, và tính năng Smart Select có thể được kích hoạt bằng Ctrl+Shift+A, nếu không quá trình chuyển đổi sẽ không diễn ra.\n\n"
         "Nếu bạn thấy phần mềm này hữu ích, vui lòng cho nó một sao trên GitHub hoặc giới thiệu nó cho bạn bè của bạn. Cảm ơn!\n\n"

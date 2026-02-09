@@ -240,7 +240,19 @@ class AppGUI:
         """Tạo cửa sổ Toplevel với cài đặt biểu tượng"""
         top = tk.Toplevel(self.root)
         top.title(title)
-        top.iconbitmap(icon_path())
+        # Cố gắng thiết lập biểu tượng một cách an toàn (bỏ qua nếu không hỗ trợ)
+        try:
+            ico = icon_path()
+            if ico and os.path.exists(ico):
+                try:
+                    top.iconbitmap(ico)
+                except Exception:
+                    try:
+                        top.iconbitmap(default=ico)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
         self.center_toplevel(top, width, height)
         # Đặt thuộc tính cửa sổ (không sử dụng chế độ modal để tránh xung đột với chức năng kéo thả)
         top.transient(self.root)
@@ -2468,8 +2480,19 @@ def launch_gui():
         pass
 
     root = tk.Tk()
-    # Thiết lập biểu tượng cửa sổ
-    root.iconbitmap(icon_path())
+    # Thiết lập biểu tượng cửa sổ (an toàn: thử nhiều cách và bỏ qua nếu không thành công)
+    try:
+        ico = icon_path()
+        if ico and os.path.exists(ico):
+            try:
+                root.iconbitmap(ico)
+            except Exception:
+                try:
+                    root.iconbitmap(default=ico)
+                except Exception:
+                    pass
+    except Exception:
+        pass
     # After root exists, apply scaling using the helper (this will call tk scaling)
     try:
         enable_windows_dpi_awareness(root)

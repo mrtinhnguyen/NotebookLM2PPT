@@ -3,7 +3,7 @@ TRANSLATIONS = {
     "startup_dialog_title": "Welcome",
     "startup_info": (
         "This software is a free and open-source PDF to PPT tool.\n\n"
-        "Developer: Elliott Zheng\n\n"
+        "Developer: Tinh Nguyen\n\n"
         "⚠️ IMPORTANT: This software depends on the 'Smart Select' feature of [Microsoft PC Manager].\n"
         "Please ensure you have installed and started Microsoft PC Manager, and that the Smart Select feature can be activated with Ctrl+Shift+A, otherwise the conversion will not proceed.\n\n"
         "If you find this software helpful, please give it a star on GitHub or introduce it to your friends. Thank you!\n\n"
